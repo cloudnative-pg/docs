@@ -12,7 +12,7 @@ managing PostgreSQL workloads on Kubernetes from the CNCF.
 ## LFX Mentorship 2025/3
 
 This repository is part of the [LFX Mentorship 2025/3](https://mentorship.lfx.linuxfoundation.org/project/86a647c1-88c7-474f-b093-6abb58197083)
-programme, with **Anushka Agarwal** as the mentee.
+programme, with **Anushka Saxena** as the mentee.
 For more details, see [cloudnative-pg/cloudnative-pg#8122](https://github.com/cloudnative-pg/cloudnative-pg/issues/8122).
 
 ---
