@@ -1,0 +1,38 @@
+name: Docs Build and Publish
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+  release:
+    types: [published]
+
+permissions: read-all
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Dagger
+        run: |
+          curl -L https://dl.dagger.io/dagger/install.sh | BIN_DIR=$HOME/.local/bin sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run Dagger Pipeline
+        env:
+          GITHUB_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION=${{ github.event.release.tag_name }}
+            task docs:build-release VERSION=$VERSION
+          else
+            task docs:build-dev
+          fi

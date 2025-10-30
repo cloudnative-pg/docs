@@ -29,3 +29,21 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
+/* Configuration for the GitHub link in the header */
+.header-github-link:hover {
+    opacity: 0.6;
+}
+
+.header-github-link:before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    display: flex;
+    background: url("/img/github-mark.svg") no-repeat ;
+    background-size: 24px 24px;
+}
+
+html[data-theme='dark'] .header-github-link:before {
+    background: url("/img/github-mark-white.svg") no-repeat;
+    background-size: 24px 24px;
+}

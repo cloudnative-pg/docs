@@ -12,7 +12,7 @@ testing before the community issues a new generally available (GA) release.
 These versions are feature-frozen, meaning no new features are added, and are
 intended for public testing prior to the final release.
 
-!!! Important
+:::Important
     CloudNativePG release candidates are not intended for use in production
     systems.
 

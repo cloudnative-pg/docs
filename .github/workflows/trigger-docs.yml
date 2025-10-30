@@ -1,0 +1,30 @@
+name: Trigger Docs Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+  release:
+    types: [published]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine event type
+        id: event
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "type=stable" >> $GITHUB_OUTPUT
+          else
+            echo "type=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger docs repo workflow
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.DOCS_REPO_TOKEN }}" \
+            https://api.github.com/repos/cloudnative-pg/docs/dispatches \
+            -d "{\"event_type\": \"${{ steps.event.outputs.type }}-build\", \"client_payload\": {\"version\": \"${{ github.ref_name }}\"}}"

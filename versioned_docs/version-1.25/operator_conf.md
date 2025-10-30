@@ -1,4 +1,10 @@
-# Operator configuration
+---
+id: operator_conf
+sidebar_position: 27
+title: Operator Configuration
+---
+
+# Operator Configuration
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
 The operator for CloudNativePG is installed from a standard
@@ -13,22 +19,25 @@ to change the default behavior, such as:
 By default, the operator is installed in the `cnpg-system`
 namespace as a Kubernetes `Deployment` called `cnpg-controller-manager`.
 
-!!! Note
+:::note
     In the examples below we assume the default name and namespace for the operator deployment.
+:::
 
 The behavior of the operator can be customized through a `ConfigMap`/`Secret` that
 is located in the same namespace of the operator deployment and with
 `cnpg-controller-manager-config` as the name.
 
-!!! Important
+:::important
     Any change to the config's `ConfigMap`/`Secret` will not be automatically
     detected by the operator, - and as such, it needs to be reloaded (see below).
     Moreover, changes only apply to the resources created after the configuration
     is reloaded.
+:::
 
-!!! Important
+:::important
     The operator first processes the ConfigMap values and then the Secret’s, in this order.
     As a result, if a parameter is defined in both places, the one in the Secret will be used.
+:::
 
 ## Available options
 
@@ -132,9 +141,10 @@ kubectl delete pods -n [NAMESPACE_NAME_HERE] \
   -l app.kubernetes.io/name=cloudnative-pg
 ```
 
-!!! Warning
+:::warning
     Customizations will be applied only to `Cluster` resources created
     after the reload of the operator deployment.
+:::
 
 Following the above example, if the `Cluster` definition contains a `categories`
 annotation and any of the `environment`, `workload`, or `app` labels, these will
@@ -168,8 +178,9 @@ Add `--pprof-server=true` to the args list, for example:
 After saving, the deployment will roll out and the new pod will
 have the pprof server enabled.
 
-!!! Important
+:::important
     The pprof server only serves plain HTTP on port `6060`.
+:::
 
 To access the pprof endpoints from your local machine, use
 port-forwarding:
@@ -182,8 +193,9 @@ go tool pprof http://localhost:6060/debug/pprof/profile?seconds=30
 
 You can also access pprof using the browser at [http://localhost:6060/debug/pprof/](http://localhost:6060/debug/pprof/).
 
-!!! Warning
+:::warning
     The example above uses `kubectl port-forward` for local testing only.
     This is **not** the intended way to expose the feature in production.
     Treat pprof as a sensitive debugging interface and never expose it publicly.
     If you must access it remotely, secure it with proper network policies and access controls.
+:::

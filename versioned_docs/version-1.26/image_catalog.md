@@ -1,3 +1,9 @@
+---
+id: image_catalog
+sidebar_position: 8
+title: Image Catalog
+---
+
 # Image Catalog
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
@@ -10,11 +16,12 @@ a `ClusterImageCatalog` is cluster-scoped.
 Both share a common structure, comprising a list of images, each equipped with
 a `major` field indicating the major version of the image.
 
-!!! Warning
+:::warning
     The operator places trust in the user-defined major version and refrains
     from conducting any PostgreSQL version detection. It is the user's
     responsibility to ensure alignment between the declared major version in
     the catalog and the PostgreSQL image.
+:::
 
 The `major` field's value must remain unique within a catalog, preventing
 duplication across images. Distinct catalogs, however, may
