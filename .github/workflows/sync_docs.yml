@@ -1,0 +1,57 @@
+name: Import CloudNativePG Docs
+
+on:
+  repository_dispatch:
+    types: [cnpg-docs-release]
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------
+      # CHECKOUT CNPG DOCS REPO
+      # -----------------------------
+      - name: Checkout docs repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # -----------------------------
+      # RUN IMPORT SCRIPT
+      # -----------------------------
+      - name: Import docs
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          echo "Importing CloudNativePG docs for version: $VERSION"
+          chmod +x scripts/import_docs.sh
+          bash scripts/import_docs.sh "$VERSION"
+
+      # -----------------------------
+      # COMMIT CHANGES
+      # -----------------------------
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "docs: import CloudNativePG $VERSION" || echo "No changes to commit"
+
+      # -----------------------------
+      # PUSH CHANGES
+      # -----------------------------
+      - name: Push changes
+        run: git push
