@@ -94,7 +94,7 @@ fi
 # Copy imported docs → ./docs
 echo "Copying imported docs -> ./docs"
 mkdir -p ./docs
-rsync -a --delete "$SOURCE_PATH/" ./docs/
+rsync -av --delete "$SOURCE_PATH/" --exclude "css" ./docs/
 
 # ===== MAIN BRANCH =====
 if [[ "$IS_MAIN" == true ]]; then
