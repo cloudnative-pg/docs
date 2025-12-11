@@ -63,7 +63,6 @@ if ! git clone --depth 1 --branch "${VERSION_ARG}" "$SOURCE_REPO" "$SRC_TMP" 2>/
     echo "Cloned using tag v${VERSION_LABEL}"
   else
     echo "ERROR: failed to clone branch/tag for ${VERSION_ARG} (or v${VERSION_LABEL})."
-    rm -rf "$TMP_BASE"
     exit 1
   fi
 fi
@@ -71,14 +70,12 @@ fi
 SOURCE_PATH="$SRC_TMP/$SOURCE_DOCS_PATH"
 if [[ ! -d "$SOURCE_PATH" ]]; then
   echo "ERROR: expected docs folder at $SOURCE_PATH"
-  rm -rf "$TMP_BASE"
   exit 1
 fi
 
 # Install node modules if missing
 if ! command -v yarn >/dev/null 2>&1; then
   echo "ERROR: yarn not found. Install Yarn."
-  rm -rf "$TMP_BASE"
   exit 1
 fi
 
@@ -102,7 +99,6 @@ rsync -a --delete "$SOURCE_PATH/" ./docs/
 # ===== MAIN BRANCH =====
 if [[ "$IS_MAIN" == true ]]; then
   echo "Updated ./docs from main — import completed."
-  rm -rf "$TMP_BASE"
   exit 0
 fi
 
@@ -144,6 +140,5 @@ else
   echo "WARNING: No backup found — ./docs removed"
 fi
 
-rm -rf "$TMP_BASE"
 echo "=== Done: Docusaurus version ${VERSION_LABEL} created ==="
 exit 0
