@@ -34,7 +34,7 @@ jobs:
       # -----------------------------
       - name: Import docs
         env:
-          VERSION: ${{ github.event.client_payload.version }}
+          VERSION: ${{ github.event.client_payload.tag }}
         run: |
           echo "Importing CloudNativePG docs for version: $VERSION"
           ./scripts/import_docs.sh "$VERSION"
