@@ -37,8 +37,7 @@ jobs:
           VERSION: ${{ github.event.client_payload.version }}
         run: |
           echo "Importing CloudNativePG docs for version: $VERSION"
-          chmod +x scripts/import_docs.sh
-          bash scripts/import_docs.sh "$VERSION"
+          ./scripts/import_docs.sh "$VERSION"
 
       # -----------------------------
       # COMMIT CHANGES
