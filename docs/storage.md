@@ -1,6 +1,6 @@
 ---
 id: storage
-sidebar_position: 29
+sidebar_position: 280
 title: Storage
 ---
 
@@ -13,7 +13,7 @@ and guarantee consistency and durability. The same expectations and
 requirements that apply to traditional environments, such as virtual machines
 and bare metal, are also valid in container contexts managed by Kubernetes.
 
-:::important
+:::info[Important]
     When it comes to dynamically provisioned storage,
     Kubernetes has its own specifics. These include *storage classes*, *persistent
     volumes*, and *Persistent Volume Claims (PVCs)*. You need to own these
@@ -60,7 +60,7 @@ Since CloudNativePG supports volume snapshots for both backup and recovery,
 we recommend that you also consider this aspect when you choose your storage
 solution, especially if you manage very large databases.
 
-:::important
+:::info[Important]
     See the Kubernetes documentation for a list of all
     the supported [container storage interface (CSI) drivers](https://kubernetes-csi.github.io/docs/drivers.html)
     that provide snapshot capabilities.
@@ -80,7 +80,7 @@ Briefly, we recommend operating at two levels:
 - Measuring the performance of the database using pgbench, the default benchmarking tool
   distributed with PostgreSQL
 
-:::important
+:::info[Important]
     You must measure both the storage and database performance before putting
     the database into production. These results are extremely valuable not just in
     the planning phase (for example, capacity planning). They are also valuable in
@@ -117,7 +117,7 @@ defined as a *PVC group*.
 
 ## Configuration via a storage class
 
-:::important
+:::info[Important]
     CloudNativePG was designed to work interchangeably with all storage classes.
     As usual, we recommend properly benchmarking the storage class in a
     controlled environment before deploying to production.
@@ -216,7 +216,7 @@ volume has a few benefits:
   on both `PGDATA` and `pg_wal`. You can also set alerts that notify you in case,
   for example, `PGDATA` requires resizing.
 
-:::info Write-Ahead Log (WAL)
+:::note[Write-Ahead Log (WAL)]
     See [Reliability and the Write-Ahead Log](https://www.postgresql.org/docs/current/wal.html)
     in the PostgreSQL documentation for more information.
 :::
@@ -238,7 +238,7 @@ spec:
     size: 1Gi
 ```
 
-:::important
+:::info[Important]
     Removing `walStorage` isn't supported. Once added, a separate volume for
     WALs can't be removed from an existing Postgres cluster.
 :::
@@ -320,7 +320,7 @@ For example, re-create the storage for `cluster-example-3`:
 $ kubectl delete pvc/cluster-example-3 pod/cluster-example-3
 ```
 
-:::important
+:::info[Important]
     If you created a dedicated WAL volume, both PVCs must be deleted during
     this process. The same procedure applies if you want to regenerate the WAL
     volume PVC. You can do this by also disabling `resizeInUseVolumes` for the
@@ -357,7 +357,7 @@ storage volumes and then create the related `PersistentVolume` objects for
 their representation inside the Kubernetes cluster. This is also known as
 *pre-provisioning* of volumes.
 
-:::important
+:::info[Important]
     We recommend that you avoid pre-provisioning volumes, as it has an effect
     on the high availability and self-healing capabilities of the operator. It
     breaks the fully declarative model on which CloudNativePG was built.

@@ -1,7 +1,7 @@
 ---
 id: installation_upgrade
-sidebar_position: 6
-title: Installation and Upgrade
+sidebar_position: 50
+title: Installation and upgrades
 ---
 
 # Installation and upgrades
@@ -14,12 +14,12 @@ title: Installation and Upgrade
 The operator can be installed like any other resource in Kubernetes,
 through a YAML manifest applied via `kubectl`.
 
-You can install the [latest operator manifest](https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml)
+You can install the [latest operator manifest](https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.28/releases/cnpg-1.28.0.yaml)
 for this minor release as follows:
 
 ```sh
 kubectl apply --server-side -f \
-  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml
+  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.28/releases/cnpg-1.28.0.yaml
 ```
 
 You can verify that with:
@@ -81,11 +81,11 @@ specific minor release, you can just run:
 
 ```sh
 curl -sSfL \
-  https://raw.githubusercontent.com/cloudnative-pg/artifacts/release-1.27/manifests/operator-manifest.yaml | \
+  https://raw.githubusercontent.com/cloudnative-pg/artifacts/release-1.28/manifests/operator-manifest.yaml | \
   kubectl apply --server-side -f -
 ```
 
-:::important
+:::info[Important]
     Snapshots are not supported by the CloudNativePG Community, and are not
     intended for use in production.
 :::
@@ -144,7 +144,7 @@ tolerations to make sure that the operator does not run on the same nodes where
 the actual PostgreSQL clusters are running (this might even include the control
 plane for self-managed Kubernetes installations).
 
-:::info Operator configuration
+:::note[Operator configuration]
     You can change the default behavior of the operator by overriding
     some default options. For more information, please refer to the
     ["Operator configuration"](operator_conf.md) section.
@@ -152,7 +152,7 @@ plane for self-managed Kubernetes installations).
 
 ## Upgrades
 
-:::important
+:::info[Important]
     Please carefully read the [release notes](release_notes.md)
     before performing an upgrade as some versions might require
     extra steps.
@@ -177,11 +177,11 @@ update concludes with a switchover, which is governed by the
 the switchover automatically. If set to `supervised`, the user must manually
 promote the new primary instance using the `cnpg` plugin for `kubectl`.
 
-:::info Rolling updates
+:::note[Rolling updates]
     This process is discussed in-depth on the [Rolling Updates](rolling_update.md) page.
 :::
 
-:::important
+:::info[Important]
     In case `primaryUpdateStrategy` is set to the default value of `unsupervised`,
     an upgrade of the operator will trigger a switchover on your PostgreSQL cluster,
     causing a (normally negligible) downtime. If your PostgreSQL Cluster has only one
@@ -267,20 +267,17 @@ removed before installing the new one. This won't affect user data but
 only the operator itself.
 
 
-<!--
 ### Upgrading to 1.28.0 or 1.27.x
 
-:::important
+:::info[Important]
     We strongly recommend that all CloudNativePG users upgrade to version
     1.28.0, or at least to the latest stable version of your current minor release
     (e.g., 1.27.x).
 :::
 
--->
+### Upgrading to 1.27 from a previous minor version
 
-### Upgrading to 1.27.0 or 1.26.1
-
-:::important
+:::info[Important]
     We strongly recommend that all CloudNativePG users upgrade to version
     1.27.0, or at least to the latest stable version of your current minor release
     (e.g., 1.26.1).
@@ -303,12 +300,6 @@ spec:
 ```
 
 ### Upgrading to 1.26 from a previous minor version
-
-:::important
-    We strongly recommend that all CloudNativePG users upgrade to version
-    1.26.1, or at a minimum, to the latest stable version of your current minor
-    release (for example, 1.25.x).
-:::
 
 :::warning
     Due to changes in the startup probe for the manager component
@@ -367,57 +358,3 @@ that apply declarative changes to enable or disable hibernation.
 The `hibernate status` command has been removed, as its purpose is now
 fulfilled by the standard `status` command.
 
-### Upgrading to 1.25 from a previous minor version
-
-:::warning
-    Every time you are upgrading to a higher minor release, make sure you
-    go through the release notes and upgrade instructions of all the
-    intermediate minor releases. For example, if you want to move
-    from 1.23.x to 1.25, make sure you go through the release notes
-    and upgrade instructions for 1.24 and 1.25.
-:::
-
-No changes to existing 1.24 cluster configurations are required when upgrading
-to 1.25.
-
-### Upgrading to 1.24 from a previous minor version
-
-#### From Replica Clusters to Distributed Topology
-
-One of the key enhancements in CloudNativePG 1.24.0 is the upgrade of the
-replica cluster feature.
-
-The former replica cluster feature, now referred to as the "Standalone Replica
-Cluster," is no longer recommended for Disaster Recovery (DR) and High
-Availability (HA) scenarios that span multiple Kubernetes clusters. Standalone
-replica clusters are best suited for read-only workloads, such as reporting,
-OLAP, or creating development environments with test data.
-
-For DR and HA purposes, CloudNativePG now introduces the Distributed Topology
-strategy for replica clusters. This new strategy allows you to build PostgreSQL
-clusters across private, public, hybrid, and multi-cloud environments, spanning
-multiple regions and potentially different cloud providers. It also provides an
-API to control the switchover operation, ensuring that only one cluster acts as
-the primary at any given time.
-
-This Distributed Topology strategy enhances resilience and scalability, making
-it a robust solution for modern, distributed applications that require high
-availability and disaster recovery capabilities across diverse infrastructure
-setups.
-
-You can seamlessly transition from a previous replica cluster configuration to a
-distributed topology by modifying all the `Cluster` resources involved in the
-distributed PostgreSQL setup. Ensure the following steps are taken:
-
-- Configure the `externalClusters` section to include all the clusters involved
-  in the distributed topology. We strongly suggest using the same configuration
-  across all `Cluster` resources for maintainability and consistency.
-- Configure the `primary` and `source` fields in the `.spec.replica` stanza to
-  reflect the distributed topology. The `primary` field should contain the name
-  of the current primary cluster in the distributed topology, while the `source`
-  field should contain the name of the cluster each `Cluster` resource is
-  replicating from. It is important to note that the `enabled` field, which was
-  previously set to `true` or `false`, should now be unset (default).
-
-For more information, please refer to
-the ["Distributed Topology" section for replica clusters](replica_cluster.md#distributed-topology).

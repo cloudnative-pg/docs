@@ -1,7 +1,7 @@
 ---
 id: operator_capability_levels
-sidebar_position: 50
-title: Operator Capability Levels
+sidebar_position: 490
+title: Operator capability levels
 ---
 
 # Operator capability levels
@@ -12,9 +12,9 @@ classified using the
 [Operator SDK definition of Capability Levels](https://operatorframework.io/operator-capabilities/)
 framework.
 
-![Operator Capability Levels](/img/operator-capability-level.png)
+![Operator Capability Levels](./images/operator-capability-level.png)
 
-:::important
+:::info[Important]
     Based on the [Operator Capability Levels model](operator_capability_levels.md),
     you can expect a "Level V - Auto Pilot" set of capabilities from the
     CloudNativePG operator.
@@ -39,7 +39,7 @@ operator. This category includes usability and user experience
 enhancements, such as improvements in how you interact with the
 operator and a PostgreSQL cluster configuration.
 
-:::important
+:::info[Important]
     We consider information security part of this level.
 :::
 
@@ -248,7 +248,7 @@ The operator enables you to apply changes to the `Cluster` resource YAML
 section of the PostgreSQL configuration. Depending on the configuration option,
 it also makes sure that all instances are properly reloaded or restarted.
 
-:::note Current limitation
+:::note
     Changes with `ALTER SYSTEM` aren't detected, meaning
     that the cluster state isn't enforced.
 :::
@@ -452,11 +452,15 @@ one and supports all the options available in
 
 ### Zero-Data-Loss Clusters Through Synchronous Replication
 
-Achieve *zero data loss* (RPO=0) in your local high-availability CloudNativePG
-cluster with support for both quorum-based and priority-based synchronous
-replication. The operator offers a flexible way to define the number of
-expected synchronous standby replicas available at any time, and allows
-customization of the `synchronous_standby_names` option as needed.
+CloudNativePG enables *zero-data-loss (RPO=0)* high-availability clusters by
+combining synchronous replication with optional [failover quorum](failover.md#failover-quorum-quorum-based-failover):
+you can define how many synchronous standby replicas must be available at any
+given time, ensuring that failover only proceeds when data is safely
+replicated.
+Both quorum-based and priority-based synchronous replication are supported, and
+the operator provides full flexibility in configuring the
+`synchronous_standby_names` setting to match your durability and performance
+requirements.
 
 ### Replica clusters
 

@@ -1,6 +1,6 @@
 ---
 id: cilium
-title: cilium
+title: Cilium
 ---
 
 # Cilium
@@ -39,7 +39,7 @@ In the following examples, we demonstrate how Cilium can be used to secure a
 CloudNativePG PostgreSQL instance by restricting ingress traffic to only
 authorized Pods.
 
-:::important
+:::info[Important]
     Before proceeding, ensure that the `cluster-example` Postgres cluster is up
     and running in your environment.
 :::
@@ -100,7 +100,7 @@ spec:
             - port: "8000"
               protocol: TCP
 ```
-:::important
+:::info[Important]
     The `cnpg-system` namespace is the default namespace for the operator when
     using the YAML manifests. If the operator was installed using a different
     process (Helm, OLM, etc.), the namespace may be different. Make sure to adjust

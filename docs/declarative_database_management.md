@@ -1,10 +1,10 @@
 ---
 id: declarative_database_management
-sidebar_position: 25
-title: PostgreSQL Database Management
+sidebar_position: 240
+title: PostgreSQL Database management
 ---
 
-# PostgreSQL Database Management
+# PostgreSQL Database management
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
 CloudNativePG simplifies PostgreSQL database provisioning by automatically
@@ -24,7 +24,7 @@ automated, and consistent approach to managing PostgreSQL databases.
 
 ### Scope of Management
 
-:::important
+:::info[Important]
     CloudNativePG manages **global objects** in PostgreSQL clusters, including
     databases, roles, and tablespaces. However, it does **not** manage database content
     beyond extensions and schemas (e.g., tables). To manage database content, use specialized
@@ -56,7 +56,7 @@ When applied, this manifest creates a `Database` object called
 role, in the `cluster-example` PostgreSQL cluster.
 
 :::info
-    Please refer to the [API reference](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-DatabaseSpec)
+    Please refer to the [API reference](cloudnative-pg.v1.md#databasespec)
     the full list of attributes you can define for each `Database` object.
 :::
 
@@ -83,7 +83,7 @@ PostgreSQL automatically creates databases such as `postgres`, `template0`, and
 `template1`. These names are reserved and cannot be used for new `Database`
 objects in CloudNativePG.
 
-:::important
+:::info[Important]
     Creating a `Database` with `spec.name` set to `postgres`, `template0`, or
     `template1` is not allowed.
 :::
@@ -355,7 +355,7 @@ A **foreign server** encapsulates the connection details that a foreign data
 wrapper (FDW) uses to access an external data source. For user-specific
 connection details, you can define [user mappings](https://www.postgresql.org/docs/current/sql-createusermapping.html).
 
-:::important
+:::info[Important]
     CloudNativePG does not currently support declarative configuration of user mappings.
     However, once an FDW and its foreign server are defined, you can grant
     usage privileges to a standard database role. This allows you to manage user
@@ -401,18 +401,20 @@ Each foreign server entry supports the following properties:
     - `value`: The string value of the option.
     - `ensure`: Indicates whether the option should be `present` or `absent`.
 
-:::important
-The `fdw` field must reference an existing foreign data wrapper already defined in the database.
-If the specified FDW does not exist, the foreign server will not be created.
+:::info[Important]
 :::
 
+The `fdw` field must reference an existing foreign data wrapper already defined in the database.
+If the specified FDW does not exist, the foreign server will not be created.
+
 :::info
+:::
+
 CloudNativePG manages foreign servers using PostgreSQL’s native SQL commands:
 [`CREATE SERVER`](https://www.postgresql.org/docs/current/sql-createserver.html),
 [`ALTER SERVER`](https://www.postgresql.org/docs/current/sql-alterserver.html), and
 [`DROP SERVER`](https://www.postgresql.org/docs/current/sql-dropserver.html).
 The `ALTER SERVER` command is used to update server options.
-:::
 
 The operator reconciles **only** the foreign servers explicitly listed in
 `spec.servers`. Any existing servers not included in this list are left

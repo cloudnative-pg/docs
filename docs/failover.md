@@ -1,6 +1,6 @@
 ---
 id: failover
-sidebar_position: 41
+sidebar_position: 400
 title: Automated failover
 ---
 
@@ -30,7 +30,7 @@ controller will initiate the failover process, in two steps:
    Meanwhile, the former primary pod will restart, detect that it is no longer
    the primary, and become a replica node.
 
-:::important
+:::info[Important]
     The two-phase procedure helps ensure the WAL receivers can stop in an orderly
     fashion, and that the failing primary will not start streaming WALs again upon
     restart. These safeguards prevent timeline discrepancies between the new primary
@@ -105,11 +105,6 @@ prevent premature failover for short-lived network or node instability.
 
 ## Failover Quorum (Quorum-based Failover)
 
-:::warning
-    *Failover quorum* is an experimental feature introduced in version 1.27.0.
-    Use with caution in production environments.
-:::
-
 Failover quorum is a mechanism that enhances data durability and safety during
 failover events in CloudNativePG-managed PostgreSQL clusters.
 
@@ -162,7 +157,7 @@ spec:
       failoverQuorum: true
 
   storage:
-    size: 1G
+    size: 1Gi
 ```
 
 For backward compatibility, the legacy annotation
@@ -174,7 +169,7 @@ takes precedence over the `Cluster` spec option:
   `.spec.postgresql.synchronous.failoverQuorum` to `true`.
 - If the annotation evaluates to `"false"`, the feature is always disabled
 
-:::important
+:::info[Important]
     Because the annotation overrides the spec, we recommend that users of this
     experimental feature migrate to the native
     `.spec.postgresql.synchronous.failoverQuorum` option and remove the annotation
@@ -223,7 +218,7 @@ instance during its reconciliation loop, and read by the operator during quorum
 checks. It is used to track the latest known configuration of the synchronous
 replication.
 
-:::important
+:::info[Important]
     Users should not modify the `FailoverQuorum` resource directly. During
     PostgreSQL configuration changes, when it is not possible to determine the
     configuration, the `FailoverQuorum` resource will be reset, preventing any

@@ -1,7 +1,7 @@
 ---
 id: connection_pooling
-sidebar_position: 36
-title: Connection pooling
+sidebar_position: 350
+title: Connection Pooling
 ---
 
 # Connection pooling
@@ -30,7 +30,7 @@ equivalent service for PgBouncer. This ability enables reuse of existing
 connections for faster performance and better resource management on the
 PostgreSQL side.
 
-![Applications writing to the single primary via PgBouncer](/img/pgbouncer-architecture-rw.png)
+![Applications writing to the single primary via PgBouncer](./images/pgbouncer-architecture-rw.png)
 
 ## Quick start
 
@@ -55,7 +55,7 @@ spec:
       default_pool_size: "10"
 ```
 
-:::important
+:::info[Important]
     The pooler name can't be the same as any cluster name in the same namespace.
 :::
 
@@ -71,7 +71,7 @@ configured with the [`session` pooling mode](https://www.pgbouncer.org/config.ht
 and accepting up to 1000 connections each. The default pool size is 10
 user/database pairs toward PostgreSQL.
 
-:::important
+:::info[Important]
     The `Pooler` resource sets only the `*` fallback database in PgBouncer. This setting means that
     that all parameters in the connection strings passed from the client are
     relayed to the PostgreSQL server. For details, see ["Section [databases]"
@@ -81,11 +81,10 @@ user/database pairs toward PostgreSQL.
 CloudNativePG also creates a secret with the same name as the pooler containing
 the configuration files used with PgBouncer.
 
-:::info API reference
-    For details, see [`PgBouncerSpec`](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-PgBouncerSpec)
+:::note[API reference]
+    For details, see [`PgBouncerSpec`](cloudnative-pg.v1.md#pgbouncerspec)
     in the API reference.
 :::
-
 
 ## Pooler resource lifecycle
 
@@ -104,7 +103,7 @@ remove its poolers, and deleting a pooler does not affect the cluster.
     application).
 :::
 
-:::important
+:::info[Important]
     When the operator itself is upgraded, pooler pods will also undergo a
     rolling upgrade. This ensures that the instance manager inside the pooler
     pods is upgraded consistently.
@@ -153,7 +152,7 @@ PgBouncer clients connecting to the PostgreSQL database.
 This built-in mechanism leverages PgBouncer’s `auth_dbname` (introduced in
 version 1.19), together with the `auth_user` and `auth_query` options.
 
-:::important
+:::info[Important]
     If you provide your own certificate secrets, the built-in integration is
     disabled. In that case, you are fully responsible for configuring and
     managing PgBouncer authentication.
@@ -224,7 +223,7 @@ replicate similar behavior to the default setup.
 
 You can take advantage of pod templates specification in the `template`
 section of a `Pooler` resource. For details, see
-[`PoolerSpec`](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-PoolerSpec) in the API reference.
+[`PoolerSpec`](cloudnative-pg.v1.md#poolerspec) in the API reference.
 
 Using templates, you can configure pods as you like, including fine control
 over affinity and anti-affinity rules for pods and nodes. By default,
@@ -649,10 +648,9 @@ spec:
 
 ### Deprecation of Automatic `PodMonitor` Creation
 
-:::warning Feature Deprecation Notice
+!!!warning "Feature Deprecation Notice"
     The `.spec.monitoring.enablePodMonitor` field in the `Pooler` resource is
     now deprecated and will be removed in a future version of the operator.
-:::
 
 If you are currently using this feature, we strongly recommend you either
 remove or set `.spec.monitoring.enablePodMonitor` to `false` and manually
@@ -696,12 +694,12 @@ When the `paused` option is reset to `false`, the operator invokes the
 `RESUME` command in PgBouncer, reopening the taps toward the PostgreSQL
 service defined in the `Pooler` resource.
 
-:::info PAUSE
+:::note[PAUSE]
     For more information, see
     [`PAUSE` in the PgBouncer documentation](https://www.pgbouncer.org/usage.html#pause-db).
 :::
 
-:::important
+:::info[Important]
     In future versions, the switchover operation will be fully integrated
     with the PgBouncer pooler and take advantage of the `PAUSE`/`RESUME`
     features to reduce the perceived downtime by client applications.

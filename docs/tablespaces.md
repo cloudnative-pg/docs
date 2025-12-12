@@ -1,6 +1,6 @@
 ---
 id: tablespaces
-sidebar_position: 26
+sidebar_position: 250
 title: Tablespaces
 ---
 
@@ -182,7 +182,7 @@ CREATE TABLE facts_202312 PARTITION OF facts
     TABLESPACE current;
 ```
 
-:::important
+:::info[Important]
     This example assumes you're familiar with
     [PostgreSQL declarative partitioning](https://www.postgresql.org/docs/current/ddl-partitioning.html).
 :::
@@ -208,7 +208,7 @@ the `postgres` user, like in the following excerpt:
         size: 1Gi
 ```
 
-:::important
+:::info[Important]
     If you change the ownership of a tablespace, make sure that you're using
     an existing role. Otherwise, the status of the cluster reports the
     issue and stops reconciling tablespaces until fixed. It's your responsibility

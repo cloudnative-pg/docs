@@ -1,7 +1,7 @@
 ---
 id: samples
-sidebar_position: 52
-title: Samples
+sidebar_position: 510
+title: Examples
 ---
 
 # Examples
@@ -10,13 +10,13 @@ title: Samples
 The examples show configuration files for setting up
 your PostgreSQL cluster.
 
-:::important
+:::info[Important]
     These examples are for demonstration and experimentation
     purposes. You can execute them on a personal Kubernetes cluster with Minikube
     or Kind, as described in [Quick start](quickstart.md).
 :::
 
-:::info Reference
+:::note[Reference]
     For a list of available options, see [API reference](cloudnative-pg.v1.md).
 :::
 
@@ -56,6 +56,13 @@ your PostgreSQL cluster.
 : [`cluster-example-projected-volume.yaml`](samples/cluster-example-projected-volume.yaml)
   A basic cluster with the existing `Secret` and `ConfigMap` mounted into Postgres
   pod using projected volume mount.
+
+## Security
+
+**Sample cluster with custom security contexts**
+: [`cluster-example-security-context.yaml`](samples/cluster-example-security-context.yaml)
+  A cluster demonstrating how to customize both Pod and Container security contexts.
+  This is useful when working with Pod Security Standards or meeting specific security requirements.
 
 ## Backups
 

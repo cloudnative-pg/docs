@@ -1,7 +1,7 @@
 ---
 id: instance_manager
-sidebar_position: 12
-title: Instance Manager
+sidebar_position: 110
+title: Postgres Instance Manager
 ---
 
 # Postgres instance manager
@@ -73,7 +73,7 @@ section of your configuration.
 
 :::info
     For more details on probe configuration, refer to the
-    [probe API documentation](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ProbeWithStrategy).
+    [probe API documentation](cloudnative-pg.v1.md#probewithstrategy).
 :::
 
 If you manually specify `.spec.probes.startup.failureThreshold`, it will
@@ -118,7 +118,7 @@ To accommodate these requirements, CloudNativePG extends the
   `type` is set to `streaming`. If `maximumLag` is not specified, the replica is
   considered successfully started as soon as it begins streaming.
 
-:::important
+:::info[Important]
     The `.spec.probes.startup.maximumLag` option is validated and enforced only
     during the startup phase of the pod, meaning it applies exclusively when the
     replica is starting.
@@ -182,7 +182,7 @@ section of your configuration.
 
 :::info
     For more details on probe configuration, refer to the
-    [probe API documentation](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-Probe).
+    [probe API documentation](cloudnative-pg.v1.md#probe).
 :::
 
 If you manually specify `.spec.probes.liveness.failureThreshold`, it will
@@ -223,7 +223,7 @@ spec:
         enabled: false
 ```
 
-:::important
+:::info[Important]
     Be aware that the default liveness probe settings—automatically derived from `livenessProbeTimeout`—might
     be aggressive (30 seconds). As such, we recommend explicitly setting the
     liveness probe configuration to suit your environment.
@@ -291,7 +291,7 @@ spec:
 
 :::info
     For more information on configuring probes, see the
-    [probe API](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ProbeWithStrategy).
+    [probe API](cloudnative-pg.v1.md#probewithstrategy).
 :::
 
 ### Readiness Probe Strategy
@@ -306,7 +306,7 @@ To accommodate these requirements, CloudNativePG extends the
 `maximumLag`. Please refer to the [Startup Probe Strategy](#startup-probe-strategy)
 section for detailed information on these options.
 
-:::important
+:::info[Important]
     Unlike the startup probe, the `.spec.probes.readiness.maximumLag` option is
     continuously monitored. A lagging replica may become unready if this setting is
     not appropriately tuned.
@@ -323,7 +323,7 @@ section for detailed information on these options.
       leading to a cluster stall requiring manual intervention.
 :::
 
-:::tip
+:::note[Recommendation]
     Use the `streaming` and `maximumLag` options with extreme caution. If
     you're unfamiliar with PostgreSQL replication, rely on the default
     strategy. Seek professional advice if unsure.
@@ -366,7 +366,7 @@ will wait for up to the remaining time set in `.spec.stopDelay` to complete the
 operation and then forcibly shut down. Such a timeout needs to be at least 15
 seconds.
 
-:::important
+:::info[Important]
     In order to avoid any data loss in the Postgres cluster, which impacts
     the database [RPO](before_you_start.md#rpo), don't delete the Pod where
     the primary instance is running. In this case, perform a switchover to
@@ -411,7 +411,7 @@ The same applies to CloudNativePG and Kubernetes as well: the
 provides details on checking the disk space used by WAL segments and standard
 metrics on disk usage exported to Prometheus.
 
-:::important
+:::info[Important]
     In a production system, it is critical to monitor the database
     continuously. Exhausted disk storage can lead to a database server shutdown.
 :::

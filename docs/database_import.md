@@ -1,6 +1,6 @@
 ---
 id: database_import
-sidebar_position: 10
+sidebar_position: 90
 title: Importing Postgres databases
 ---
 
@@ -37,7 +37,7 @@ As a result, the instructions in this section are suitable for both:
 In both cases, the operation is performed on a consistent **snapshot** of the
 origin database.
 
-:::important
+:::info[Important]
     For this reason we suggest to stop write operations on the source before
     the final import in the `Cluster` resource, as changes done to the source
     database after the start of the backup will not be in the destination cluster -
@@ -95,7 +95,7 @@ In the figure below, a single PostgreSQL cluster containing *N* databases is
 imported into separate CloudNativePG clusters, with each cluster using a
 microservice import for one of the *N* source databases.
 
-![Example of microservice import type](/img/microservice-import.png)
+![Example of microservice import type](./images/microservice-import.png)
 
 For example, the YAML below creates a new 3 instance PostgreSQL cluster (latest
 available major version at the time the operator was released) called
@@ -168,7 +168,7 @@ There are a few things you need to be aware of when using the `microservice` typ
 - Only one database can be specified inside the `initdb.import.databases` array
 - Roles are not imported - and as such they cannot be specified inside `initdb.import.roles`
 
-:::tip
+:::tip[Hint]
     The microservice approach adheres to CloudNativePG conventions and defaults
     for the destination cluster. If you do not set `initdb.database` or
     `initdb.owner` for the destination cluster, both parameters will default to
@@ -189,7 +189,7 @@ The operation is performed in the following steps:
 - run `ANALYZE` on each imported database
 - cleanup of the database dump files
 
-![Example of monolith import type](/img/monolith-import.png)
+![Example of monolith import type](./images/monolith-import.png)
 
 For example, the YAML below creates a new 3 instance PostgreSQL cluster (latest
 available major version at the time the operator was released) called
@@ -264,7 +264,7 @@ There are a few things you need to be aware of when using the `monolith` type:
   database.
 - The `postImportApplicationSQL` field is not supported
 
-:::tip
+:::tip[Hint]
     The databases and their owners are preserved exactly as they exist in the
     source cluster—no `app` database or user will be created during import. If your
     `bootstrap.initdb` stanza specifies custom `database` and `owner` values that
@@ -391,7 +391,7 @@ Before completing the import job, CloudNativePG restores the expected
 configuration, then runs `initdb --sync-only` to ensure that data is
 permanently written on disk.
 
-:::important
+:::info[Important]
     WAL archiving, if requested, and WAL level will be honored after the
     database import process has completed. Similarly, replicas will be cloned
     after the bootstrap phase, when the actual cluster resource starts.

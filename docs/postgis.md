@@ -1,6 +1,6 @@
 ---
 id: postgis
-sidebar_position: 45
+sidebar_position: 440
 title: PostGIS
 ---
 
@@ -11,7 +11,7 @@ title: PostGIS
 for PostgreSQL that introduces support for storing GIS (Geographic Information
 Systems) objects in the database and be queried via SQL.
 
-:::important
+:::info[Important]
     This section assumes you are familiar with PostGIS and provides some basic
     information about how to create a new PostgreSQL cluster with a PostGIS database
     in Kubernetes via CloudNativePG.
@@ -73,7 +73,6 @@ provides some guidance on how the creation of a PostGIS cluster can be done.
     Alternatively, use the provided [image catalogs](https://github.com/cloudnative-pg/postgis-containers?tab=readme-ov-file#image-catalogs).
 :::
 
-
 ```yaml
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -118,7 +117,7 @@ values from the ones in this document):
 
 ```console
 $ kubectl cnpg psql postgis-example -- app
-psql (18.0 (Debian 18.0-1.pgdg13+3))
+psql (18.1 (Debian 18.1-1.pgdg13+3))
 Type "help" for help.
 
 app=# SELECT * FROM pg_available_extensions WHERE name ~ '^postgis' ORDER BY 1;

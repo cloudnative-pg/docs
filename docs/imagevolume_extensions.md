@@ -1,6 +1,6 @@
 ---
 id: imagevolume_extensions
-sidebar_position: 48
+sidebar_position: 470
 title: Image Volume Extensions
 ---
 
@@ -16,12 +16,11 @@ This feature allows you to mount a [PostgreSQL extension](https://www.postgresql
 packaged as an OCI-compliant container image, as a read-only and immutable
 volume inside a running pod at a known filesystem path.
 
-You can make the extension available either globally, using the
-[`shared_preload_libraries` option](postgresql_conf.md#shared-preload-libraries),
-or at the database level through the `CREATE EXTENSION` command. For the
-latter, you can use the [`Database` resource’s declarative extension management](declarative_database_management.md/#managing-extensions-in-a-database)
-to ensure consistent, automated extension setup within your PostgreSQL
-databases.
+If the extension requires one or more shared libraries to be pre-loaded at server
+start, you can add them via the [`shared_preload_libraries` option](postgresql_conf.md#shared-preload-libraries).
+Also, if your extension requires being created at the database level through
+the `CREATE EXTENSION` command, you can use the [`Database` resource’s declarative extension management](declarative_database_management.md/#managing-extensions-in-a-database)
+to ensure consistent, automated extension setup within your PostgreSQL databases.
 
 ## Benefits
 
@@ -49,6 +48,9 @@ To use image volume extensions with CloudNativePG, you need:
 
 - **PostgreSQL 18 or later**, with support for `extension_control_path`.
 - **Kubernetes 1.33**, with the `ImageVolume` feature gate enabled.
+- **Container runtime with `ImageVolume` support**:
+    - `containerd` v2.1.0 or later, or
+    - `CRI-O` v1.31 or later.
 - **CloudNativePG-compatible extension container images**, ensuring:
     - Matching PostgreSQL major version of the `Cluster` resource.
     - Compatible operating system distribution of the `Cluster` resource.
@@ -62,7 +64,7 @@ the PostgreSQL cluster.
 
 :::info
     For field-level details, see the
-    [API reference for `ExtensionConfiguration`](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ExtensionConfiguration).
+    [API reference for `ExtensionConfiguration`](cloudnative-pg.v1.md#extensionconfiguration).
 :::
 
 Each image volume is mounted at `/extensions/<EXTENSION_NAME>`.
@@ -84,7 +86,7 @@ requiring manual configuration inside the pod.
     `dynamic_library_path` values to match the image structure.
 :::
 
-:::important
+:::info[Important]
     If the extension image includes shared libraries, they must be compiled
     with the same PostgreSQL major version, operating system distribution, and CPU
     architecture as the PostgreSQL container image used by your cluster, to ensure
@@ -142,7 +144,7 @@ The `image` stanza follows the [Kubernetes `ImageVolume` API](https://kubernetes
 The `reference` must point to a valid container registry path for the extension
 image.
 
-:::important
+:::info[Important]
     When a new extension is added to a running `Cluster`, CloudNativePG will
     automatically trigger a [rolling update](rolling_update.md) to attach the new
     image volume to each pod. Before adding a new extension in production,
@@ -300,7 +302,7 @@ spec:
       - name: postgis
         # ...
         ld_library_path:
-          - syslib
+          - system
         image:
           reference: # registry path for your PostGIS image
       # ...
@@ -312,7 +314,7 @@ CloudNativePG will set the `LD_LIBRARY_PATH` environment variable to include
 `/extensions/postgis/system`, allowing PostgreSQL to locate and load these
 system libraries at runtime.
 
-:::important
+:::info[Important]
     Since `ld_library_path` must be set when the PostgreSQL process starts,
     changing this value requires a **cluster restart** for the new value to take effect.
     CloudNativePG does not currently trigger this restart automatically; you will need to
@@ -333,7 +335,7 @@ Following this structure ensures that the extension will be automatically
 discoverable and usable by PostgreSQL within CloudNativePG without requiring
 manual configuration.
 
-:::important
+:::info[Important]
     We encourage PostgreSQL extension developers to publish OCI-compliant extension
     images following this layout as part of their artifact distribution, making
     their extensions easily consumable within Kubernetes environments.

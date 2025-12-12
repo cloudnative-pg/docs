@@ -1,6 +1,6 @@
 ---
 id: backup_recovery
-title: backup_recovery
+title: Backup and Recovery
 ---
 
 # Backup and Recovery

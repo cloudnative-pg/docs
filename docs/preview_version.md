@@ -1,6 +1,6 @@
 ---
 id: preview_version
-sidebar_position: 58
+sidebar_position: 570
 title: Preview Versions
 ---
 
@@ -12,9 +12,10 @@ testing before the community issues a new generally available (GA) release.
 These versions are feature-frozen, meaning no new features are added, and are
 intended for public testing prior to the final release.
 
-:::Important
+:::info[Important]
     CloudNativePG release candidates are not intended for use in production
     systems.
+:::
 
 ## Purpose of Release Candidates
 
@@ -43,10 +44,10 @@ are not backwards compatible and could be removed entirely.
 There are currently no preview versions available.
 
 <!--
-The current preview version is **1.28.0-rc1**.
+The current preview version is **1.29.0-rc1**.
 
 For more information on the current preview version and how to test, please view the links below:
 
-- [Announcement](https://cloudnative-pg.io/releases/cloudnative-pg-1-28.0-rc1-released/)
+- [Announcement](https://cloudnative-pg.io/releases/cloudnative-pg-1-29.0-rc1-released/)
 - [Documentation](https://cloudnative-pg.io/documentation/preview/)
 -->

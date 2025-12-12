@@ -1,7 +1,7 @@
 ---
 id: replica_cluster
-sidebar_position: 37
-title: Replica Clusters
+sidebar_position: 360
+title: Replica clusters
 ---
 
 # Replica clusters
@@ -33,7 +33,7 @@ For example, the diagram below — taken from the ["Architecture" section](archi
 clusters, with a symmetric replica cluster primarily serving disaster recovery
 purposes.
 
-![An example of multi-cluster deployment with a primary and a replica cluster](/img/multi-cluster.png)
+![An example of multi-cluster deployment with a primary and a replica cluster](./images/multi-cluster.png)
 
 ## Basic Concepts
 
@@ -268,7 +268,7 @@ involving:
 
 These processes are described in the next sections.
 
-:::important
+:::info[Important]
     Before you proceed, ensure you review the ["About PostgreSQL Roles" section](#about-postgresql-roles)
     above and use identical role definitions, including secrets, in all
     `Cluster` objects participating in the distributed topology.
@@ -389,7 +389,7 @@ clusters.
 
 ## Standalone Replica Clusters
 
-:::important
+:::info[Important]
     Standalone Replica Clusters were previously known as Replica Clusters
     before the introduction of the Distributed Topology strategy in CloudNativePG
     1.24.
@@ -412,7 +412,7 @@ from the original source.
     and the source cluster become two independent clusters definitively.
 :::
 
-:::important
+:::info[Important]
     Standalone replica clusters are suitable for several use cases, primarily
     involving read-only workloads. If you are planning to setup a disaster
     recovery solution, look into "Distributed Topology" above.
@@ -575,7 +575,7 @@ See ["About PostgreSQL Roles"](#about-postgresql-roles) for more details.
 ## Delayed replicas
 
 CloudNativePG supports the creation of **delayed replicas** through the
-[`.spec.replica.minApplyDelay` option](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ReplicaClusterConfiguration),
+[`.spec.replica.minApplyDelay` option](cloudnative-pg.v1.md#replicaclusterconfiguration),
 leveraging PostgreSQL's
 [`recovery_min_apply_delay`](https://www.postgresql.org/docs/current/runtime-config-replication.html#GUC-RECOVERY-MIN-APPLY-DELAY).
 
@@ -633,7 +633,7 @@ the resilience and data protection capabilities of your PostgreSQL environment.
 Adjust the delay duration based on your specific needs and the criticality of
 your data.
 
-:::important
+:::info[Important]
     Always measure your goals. Depending on your environment, it might be more
     efficient to rely on volume snapshot-based recovery for faster outcomes.
     Evaluate and choose the approach that best aligns with your unique requirements

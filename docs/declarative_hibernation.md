@@ -1,6 +1,6 @@
 ---
 id: declarative_hibernation
-sidebar_position: 44
+sidebar_position: 430
 title: Declarative hibernation
 ---
 
@@ -57,7 +57,7 @@ $ kubectl cnpg status <cluster-name>
 Cluster Summary
 Name:              cluster-example
 Namespace:         default
-PostgreSQL Image:  ghcr.io/cloudnative-pg/postgresql:18.0-system-trixie
+PostgreSQL Image:  ghcr.io/cloudnative-pg/postgresql:18.1-system-trixie
 Primary instance:  cluster-example-2
 Status:            Cluster in healthy state 
 Instances:         3
