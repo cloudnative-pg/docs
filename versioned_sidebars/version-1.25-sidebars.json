@@ -37,7 +37,6 @@
     "connection_pooling",
     "replica_cluster",
     "kubernetes_upgrade",
-    "postgres_upgrades",
     "kubectl-plugin",
     "failover",
     "troubleshooting",
@@ -46,7 +45,6 @@
     "postgis",
     "e2e",
     "container_images",
-    "imagevolume_extensions",
     "cnpg_i",
     "operator_capability_levels",
     "controller",
@@ -70,8 +68,6 @@
       "type": "category",
       "label": "Appendixes",
       "items": [
-        "appendixes/backup_volumesnapshot",
-        "appendixes/backup_barmanobjectstore",
         "appendixes/object_stores"
       ]
     }
