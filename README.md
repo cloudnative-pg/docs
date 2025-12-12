@@ -83,7 +83,7 @@ build the website and push to the `gh-pages` branch.
 ## Workflow
 
 The documentation is updated from the upstream CloudNativePG project by the
-[`sync_docs` workflow](.github/workflows/sync_docs.yaml).
+[`sync_docs` workflow](.github/workflows/sync_docs.yml).
 
 ---
 
