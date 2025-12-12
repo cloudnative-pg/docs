@@ -1,2049 +1,2614 @@
 ---
 id: cloudnative-pg.v1
-sidebar_position: 56
+sidebar_position: 550
 title: API Reference
 ---
 
 # API Reference
-<!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-<p>Package v1 contains API Schema definitions for the postgresql v1 API group</p>
-
-
-## Resource Types
+## Packages
+- [postgresql.cnpg.io/v1](#postgresqlcnpgiov1)
 
 
-- [Backup](#postgresql-cnpg-io-v1-Backup)
-- [Cluster](#postgresql-cnpg-io-v1-Cluster)
-- [ClusterImageCatalog](#postgresql-cnpg-io-v1-ClusterImageCatalog)
-- [Database](#postgresql-cnpg-io-v1-Database)
-- [FailoverQuorum](#postgresql-cnpg-io-v1-FailoverQuorum)
-- [ImageCatalog](#postgresql-cnpg-io-v1-ImageCatalog)
-- [Pooler](#postgresql-cnpg-io-v1-Pooler)
-- [Publication](#postgresql-cnpg-io-v1-Publication)
-- [ScheduledBackup](#postgresql-cnpg-io-v1-ScheduledBackup)
-- [Subscription](#postgresql-cnpg-io-v1-Subscription)
+## postgresql.cnpg.io/v1
 
-## Backup {#postgresql-cnpg-io-v1-Backup}
+Package v1 contains API Schema definitions for the postgresql v1 API group
+
+### Resource Types
+- [Backup](#backup)
+- [Cluster](#cluster)
+- [ClusterImageCatalog](#clusterimagecatalog)
+- [Database](#database)
+- [ImageCatalog](#imagecatalog)
+- [Pooler](#pooler)
+- [Publication](#publication)
+- [ScheduledBackup](#scheduledbackup)
+- [Subscription](#subscription)
+
+
+
+#### AffinityConfiguration
+
+
+
+AffinityConfiguration contains the info we need to create the
+affinity rules for Pods
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `enablePodAntiAffinity` _boolean_ | Activates anti-affinity for the pods. The operator will define pods<br />anti-affinity unless this field is explicitly set to false |  |  |  |
+| `topologyKey` _string_ | TopologyKey to use for anti-affinity configuration. See k8s documentation<br />for more info on that |  |  |  |
+| `nodeSelector` _object (keys:string, values:string)_ | NodeSelector is map of key-value pairs used to define the nodes on which<br />the pods can run.<br />More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ |  |  |  |
+| `nodeAffinity` _[NodeAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#nodeaffinity-v1-core)_ | NodeAffinity describes node affinity scheduling rules for the pod.<br />More info: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity |  |  |  |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#toleration-v1-core) array_ | Tolerations is a list of Tolerations that should be set for all the pods, in order to allow them to run<br />on tainted nodes.<br />More info: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |  |  |  |
+| `podAntiAffinityType` _string_ | PodAntiAffinityType allows the user to decide whether pod anti-affinity between cluster instance has to be<br />considered a strong requirement during scheduling or not. Allowed values are: "preferred" (default if empty) or<br />"required". Setting it to "required", could lead to instances remaining pending until new kubernetes nodes are<br />added if all the existing nodes don't match the required pod anti-affinity rule.<br />More info:<br />https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity |  |  |  |
+| `additionalPodAntiAffinity` _[PodAntiAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podantiaffinity-v1-core)_ | AdditionalPodAntiAffinity allows to specify pod anti-affinity terms to be added to the ones generated<br />by the operator if EnablePodAntiAffinity is set to true (default) or to be used exclusively if set to false. |  |  |  |
+| `additionalPodAffinity` _[PodAffinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podaffinity-v1-core)_ | AdditionalPodAffinity allows to specify pod affinity terms to be passed to all the cluster's pods. |  |  |  |
+
+
+#### AvailableArchitecture
+
+
+
+AvailableArchitecture represents the state of a cluster's architecture
+
+
+
+_Appears in:_
+
+- [ClusterStatus](#clusterstatus)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `goArch` _string_ | GoArch is the name of the executable architecture | True |  |  |
+| `hash` _string_ | Hash is the hash of the executable | True |  |  |
+
+
+
+
+#### Backup
+
+
 
 A Backup resource is a request for a PostgreSQL backup by the user.
 
-| Field | Description |
-|-------|--------------|
-| **apiVersion**<br/>_string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| **kind**<br/>_string_ **[Required]** | `Backup` |
-| **metadata**<br/>_meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| **spec**<br/>_[BackupSpec]_ **[Required]** | Specification of the desired behavior of the backup.<br/>More info: [Kubernetes API conventions](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status) |
-| **status**<br/>_[BackupStatus]_ | Most recently observed status of the backup. This data may not be up to date. Populated by the system. Read-only.<br/>More info: [Kubernetes API conventions](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status) |
 
-## Cluster     {#postgresql-cnpg-io-v1-Cluster}
 
-<p>Cluster defines the API schema for a highly available PostgreSQL database cluster
-managed by CloudNativePG.</p>
 
-| Field | Description |
-|-------|-------------|
-| `apiVersion` <br/> _string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| `kind` <br/> _string_ **[Required]** | `Cluster` |
-| `metadata` <br/> _meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| `spec` <br/> _ClusterSpec_ **[Required]** | Specification of the desired behavior of the cluster. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
-| `status` <br/> _ClusterStatus_ | Most recently observed status of the cluster. This data may not be up to date. Populated by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
 
-## ClusterImageCatalog     {#postgresql-cnpg-io-v1-ClusterImageCatalog}
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiVersion` _string_ | `postgresql.cnpg.io/v1` | True | | |
+| `kind` _string_ | `Backup` | True | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
+| `spec` _[BackupSpec](#backupspec)_ | Specification of the desired behavior of the backup.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | True |  |  |
+| `status` _[BackupStatus](#backupstatus)_ | Most recently observed status of the backup. This data may not be up to<br />date. Populated by the system. Read-only.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |  |
 
-<p>ClusterImageCatalog is the Schema for the clusterimagecatalogs API</p>
 
-| Field | Description |
-|-------|-------------|
-| `apiVersion` <br/> _string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| `kind` <br/> _string_ **[Required]** | `ClusterImageCatalog` |
-| `metadata` <br/> _meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| `spec` <br/> _ImageCatalogSpec_ **[Required]** | Specification of the desired behavior of the ClusterImageCatalog. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
+#### BackupConfiguration
 
-## Database     {#postgresql-cnpg-io-v1-Database}
 
-<p>Database is the Schema for the databases API</p>
 
-| Field | Description |
-|-------|-------------|
-| `apiVersion` <br/> _string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| `kind` <br/> _string_ **[Required]** | `Database` |
-| `metadata` <br/> _meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| `spec` <br/> _DatabaseSpec_ **[Required]** | Specification of the desired Database. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
-| `status` <br/> _DatabaseStatus_ | Most recently observed status of the Database. This data may not be up to date. Populated by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
-
-## FailoverQuorum     {#postgresql-cnpg-io-v1-FailoverQuorum}
-
-**Appears in:**
-
-<p>FailoverQuorum contains the information about the current failover
-quorum status of a PG cluster. It is updated by the instance manager
-of the primary node and reset to zero by the operator to trigger
-an update.</p>
-
-| Field | Description |
-|-------|-------------|
-| `apiVersion` <br/> _string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| `kind` <br/> _string_ **[Required]** | `FailoverQuorum` |
-| `metadata` <br/> _meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| `status` <br/> _FailoverQuorumStatus_ | Most recently observed status of the failover quorum. |
-
-## ImageCatalog     {#postgresql-cnpg-io-v1-ImageCatalog}
-
-<p>ImageCatalog is the Schema for the imagecatalogs API</p>
-
-| Field | Description |
-|-------|-------------|
-| `apiVersion` <br/> _string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| `kind` <br/> _string_ **[Required]** | `ImageCatalog` |
-| `metadata` <br/> _meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| `spec` <br/> _ImageCatalogSpec_ **[Required]** | Specification of the desired behavior of the ImageCatalog. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
-
-## Pooler     {#postgresql-cnpg-io-v1-Pooler}
-
-<p>Pooler is the Schema for the poolers API</p>
-
-| Field | Description |
-|-------|-------------|
-| `apiVersion` <br/> _string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| `kind` <br/> _string_ **[Required]** | `Pooler` |
-| `metadata` <br/> _meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| `spec` <br/> _PoolerSpec_ **[Required]** | Specification of the desired behavior of the Pooler. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
-| `status` <br/> _PoolerStatus_ | Most recently observed status of the Pooler. This data may not be up to date. Populated by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
-
-## Publication     {#postgresql-cnpg-io-v1-Publication}
-
-<p>Publication is the Schema for the publications API</p>
-
-| Field | Description |
-|-------|-------------|
-| `apiVersion` <br/> _string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| `kind` <br/> _string_ **[Required]** | `Publication` |
-| `metadata` <br/> _meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| `spec` <br/> _PublicationSpec_ **[Required]** | No description provided. |
-| `status` <br/> _PublicationStatus_ **[Required]** | No description provided. |
-
-## ScheduledBackup     {#postgresql-cnpg-io-v1-ScheduledBackup}
-
-<p>ScheduledBackup is the Schema for the scheduledbackups API</p>
-
-| Field | Description |
-|-------|-------------|
-| `apiVersion` <br/> _string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| `kind` <br/> _string_ **[Required]** | `ScheduledBackup` |
-| `metadata` <br/> _meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| `spec` <br/> _ScheduledBackupSpec_ **[Required]** | Specification of the desired behavior of the ScheduledBackup. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
-| `status` <br/> _ScheduledBackupStatus_ | Most recently observed status of the ScheduledBackup. This data may not be up to date. Populated by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |
-
-## Subscription     {#postgresql-cnpg-io-v1-Subscription}
-
-<p>Subscription is the Schema for the subscriptions API</p>
-
-| Field | Description |
-|-------|-------------|
-| `apiVersion` <br/> _string_ **[Required]** | `postgresql.cnpg.io/v1` |
-| `kind` <br/> _string_ **[Required]** | `Subscription` |
-| `metadata` <br/> _meta/v1.ObjectMeta_ **[Required]** | Refer to the [Kubernetes API documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#objectmeta-v1-meta) for the fields of the `metadata` field. |
-| `spec` <br/> _SubscriptionSpec_ **[Required]** | No description provided. |
-| `status` <br/> _SubscriptionStatus_ **[Required]** | No description provided. |
-
-## AffinityConfiguration     {#postgresql-cnpg-io-v1-AffinityConfiguration}
-
-**Appears in:**
-
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
-
-<p>AffinityConfiguration contains the info we need to create the
-affinity rules for Pods</p>
-
-| Field | Description |
-|-------|-------------|
-| `enablePodAntiAffinity` <br/> _bool_ | Activates anti-affinity for the pods. The operator will define pods anti-affinity unless this field is explicitly set to false |
-| `topologyKey` <br/> _string_ | TopologyKey to use for anti-affinity configuration. See k8s documentation for more info on that |
-| `nodeSelector` <br/> _map[string]string_ | NodeSelector is map of key-value pairs used to define the nodes on which the pods can run. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ |
-| `nodeAffinity` <br/> _core/v1.NodeAffinity_ | NodeAffinity describes node affinity scheduling rules for the pod. More info: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity |
-| `tolerations` <br/> _[]core/v1.Toleration_ | Tolerations is a list of Tolerations that should be set for all the pods, in order to allow them to run on tainted nodes. More info: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
-| `podAntiAffinityType` <br/> _string_ | PodAntiAffinityType allows the user to decide whether pod anti-affinity between cluster instance has to be considered a strong requirement during scheduling or not. Allowed values are: `"preferred"` (default if empty) or `"required"`. Setting it to `"required"` could lead to instances remaining pending until new kubernetes nodes are added if all the existing nodes don't match the required pod anti-affinity rule. More info: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity |
-| `additionalPodAntiAffinity` <br/> _core/v1.PodAntiAffinity_ | AdditionalPodAntiAffinity allows to specify pod anti-affinity terms to be added to the ones generated by the operator if EnablePodAntiAffinity is set to true (default) or to be used exclusively if set to false. |
-| `additionalPodAffinity` <br/> _core/v1.PodAffinity_ | AdditionalPodAffinity allows to specify pod affinity terms to be passed to all the cluster's pods. |
-
-## AvailableArchitecture     {#postgresql-cnpg-io-v1-AvailableArchitecture}
-
-**Appears in:**
-
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
-
-<p>AvailableArchitecture represents the state of a cluster's architecture</p>
-
-| Field | Description |
-|-------|-------------|
-| `goArch` <br/> _string_ **[Required]** | GoArch is the name of the executable architecture |
-| `hash` <br/> _string_ **[Required]** | Hash is the hash of the executable |
-
-## BackupConfiguration     {#postgresql-cnpg-io-v1-BackupConfiguration}
-
-**Appears in:**
-
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
-
-<p>BackupConfiguration defines how the backup of the cluster are taken.
+BackupConfiguration defines how the backup of the cluster are taken.
 The supported backup methods are BarmanObjectStore and VolumeSnapshot.
 For details and examples refer to the Backup and Recovery section of the
-documentation</p>
+documentation
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `volumeSnapshot` _[VolumeSnapshotConfiguration](#volumesnapshotconfiguration)_ | VolumeSnapshot provides the configuration for the execution of volume snapshot backups. |  |  |  |
+| `barmanObjectStore` _[BarmanObjectStoreConfiguration](https://pkg.go.dev/github.com/cloudnative-pg/barman-cloud/pkg/api#BarmanObjectStoreConfiguration)_ | The configuration for the barman-cloud tool suite |  |  |  |
+| `retentionPolicy` _string_ | RetentionPolicy is the retention policy to be used for backups<br />and WALs (i.e. '60d'). The retention policy is expressed in the form<br />of `XXu` where `XX` is a positive integer and `u` is in `[dwm]` -<br />days, weeks, months.<br />It's currently only applicable when using the BarmanObjectStore method. |  |  | Pattern: `^[1-9][0-9]*[dwm]$` <br /> |
+| `target` _[BackupTarget](#backuptarget)_ | The policy to decide which instance should perform backups. Available<br />options are empty string, which will default to `prefer-standby` policy,<br />`primary` to have backups run always on primary instances, `prefer-standby`<br />to have backups run preferably on the most updated standby, if available. |  | prefer-standby | Enum: [primary prefer-standby] <br /> |
+
+
+#### BackupMethod
+
+_Underlying type:_ _string_
+
+BackupMethod defines the way of executing the physical base backups of
+the selected PostgreSQL instance
+
+
+
+_Appears in:_
+
+- [BackupSpec](#backupspec)
+- [BackupStatus](#backupstatus)
+- [ClusterStatus](#clusterstatus)
+- [ScheduledBackupSpec](#scheduledbackupspec)
 
 | Field | Description |
-|-------|-------------|
-| `volumeSnapshot` <br/> _VolumeSnapshotConfiguration_ | VolumeSnapshot provides the configuration for the execution of volume snapshot backups. |
-| `barmanObjectStore` <br/> _github.com/cloudnative-pg/barman-cloud/pkg/api.BarmanObjectStoreConfiguration_ | The configuration for the barman-cloud tool suite |
-| `retentionPolicy` <br/> _string_ | RetentionPolicy is the retention policy to be used for backups and WALs (i.e. `60d`). The retention policy is expressed in the form of `XXu` where `XX` is a positive integer and `u` is in `[dwm]` - days, weeks, months. It's currently only applicable when using the BarmanObjectStore method. |
-| `target` <br/> _BackupTarget_ | The policy to decide which instance should perform backups. Available options are empty string (defaults to `prefer-standby`), `primary`, or `prefer-standby`. |
+| --- | --- |
+| `volumeSnapshot` | BackupMethodVolumeSnapshot means using the volume snapshot<br />Kubernetes feature<br /> |
+| `barmanObjectStore` | BackupMethodBarmanObjectStore means using barman to backup the<br />PostgreSQL cluster<br /> |
+| `plugin` | BackupMethodPlugin means that this backup should be handled by<br />a plugin<br /> |
 
-## BackupMethod     {#postgresql-cnpg-io-v1-BackupMethod}
 
-(Alias of `string`)
+#### BackupPhase
 
-**Appears in:**
+_Underlying type:_ _string_
 
-- [BackupSpec](#postgresql-cnpg-io-v1-BackupSpec)
-- [BackupStatus](#postgresql-cnpg-io-v1-BackupStatus)
-- [ScheduledBackupSpec](#postgresql-cnpg-io-v1-ScheduledBackupSpec)
+BackupPhase is the phase of the backup
 
-<p>BackupMethod defines the way of executing the physical base backups of the selected PostgreSQL instance</p>
 
-## BackupPhase     {#postgresql-cnpg-io-v1-BackupPhase}
 
-(Alias of `string`)
+_Appears in:_
 
-**Appears in:**
+- [BackupStatus](#backupstatus)
 
-- [BackupStatus](#postgresql-cnpg-io-v1-BackupStatus)
 
-<p>BackupPhase is the phase of the backup</p>
 
-## BackupPluginConfiguration     {#postgresql-cnpg-io-v1-BackupPluginConfiguration}
+#### BackupPluginConfiguration
 
-**Appears in:**
 
-- [BackupSpec](#postgresql-cnpg-io-v1-BackupSpec)
-- [ScheduledBackupSpec](#postgresql-cnpg-io-v1-ScheduledBackupSpec)
 
-<p>BackupPluginConfiguration contains the backup configuration used by the backup plugin</p>
+BackupPluginConfiguration contains the backup configuration used by
+the backup plugin
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Name is the name of the plugin managing this backup |
-| `parameters` <br/> _map[string]string_ | Parameters are the configuration parameters passed to the backup plugin for this backup |
 
-## BackupSnapshotElementStatus     {#postgresql-cnpg-io-v1-BackupSnapshotElementStatus}
 
-**Appears in:**
+_Appears in:_
 
-- [BackupSnapshotStatus](#postgresql-cnpg-io-v1-BackupSnapshotStatus)
+- [BackupSpec](#backupspec)
+- [ScheduledBackupSpec](#scheduledbackupspec)
 
-<p>BackupSnapshotElementStatus is a volume snapshot that is part of a volume snapshot method backup</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | Name is the name of the plugin managing this backup | True |  |  |
+| `parameters` _object (keys:string, values:string)_ | Parameters are the configuration parameters passed to the backup<br />plugin for this backup |  |  |  |
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Name is the snapshot resource name |
-| `type` <br/> _string_ **[Required]** | Type is the role of the snapshot in the cluster, such as PG_DATA, PG_WAL and PG_TABLESPACE |
-| `tablespaceName` <br/> _string_ | TablespaceName is the name of the snapshotted tablespace. Only set when type is PG_TABLESPACE |
 
-## BackupSnapshotStatus     {#postgresql-cnpg-io-v1-BackupSnapshotStatus}
+#### BackupSnapshotElementStatus
 
-**Appears in:**
 
-- [BackupStatus](#postgresql-cnpg-io-v1-BackupStatus)
 
-<p>BackupSnapshotStatus the fields exclusive to the volumeSnapshot method backup</p>
+BackupSnapshotElementStatus is a volume snapshot that is part of a volume snapshot method backup
 
-| Field | Description |
-|-------|-------------|
-| `elements` <br/> _[]BackupSnapshotElementStatus_ | The elements list, populated with the gathered volume snapshots |
 
-## BackupSource     {#postgresql-cnpg-io-v1-BackupSource}
 
-**Appears in:**
+_Appears in:_
 
-- [BootstrapRecovery](#postgresql-cnpg-io-v1-BootstrapRecovery)
+- [BackupSnapshotStatus](#backupsnapshotstatus)
 
-<p>BackupSource contains the backup we need to restore from, plus some information that could be needed to correctly restore it.</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | Name is the snapshot resource name | True |  |  |
+| `type` _string_ | Type is tho role of the snapshot in the cluster, such as PG_DATA, PG_WAL and PG_TABLESPACE | True |  |  |
+| `tablespaceName` _string_ | TablespaceName is the name of the snapshotted tablespace. Only set<br />when type is PG_TABLESPACE |  |  |  |
 
-| Field | Description |
-|-------|-------------|
-| `LocalObjectReference` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ | (Members of `LocalObjectReference` are embedded into this type.) No description provided. |
-| `endpointCA` <br/> _github.com/cloudnative-pg/machinery/pkg/api.SecretKeySelector_ | EndpointCA store the CA bundle of the barman endpoint. Useful when using self-signed certificates to avoid errors with certificate issuer and barman-cloud-wal-archive. |
 
-## BackupSpec     {#postgresql-cnpg-io-v1-BackupSpec}
+#### BackupSnapshotStatus
 
-**Appears in:**
 
-- [Backup](#postgresql-cnpg-io-v1-Backup)
 
-<p>BackupSpec defines the desired state of Backup</p>
+BackupSnapshotStatus the fields exclusive to the volumeSnapshot method backup
 
-| Field | Description |
-|-------|-------------|
-| `cluster` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ **[Required]** | The cluster to backup |
-| `target` <br/> _BackupTarget_ | The policy to decide which instance should perform this backup. If empty, it defaults to `cluster.spec.backup.target`. Available options: empty string, `primary`, `prefer-standby`. |
-| `method` <br/> _BackupMethod_ | The backup method to be used: `barmanObjectStore`, `volumeSnapshot`, or `plugin`. Defaults to `barmanObjectStore`. |
-| `pluginConfiguration` <br/> _BackupPluginConfiguration_ | Configuration parameters passed to the plugin managing this backup |
-| `online` <br/> _bool_ | Whether the default type of backup with volume snapshots is online/hot (`true`, default) or offline/cold (`false`). Overrides cluster `.spec.backup.volumeSnapshot.online` |
-| `onlineConfiguration` <br/> _OnlineConfiguration_ | Configuration parameters to control the online/hot backup with volume snapshots. Overrides cluster settings. |
 
-## BackupStatus     {#postgresql-cnpg-io-v1-BackupStatus}
 
-**Appears in:**
+_Appears in:_
 
-- [Backup](#postgresql-cnpg-io-v1-Backup)
+- [BackupStatus](#backupstatus)
 
-<p>BackupStatus defines the observed state of Backup</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `elements` _[BackupSnapshotElementStatus](#backupsnapshotelementstatus) array_ | The elements list, populated with the gathered volume snapshots |  |  |  |
 
-| Field | Description |
-|-------|-------------|
-| `BarmanCredentials` <br/> _github.com/cloudnative-pg/barman-cloud/pkg/api.BarmanCredentials_ | (Members of `BarmanCredentials` are embedded.) The potential credentials for each cloud provider |
-| `majorVersion` <br/> _int_ **[Required]** | The PostgreSQL major version that was running when the backup was taken. |
-| `endpointCA` <br/> _github.com/cloudnative-pg/machinery/pkg/api.SecretKeySelector_ | EndpointCA store the CA bundle of the barman endpoint. Useful when using self-signed certificates. |
-| `endpointURL` <br/> _string_ | Endpoint to be used to upload data to the cloud, overriding automatic endpoint discovery |
-| `destinationPath` <br/> _string_ | The path where to store the backup (e.g. s3://bucket/path/to/folder). May not be populated in case of errors. |
-| `serverName` <br/> _string_ | The server name on S3; cluster name used if omitted |
-| `encryption` <br/> _string_ | Encryption method required to S3 API |
-| `backupId` <br/> _string_ | The ID of the Barman backup |
-| `backupName` <br/> _string_ | The Name of the Barman backup |
-| `phase` <br/> _BackupPhase_ | The last backup status |
-| `startedAt` <br/> _meta/v1.Time_ | When the backup was started |
-| `stoppedAt` <br/> _meta/v1.Time_ | When the backup was terminated |
-| `beginWal` <br/> _string_ | The starting WAL |
-| `endWal` <br/> _string_ | The ending WAL |
-| `beginLSN` <br/> _string_ | The starting xlog |
-| `endLSN` <br/> _string_ | The ending xlog |
-| `error` <br/> _string_ | The detected error |
-| `commandOutput` <br/> _string_ | Unused. Retained for compatibility with old versions. |
-| `commandError` <br/> _string_ | The backup command output in case of error |
-| `backupLabelFile` <br/> _[]byte_ | Backup label file content as returned by Postgres in case of online (hot) backups |
-| `tablespaceMapFile` <br/> _[]byte_ | Tablespace map file content as returned by Postgres in case of online (hot) backups |
-| `instanceID` <br/> _InstanceID_ | Information to identify the instance where the backup has been taken from |
-| `snapshotBackupStatus` <br/> _BackupSnapshotStatus_ | Status of the volumeSnapshot backup |
-| `method` <br/> _BackupMethod_ | The backup method being used |
-| `online` <br/> _bool_ | Whether the backup was online/hot (`true`) or offline/cold (`false`) |
-| `pluginMetadata` <br/> _map[string]string_ | A map containing the plugin metadata |
 
-## BackupTarget     {#postgresql-cnpg-io-v1-BackupTarget}
+#### BackupSource
 
-(Alias of `string`)
 
-**Appears in:**
 
-- [BackupConfiguration](#postgresql-cnpg-io-v1-BackupConfiguration)
-- [BackupSpec](#postgresql-cnpg-io-v1-BackupSpec)
-- [ScheduledBackupSpec](#postgresql-cnpg-io-v1-ScheduledBackupSpec)
+BackupSource contains the backup we need to restore from, plus some
+information that could be needed to correctly restore it.
 
-<p>BackupTarget describes the preferred targets for a backup</p>
 
-## BootstrapConfiguration     {#postgresql-cnpg-io-v1-BootstrapConfiguration}
 
-**Appears in:**
+_Appears in:_
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+- [BootstrapRecovery](#bootstraprecovery)
 
-<p>BootstrapConfiguration contains information about how to create the PostgreSQL
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | Name of the referent. | True |  |  |
+| `endpointCA` _[SecretKeySelector](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#SecretKeySelector)_ | EndpointCA store the CA bundle of the barman endpoint.<br />Useful when using self-signed certificates to avoid<br />errors with certificate issuer and barman-cloud-wal-archive. |  |  |  |
+
+
+#### BackupSpec
+
+
+
+BackupSpec defines the desired state of Backup
+
+
+
+_Appears in:_
+
+- [Backup](#backup)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `cluster` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | The cluster to backup | True |  |  |
+| `target` _[BackupTarget](#backuptarget)_ | The policy to decide which instance should perform this backup. If empty,<br />it defaults to `cluster.spec.backup.target`.<br />Available options are empty string, `primary` and `prefer-standby`.<br />`primary` to have backups run always on primary instances,<br />`prefer-standby` to have backups run preferably on the most updated<br />standby, if available. |  |  | Enum: [primary prefer-standby] <br /> |
+| `method` _[BackupMethod](#backupmethod)_ | The backup method to be used, possible options are `barmanObjectStore`,<br />`volumeSnapshot` or `plugin`. Defaults to: `barmanObjectStore`. |  | barmanObjectStore | Enum: [barmanObjectStore volumeSnapshot plugin] <br /> |
+| `pluginConfiguration` _[BackupPluginConfiguration](#backuppluginconfiguration)_ | Configuration parameters passed to the plugin managing this backup |  |  |  |
+| `online` _boolean_ | Whether the default type of backup with volume snapshots is<br />online/hot (`true`, default) or offline/cold (`false`)<br />Overrides the default setting specified in the cluster field '.spec.backup.volumeSnapshot.online' |  |  |  |
+| `onlineConfiguration` _[OnlineConfiguration](#onlineconfiguration)_ | Configuration parameters to control the online/hot backup with volume snapshots<br />Overrides the default settings specified in the cluster '.backup.volumeSnapshot.onlineConfiguration' stanza |  |  |  |
+
+
+#### BackupStatus
+
+
+
+BackupStatus defines the observed state of Backup
+
+
+
+_Appears in:_
+
+- [Backup](#backup)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `googleCredentials` _[GoogleCredentials](https://pkg.go.dev/github.com/cloudnative-pg/barman-cloud/pkg/api#GoogleCredentials)_ | The credentials to use to upload data to Google Cloud Storage |  |  |  |
+| `s3Credentials` _[S3Credentials](https://pkg.go.dev/github.com/cloudnative-pg/barman-cloud/pkg/api#S3Credentials)_ | The credentials to use to upload data to S3 |  |  |  |
+| `azureCredentials` _[AzureCredentials](https://pkg.go.dev/github.com/cloudnative-pg/barman-cloud/pkg/api#AzureCredentials)_ | The credentials to use to upload data to Azure Blob Storage |  |  |  |
+| `endpointCA` _[SecretKeySelector](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#SecretKeySelector)_ | EndpointCA store the CA bundle of the barman endpoint.<br />Useful when using self-signed certificates to avoid<br />errors with certificate issuer and barman-cloud-wal-archive. |  |  |  |
+| `endpointURL` _string_ | Endpoint to be used to upload data to the cloud,<br />overriding the automatic endpoint discovery |  |  |  |
+| `destinationPath` _string_ | The path where to store the backup (i.e. s3://bucket/path/to/folder)<br />this path, with different destination folders, will be used for WALs<br />and for data. This may not be populated in case of errors. |  |  |  |
+| `serverName` _string_ | The server name on S3, the cluster name is used if this<br />parameter is omitted |  |  |  |
+| `encryption` _string_ | Encryption method required to S3 API |  |  |  |
+| `backupId` _string_ | The ID of the Barman backup |  |  |  |
+| `backupName` _string_ | The Name of the Barman backup |  |  |  |
+| `phase` _[BackupPhase](#backupphase)_ | The last backup status |  |  |  |
+| `startedAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#time-v1-meta)_ | When the backup was started |  |  |  |
+| `stoppedAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#time-v1-meta)_ | When the backup was terminated |  |  |  |
+| `beginWal` _string_ | The starting WAL |  |  |  |
+| `endWal` _string_ | The ending WAL |  |  |  |
+| `beginLSN` _string_ | The starting xlog |  |  |  |
+| `endLSN` _string_ | The ending xlog |  |  |  |
+| `error` _string_ | The detected error |  |  |  |
+| `commandOutput` _string_ | Unused. Retained for compatibility with old versions. |  |  |  |
+| `commandError` _string_ | The backup command output in case of error |  |  |  |
+| `backupLabelFile` _integer array_ | Backup label file content as returned by Postgres in case of online (hot) backups |  |  |  |
+| `tablespaceMapFile` _integer array_ | Tablespace map file content as returned by Postgres in case of online (hot) backups |  |  |  |
+| `instanceID` _[InstanceID](#instanceid)_ | Information to identify the instance where the backup has been taken from |  |  |  |
+| `snapshotBackupStatus` _[BackupSnapshotStatus](#backupsnapshotstatus)_ | Status of the volumeSnapshot backup |  |  |  |
+| `method` _[BackupMethod](#backupmethod)_ | The backup method being used |  |  |  |
+| `online` _boolean_ | Whether the backup was online/hot (`true`) or offline/cold (`false`) |  |  |  |
+| `pluginMetadata` _object (keys:string, values:string)_ | A map containing the plugin metadata |  |  |  |
+
+
+#### BackupTarget
+
+_Underlying type:_ _string_
+
+BackupTarget describes the preferred targets for a backup
+
+
+
+_Appears in:_
+
+- [BackupConfiguration](#backupconfiguration)
+- [BackupSpec](#backupspec)
+- [ScheduledBackupSpec](#scheduledbackupspec)
+
+
+
+
+
+
+
+#### BootstrapConfiguration
+
+
+
+BootstrapConfiguration contains information about how to create the PostgreSQL
 cluster. Only a single bootstrap method can be defined among the supported
-ones. `initdb` will be used as the bootstrap method if left unspecified. Refer to the Bootstrap page of the documentation for more information.</p>
+ones. `initdb` will be used as the bootstrap method if left
+unspecified. Refer to the Bootstrap page of the documentation for more
+information.
 
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `initdb` _[BootstrapInitDB](#bootstrapinitdb)_ | Bootstrap the cluster via initdb |  |  |  |
+| `recovery` _[BootstrapRecovery](#bootstraprecovery)_ | Bootstrap the cluster from a backup |  |  |  |
+| `pg_basebackup` _[BootstrapPgBaseBackup](#bootstrappgbasebackup)_ | Bootstrap the cluster taking a physical backup of another compatible<br />PostgreSQL instance |  |  |  |
+
+
+#### BootstrapInitDB
+
+
+
+BootstrapInitDB is the configuration of the bootstrap process when
+initdb is used
+Refer to the Bootstrap page of the documentation for more information.
+
+
+
+_Appears in:_
+
+- [BootstrapConfiguration](#bootstrapconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `database` _string_ | Name of the database used by the application. Default: `app`. |  |  |  |
+| `owner` _string_ | Name of the owner of the database in the instance to be used<br />by applications. Defaults to the value of the `database` key. |  |  |  |
+| `secret` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | Name of the secret containing the initial credentials for the<br />owner of the user database. If empty a new secret will be<br />created from scratch |  |  |  |
+| `options` _string array_ | The list of options that must be passed to initdb when creating the cluster.<br />Deprecated: This could lead to inconsistent configurations,<br />please use the explicit provided parameters instead.<br />If defined, explicit values will be ignored. |  |  |  |
+| `dataChecksums` _boolean_ | Whether the `-k` option should be passed to initdb,<br />enabling checksums on data pages (default: `false`) |  |  |  |
+| `encoding` _string_ | The value to be passed as option `--encoding` for initdb (default:`UTF8`) |  |  |  |
+| `localeCollate` _string_ | The value to be passed as option `--lc-collate` for initdb (default:`C`) |  |  |  |
+| `localeCType` _string_ | The value to be passed as option `--lc-ctype` for initdb (default:`C`) |  |  |  |
+| `locale` _string_ | Sets the default collation order and character classification in the new database. |  |  |  |
+| `localeProvider` _string_ | This option sets the locale provider for databases created in the new cluster.<br />Available from PostgreSQL 16. |  |  |  |
+| `icuLocale` _string_ | Specifies the ICU locale when the ICU provider is used.<br />This option requires `localeProvider` to be set to `icu`.<br />Available from PostgreSQL 15. |  |  |  |
+| `icuRules` _string_ | Specifies additional collation rules to customize the behavior of the default collation.<br />This option requires `localeProvider` to be set to `icu`.<br />Available from PostgreSQL 16. |  |  |  |
+| `builtinLocale` _string_ | Specifies the locale name when the builtin provider is used.<br />This option requires `localeProvider` to be set to `builtin`.<br />Available from PostgreSQL 17. |  |  |  |
+| `walSegmentSize` _integer_ | The value in megabytes (1 to 1024) to be passed to the `--wal-segsize`<br />option for initdb (default: empty, resulting in PostgreSQL default: 16MB) |  |  | Maximum: 1024 <br />Minimum: 1 <br /> |
+| `postInitSQL` _string array_ | List of SQL queries to be executed as a superuser in the `postgres`<br />database right after the cluster has been created - to be used with extreme care<br />(by default empty) |  |  |  |
+| `postInitApplicationSQL` _string array_ | List of SQL queries to be executed as a superuser in the application<br />database right after the cluster has been created - to be used with extreme care<br />(by default empty) |  |  |  |
+| `postInitTemplateSQL` _string array_ | List of SQL queries to be executed as a superuser in the `template1`<br />database right after the cluster has been created - to be used with extreme care<br />(by default empty) |  |  |  |
+| `import` _[Import](#import)_ | Bootstraps the new cluster by importing data from an existing PostgreSQL<br />instance using logical backup (`pg_dump` and `pg_restore`) |  |  |  |
+| `postInitApplicationSQLRefs` _[SQLRefs](#sqlrefs)_ | List of references to ConfigMaps or Secrets containing SQL files<br />to be executed as a superuser in the application database right after<br />the cluster has been created. The references are processed in a specific order:<br />first, all Secrets are processed, followed by all ConfigMaps.<br />Within each group, the processing order follows the sequence specified<br />in their respective arrays.<br />(by default empty) |  |  |  |
+| `postInitTemplateSQLRefs` _[SQLRefs](#sqlrefs)_ | List of references to ConfigMaps or Secrets containing SQL files<br />to be executed as a superuser in the `template1` database right after<br />the cluster has been created. The references are processed in a specific order:<br />first, all Secrets are processed, followed by all ConfigMaps.<br />Within each group, the processing order follows the sequence specified<br />in their respective arrays.<br />(by default empty) |  |  |  |
+| `postInitSQLRefs` _[SQLRefs](#sqlrefs)_ | List of references to ConfigMaps or Secrets containing SQL files<br />to be executed as a superuser in the `postgres` database right after<br />the cluster has been created. The references are processed in a specific order:<br />first, all Secrets are processed, followed by all ConfigMaps.<br />Within each group, the processing order follows the sequence specified<br />in their respective arrays.<br />(by default empty) |  |  |  |
+
+
+#### BootstrapPgBaseBackup
+
+
+
+BootstrapPgBaseBackup contains the configuration required to take
+a physical backup of an existing PostgreSQL cluster
+
+
+
+_Appears in:_
+
+- [BootstrapConfiguration](#bootstrapconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `source` _string_ | The name of the server of which we need to take a physical backup | True |  | MinLength: 1 <br /> |
+| `database` _string_ | Name of the database used by the application. Default: `app`. |  |  |  |
+| `owner` _string_ | Name of the owner of the database in the instance to be used<br />by applications. Defaults to the value of the `database` key. |  |  |  |
+| `secret` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | Name of the secret containing the initial credentials for the<br />owner of the user database. If empty a new secret will be<br />created from scratch |  |  |  |
+
+
+#### BootstrapRecovery
+
+
+
+BootstrapRecovery contains the configuration required to restore
+from an existing cluster using 3 methodologies: external cluster,
+volume snapshots or backup objects. Full recovery and Point-In-Time
+Recovery are supported.
+The method can be also be used to create clusters in continuous recovery
+(replica clusters), also supporting cascading replication when `instances` >
+1. Once the cluster exits recovery, the password for the superuser
+will be changed through the provided secret.
+Refer to the Bootstrap page of the documentation for more information.
+
+
+
+_Appears in:_
+
+- [BootstrapConfiguration](#bootstrapconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `backup` _[BackupSource](#backupsource)_ | The backup object containing the physical base backup from which to<br />initiate the recovery procedure.<br />Mutually exclusive with `source` and `volumeSnapshots`. |  |  |  |
+| `source` _string_ | The external cluster whose backup we will restore. This is also<br />used as the name of the folder under which the backup is stored,<br />so it must be set to the name of the source cluster<br />Mutually exclusive with `backup`. |  |  |  |
+| `volumeSnapshots` _[DataSource](#datasource)_ | The static PVC data source(s) from which to initiate the<br />recovery procedure. Currently supporting `VolumeSnapshot`<br />and `PersistentVolumeClaim` resources that map an existing<br />PVC group, compatible with CloudNativePG, and taken with<br />a cold backup copy on a fenced Postgres instance (limitation<br />which will be removed in the future when online backup<br />will be implemented).<br />Mutually exclusive with `backup`. |  |  |  |
+| `recoveryTarget` _[RecoveryTarget](#recoverytarget)_ | By default, the recovery process applies all the available<br />WAL files in the archive (full recovery). However, you can also<br />end the recovery as soon as a consistent state is reached or<br />recover to a point-in-time (PITR) by specifying a `RecoveryTarget` object,<br />as expected by PostgreSQL (i.e., timestamp, transaction Id, LSN, ...).<br />More info: https://www.postgresql.org/docs/current/runtime-config-wal.html#RUNTIME-CONFIG-WAL-RECOVERY-TARGET |  |  |  |
+| `database` _string_ | Name of the database used by the application. Default: `app`. |  |  |  |
+| `owner` _string_ | Name of the owner of the database in the instance to be used<br />by applications. Defaults to the value of the `database` key. |  |  |  |
+| `secret` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | Name of the secret containing the initial credentials for the<br />owner of the user database. If empty a new secret will be<br />created from scratch |  |  |  |
+
+
+#### CatalogImage
+
+
+
+CatalogImage defines the image and major version
+
+
+
+_Appears in:_
+
+- [ImageCatalogSpec](#imagecatalogspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `image` _string_ | The image reference | True |  |  |
+| `major` _integer_ | The PostgreSQL major version of the image. Must be unique within the catalog. | True |  | Minimum: 10 <br /> |
+
+
+#### CertificatesConfiguration
+
+
+
+CertificatesConfiguration contains the needed configurations to handle server certificates.
+
+
+
+_Appears in:_
+
+- [CertificatesStatus](#certificatesstatus)
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `serverCASecret` _string_ | The secret containing the Server CA certificate. If not defined, a new secret will be created<br />with a self-signed CA and will be used to generate the TLS certificate ServerTLSSecret.<br /><br />Contains:<br /><br />- `ca.crt`: CA that should be used to validate the server certificate,<br />used as `sslrootcert` in client connection strings.<br />- `ca.key`: key used to generate Server SSL certs, if ServerTLSSecret is provided,<br />this can be omitted.<br /> |  |  |  |
+| `serverTLSSecret` _string_ | The secret of type kubernetes.io/tls containing the server TLS certificate and key that will be set as<br />`ssl_cert_file` and `ssl_key_file` so that clients can connect to postgres securely.<br />If not defined, ServerCASecret must provide also `ca.key` and a new secret will be<br />created using the provided CA. |  |  |  |
+| `replicationTLSSecret` _string_ | The secret of type kubernetes.io/tls containing the client certificate to authenticate as<br />the `streaming_replica` user.<br />If not defined, ClientCASecret must provide also `ca.key`, and a new secret will be<br />created using the provided CA. |  |  |  |
+| `clientCASecret` _string_ | The secret containing the Client CA certificate. If not defined, a new secret will be created<br />with a self-signed CA and will be used to generate all the client certificates.<br /><br />Contains:<br /><br />- `ca.crt`: CA that should be used to validate the client certificates,<br />used as `ssl_ca_file` of all the instances.<br />- `ca.key`: key used to generate client certificates, if ReplicationTLSSecret is provided,<br />this can be omitted.<br /> |  |  |  |
+| `serverAltDNSNames` _string array_ | The list of the server alternative DNS names to be added to the generated server TLS certificates, when required. |  |  |  |
+
+
+#### CertificatesStatus
+
+
+
+CertificatesStatus contains configuration certificates and related expiration dates.
+
+
+
+_Appears in:_
+
+- [ClusterStatus](#clusterstatus)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `serverCASecret` _string_ | The secret containing the Server CA certificate. If not defined, a new secret will be created<br />with a self-signed CA and will be used to generate the TLS certificate ServerTLSSecret.<br /><br />Contains:<br /><br />- `ca.crt`: CA that should be used to validate the server certificate,<br />used as `sslrootcert` in client connection strings.<br />- `ca.key`: key used to generate Server SSL certs, if ServerTLSSecret is provided,<br />this can be omitted.<br /> |  |  |  |
+| `serverTLSSecret` _string_ | The secret of type kubernetes.io/tls containing the server TLS certificate and key that will be set as<br />`ssl_cert_file` and `ssl_key_file` so that clients can connect to postgres securely.<br />If not defined, ServerCASecret must provide also `ca.key` and a new secret will be<br />created using the provided CA. |  |  |  |
+| `replicationTLSSecret` _string_ | The secret of type kubernetes.io/tls containing the client certificate to authenticate as<br />the `streaming_replica` user.<br />If not defined, ClientCASecret must provide also `ca.key`, and a new secret will be<br />created using the provided CA. |  |  |  |
+| `clientCASecret` _string_ | The secret containing the Client CA certificate. If not defined, a new secret will be created<br />with a self-signed CA and will be used to generate all the client certificates.<br /><br />Contains:<br /><br />- `ca.crt`: CA that should be used to validate the client certificates,<br />used as `ssl_ca_file` of all the instances.<br />- `ca.key`: key used to generate client certificates, if ReplicationTLSSecret is provided,<br />this can be omitted.<br /> |  |  |  |
+| `serverAltDNSNames` _string array_ | The list of the server alternative DNS names to be added to the generated server TLS certificates, when required. |  |  |  |
+| `expirations` _object (keys:string, values:string)_ | Expiration dates for all certificates. |  |  |  |
+
+
+#### Cluster
+
+
+
+Cluster defines the API schema for a highly available PostgreSQL database cluster
+managed by CloudNativePG.
+
+
+
+
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiVersion` _string_ | `postgresql.cnpg.io/v1` | True | | |
+| `kind` _string_ | `Cluster` | True | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
+| `spec` _[ClusterSpec](#clusterspec)_ | Specification of the desired behavior of the cluster.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | True |  |  |
+| `status` _[ClusterStatus](#clusterstatus)_ | Most recently observed status of the cluster. This data may not be up<br />to date. Populated by the system. Read-only.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |  |
+
+
+
+
+#### ClusterImageCatalog
+
+
+
+ClusterImageCatalog is the Schema for the clusterimagecatalogs API
+
+
+
+
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiVersion` _string_ | `postgresql.cnpg.io/v1` | True | | |
+| `kind` _string_ | `ClusterImageCatalog` | True | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
+| `spec` _[ImageCatalogSpec](#imagecatalogspec)_ | Specification of the desired behavior of the ClusterImageCatalog.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | True |  |  |
+
+
+#### ClusterMonitoringTLSConfiguration
+
+
+
+ClusterMonitoringTLSConfiguration is the type containing the TLS configuration
+for the cluster's monitoring
+
+
+
+_Appears in:_
+
+- [MonitoringConfiguration](#monitoringconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `enabled` _boolean_ | Enable TLS for the monitoring endpoint.<br />Changing this option will force a rollout of all instances. |  | false |  |
+
+
+#### ClusterSpec
+
+
+
+ClusterSpec defines the desired state of a PostgreSQL cluster managed by
+CloudNativePG.
+
+
+
+_Appears in:_
+
+- [Cluster](#cluster)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `description` _string_ | Description of this PostgreSQL cluster |  |  |  |
+| `inheritedMetadata` _[EmbeddedObjectMetadata](#embeddedobjectmetadata)_ | Metadata that will be inherited by all objects related to the Cluster |  |  |  |
+| `imageName` _string_ | Name of the container image, supporting both tags (`<image>:<tag>`)<br />and digests for deterministic and repeatable deployments<br />(`<image>:<tag>@sha256:<digestValue>`) |  |  |  |
+| `imageCatalogRef` _[ImageCatalogRef](#imagecatalogref)_ | Defines the major PostgreSQL version we want to use within an ImageCatalog |  |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#pullpolicy-v1-core)_ | Image pull policy.<br />One of `Always`, `Never` or `IfNotPresent`.<br />If not defined, it defaults to `IfNotPresent`.<br />Cannot be updated.<br />More info: https://kubernetes.io/docs/concepts/containers/images#updating-images |  |  |  |
+| `schedulerName` _string_ | If specified, the pod will be dispatched by specified Kubernetes<br />scheduler. If not specified, the pod will be dispatched by the default<br />scheduler. More info:<br />https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/ |  |  |  |
+| `postgresUID` _integer_ | The UID of the `postgres` user inside the image, defaults to `26` |  | 26 |  |
+| `postgresGID` _integer_ | The GID of the `postgres` user inside the image, defaults to `26` |  | 26 |  |
+| `instances` _integer_ | Number of instances required in the cluster | True | 1 | Minimum: 1 <br /> |
+| `minSyncReplicas` _integer_ | Minimum number of instances required in synchronous replication with the<br />primary. Undefined or 0 allow writes to complete when no standby is<br />available. |  | 0 | Minimum: 0 <br /> |
+| `maxSyncReplicas` _integer_ | The target value for the synchronous replication quorum, that can be<br />decreased if the number of ready standbys is lower than this.<br />Undefined or 0 disable synchronous replication. |  | 0 | Minimum: 0 <br /> |
+| `postgresql` _[PostgresConfiguration](#postgresconfiguration)_ | Configuration of the PostgreSQL server |  |  |  |
+| `replicationSlots` _[ReplicationSlotsConfiguration](#replicationslotsconfiguration)_ | Replication slots management configuration |  | \{ highAvailability:map[enabled:true] \} |  |
+| `bootstrap` _[BootstrapConfiguration](#bootstrapconfiguration)_ | Instructions to bootstrap this cluster |  |  |  |
+| `replica` _[ReplicaClusterConfiguration](#replicaclusterconfiguration)_ | Replica cluster configuration |  |  |  |
+| `superuserSecret` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | The secret containing the superuser password. If not defined a new<br />secret will be created with a randomly generated password |  |  |  |
+| `enableSuperuserAccess` _boolean_ | When this option is enabled, the operator will use the `SuperuserSecret`<br />to update the `postgres` user password (if the secret is<br />not present, the operator will automatically create one). When this<br />option is disabled, the operator will ignore the `SuperuserSecret` content, delete<br />it when automatically created, and then blank the password of the `postgres`<br />user by setting it to `NULL`. Disabled by default. |  | false |  |
+| `certificates` _[CertificatesConfiguration](#certificatesconfiguration)_ | The configuration for the CA and related certificates |  |  |  |
+| `imagePullSecrets` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference) array_ | The list of pull secrets to be used to pull the images |  |  |  |
+| `storage` _[StorageConfiguration](#storageconfiguration)_ | Configuration of the storage of the instances |  |  |  |
+| `serviceAccountTemplate` _[ServiceAccountTemplate](#serviceaccounttemplate)_ | Configure the generation of the service account |  |  |  |
+| `walStorage` _[StorageConfiguration](#storageconfiguration)_ | Configuration of the storage for PostgreSQL WAL (Write-Ahead Log) |  |  |  |
+| `ephemeralVolumeSource` _[EphemeralVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#ephemeralvolumesource-v1-core)_ | EphemeralVolumeSource allows the user to configure the source of ephemeral volumes. |  |  |  |
+| `startDelay` _integer_ | The time in seconds that is allowed for a PostgreSQL instance to<br />successfully start up (default 3600).<br />The startup probe failure threshold is derived from this value using the formula:<br />ceiling(startDelay / 10). |  | 3600 |  |
+| `stopDelay` _integer_ | The time in seconds that is allowed for a PostgreSQL instance to<br />gracefully shutdown (default 1800) |  | 1800 |  |
+| `smartShutdownTimeout` _integer_ | The time in seconds that controls the window of time reserved for the smart shutdown of Postgres to complete.<br />Make sure you reserve enough time for the operator to request a fast shutdown of Postgres<br />(that is: `stopDelay` - `smartShutdownTimeout`). Default is 180 seconds. |  | 180 |  |
+| `switchoverDelay` _integer_ | The time in seconds that is allowed for a primary PostgreSQL instance<br />to gracefully shutdown during a switchover.<br />Default value is 3600 seconds (1 hour). |  | 3600 |  |
+| `failoverDelay` _integer_ | The amount of time (in seconds) to wait before triggering a failover<br />after the primary PostgreSQL instance in the cluster was detected<br />to be unhealthy |  | 0 |  |
+| `livenessProbeTimeout` _integer_ | LivenessProbeTimeout is the time (in seconds) that is allowed for a PostgreSQL instance<br />to successfully respond to the liveness probe (default 30).<br />The Liveness probe failure threshold is derived from this value using the formula:<br />ceiling(livenessProbe / 10). |  |  |  |
+| `affinity` _[AffinityConfiguration](#affinityconfiguration)_ | Affinity/Anti-affinity rules for Pods |  |  |  |
+| `topologySpreadConstraints` _[TopologySpreadConstraint](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#topologyspreadconstraint-v1-core) array_ | TopologySpreadConstraints specifies how to spread matching pods among the given topology.<br />More info:<br />https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/ |  |  |  |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core)_ | Resources requirements of every generated Pod. Please refer to<br />https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/<br />for more information. |  |  |  |
+| `ephemeralVolumesSizeLimit` _[EphemeralVolumesSizeLimitConfiguration](#ephemeralvolumessizelimitconfiguration)_ | EphemeralVolumesSizeLimit allows the user to set the limits for the ephemeral<br />volumes |  |  |  |
+| `priorityClassName` _string_ | Name of the priority class which will be used in every generated Pod, if the PriorityClass<br />specified does not exist, the pod will not be able to schedule.  Please refer to<br />https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass<br />for more information |  |  |  |
+| `primaryUpdateStrategy` _[PrimaryUpdateStrategy](#primaryupdatestrategy)_ | Deployment strategy to follow to upgrade the primary server during a rolling<br />update procedure, after all replicas have been successfully updated:<br />it can be automated (`unsupervised` - default) or manual (`supervised`) |  | unsupervised | Enum: [unsupervised supervised] <br /> |
+| `primaryUpdateMethod` _[PrimaryUpdateMethod](#primaryupdatemethod)_ | Method to follow to upgrade the primary server during a rolling<br />update procedure, after all replicas have been successfully updated:<br />it can be with a switchover (`switchover`) or in-place (`restart` - default) |  | restart | Enum: [switchover restart] <br /> |
+| `backup` _[BackupConfiguration](#backupconfiguration)_ | The configuration to be used for backups |  |  |  |
+| `nodeMaintenanceWindow` _[NodeMaintenanceWindow](#nodemaintenancewindow)_ | Define a maintenance window for the Kubernetes nodes |  |  |  |
+| `monitoring` _[MonitoringConfiguration](#monitoringconfiguration)_ | The configuration of the monitoring infrastructure of this cluster |  |  |  |
+| `externalClusters` _[ExternalCluster](#externalcluster) array_ | The list of external clusters which are used in the configuration |  |  |  |
+| `logLevel` _string_ | The instances' log level, one of the following values: error, warning, info (default), debug, trace |  | info | Enum: [error warning info debug trace] <br /> |
+| `projectedVolumeTemplate` _[ProjectedVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#projectedvolumesource-v1-core)_ | Template to be used to define projected volumes, projected volumes will be mounted<br />under `/projected` base folder |  |  |  |
+| `env` _[EnvVar](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#envvar-v1-core) array_ | Env follows the Env format to pass environment variables<br />to the pods created in the cluster |  |  |  |
+| `envFrom` _[EnvFromSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#envfromsource-v1-core) array_ | EnvFrom follows the EnvFrom format to pass environment variables<br />sources to the pods to be used by Env |  |  |  |
+| `managed` _[ManagedConfiguration](#managedconfiguration)_ | The configuration that is used by the portions of PostgreSQL that are managed by the instance manager |  |  |  |
+| `seccompProfile` _[SeccompProfile](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#seccompprofile-v1-core)_ | The SeccompProfile applied to every Pod and Container.<br />Defaults to: `RuntimeDefault` |  |  |  |
+| `tablespaces` _[TablespaceConfiguration](#tablespaceconfiguration) array_ | The tablespaces configuration |  |  |  |
+| `enablePDB` _boolean_ | Manage the `PodDisruptionBudget` resources within the cluster. When<br />configured as `true` (default setting), the pod disruption budgets<br />will safeguard the primary node from being terminated. Conversely,<br />setting it to `false` will result in the absence of any<br />`PodDisruptionBudget` resource, permitting the shutdown of all nodes<br />hosting the PostgreSQL cluster. This latter configuration is<br />advisable for any PostgreSQL cluster employed for<br />development/staging purposes. |  | true |  |
+| `plugins` _[PluginConfiguration](#pluginconfiguration) array_ | The plugins configuration, containing<br />any plugin to be loaded with the corresponding configuration |  |  |  |
+| `probes` _[ProbesConfiguration](#probesconfiguration)_ | The configuration of the probes to be injected<br />in the PostgreSQL Pods. |  |  |  |
+
+
+#### ClusterStatus
+
+
+
+ClusterStatus defines the observed state of a PostgreSQL cluster managed by
+CloudNativePG.
+
+
+
+_Appears in:_
+
+- [Cluster](#cluster)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `instances` _integer_ | The total number of PVC Groups detected in the cluster. It may differ from the number of existing instance pods. |  |  |  |
+| `readyInstances` _integer_ | The total number of ready instances in the cluster. It is equal to the number of ready instance pods. |  |  |  |
+| `instancesStatus` _object (keys:[PodStatus](#podstatus), values:string array)_ | InstancesStatus indicates in which status the instances are |  |  |  |
+| `instancesReportedState` _object (keys:[PodName](#podname), values:[InstanceReportedState](#instancereportedstate))_ | The reported state of the instances during the last reconciliation loop |  |  |  |
+| `managedRolesStatus` _[ManagedRoles](#managedroles)_ | ManagedRolesStatus reports the state of the managed roles in the cluster |  |  |  |
+| `tablespacesStatus` _[TablespaceState](#tablespacestate) array_ | TablespacesStatus reports the state of the declarative tablespaces in the cluster |  |  |  |
+| `timelineID` _integer_ | The timeline of the Postgres cluster |  |  |  |
+| `topology` _[Topology](#topology)_ | Instances topology. |  |  |  |
+| `latestGeneratedNode` _integer_ | ID of the latest generated node (used to avoid node name clashing) |  |  |  |
+| `currentPrimary` _string_ | Current primary instance |  |  |  |
+| `targetPrimary` _string_ | Target primary instance, this is different from the previous one<br />during a switchover or a failover |  |  |  |
+| `lastPromotionToken` _string_ | LastPromotionToken is the last verified promotion token that<br />was used to promote a replica cluster |  |  |  |
+| `pvcCount` _integer_ | How many PVCs have been created by this cluster |  |  |  |
+| `jobCount` _integer_ | How many Jobs have been created by this cluster |  |  |  |
+| `danglingPVC` _string array_ | List of all the PVCs created by this cluster and still available<br />which are not attached to a Pod |  |  |  |
+| `resizingPVC` _string array_ | List of all the PVCs that have ResizingPVC condition. |  |  |  |
+| `initializingPVC` _string array_ | List of all the PVCs that are being initialized by this cluster |  |  |  |
+| `healthyPVC` _string array_ | List of all the PVCs not dangling nor initializing |  |  |  |
+| `unusablePVC` _string array_ | List of all the PVCs that are unusable because another PVC is missing |  |  |  |
+| `writeService` _string_ | Current write pod |  |  |  |
+| `readService` _string_ | Current list of read pods |  |  |  |
+| `phase` _string_ | Current phase of the cluster |  |  |  |
+| `phaseReason` _string_ | Reason for the current phase |  |  |  |
+| `secretsResourceVersion` _[SecretsResourceVersion](#secretsresourceversion)_ | The list of resource versions of the secrets<br />managed by the operator. Every change here is done in the<br />interest of the instance manager, which will refresh the<br />secret data |  |  |  |
+| `configMapResourceVersion` _[ConfigMapResourceVersion](#configmapresourceversion)_ | The list of resource versions of the configmaps,<br />managed by the operator. Every change here is done in the<br />interest of the instance manager, which will refresh the<br />configmap data |  |  |  |
+| `certificates` _[CertificatesStatus](#certificatesstatus)_ | The configuration for the CA and related certificates, initialized with defaults. |  |  |  |
+| `firstRecoverabilityPoint` _string_ | The first recoverability point, stored as a date in RFC3339 format.<br />This field is calculated from the content of FirstRecoverabilityPointByMethod |  |  |  |
+| `firstRecoverabilityPointByMethod` _object (keys:[BackupMethod](#backupmethod), values:[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#time-v1-meta))_ | The first recoverability point, stored as a date in RFC3339 format, per backup method type |  |  |  |
+| `lastSuccessfulBackup` _string_ | Last successful backup, stored as a date in RFC3339 format<br />This field is calculated from the content of LastSuccessfulBackupByMethod |  |  |  |
+| `lastSuccessfulBackupByMethod` _object (keys:[BackupMethod](#backupmethod), values:[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#time-v1-meta))_ | Last successful backup, stored as a date in RFC3339 format, per backup method type |  |  |  |
+| `lastFailedBackup` _string_ | Stored as a date in RFC3339 format |  |  |  |
+| `cloudNativePGCommitHash` _string_ | The commit hash number of which this operator running |  |  |  |
+| `currentPrimaryTimestamp` _string_ | The timestamp when the last actual promotion to primary has occurred |  |  |  |
+| `currentPrimaryFailingSinceTimestamp` _string_ | The timestamp when the primary was detected to be unhealthy<br />This field is reported when `.spec.failoverDelay` is populated or during online upgrades |  |  |  |
+| `targetPrimaryTimestamp` _string_ | The timestamp when the last request for a new primary has occurred |  |  |  |
+| `poolerIntegrations` _[PoolerIntegrations](#poolerintegrations)_ | The integration needed by poolers referencing the cluster |  |  |  |
+| `cloudNativePGOperatorHash` _string_ | The hash of the binary of the operator |  |  |  |
+| `availableArchitectures` _[AvailableArchitecture](#availablearchitecture) array_ | AvailableArchitectures reports the available architectures of a cluster |  |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#condition-v1-meta) array_ | Conditions for cluster object |  |  |  |
+| `instanceNames` _string array_ | List of instance names in the cluster |  |  |  |
+| `onlineUpdateEnabled` _boolean_ | OnlineUpdateEnabled shows if the online upgrade is enabled inside the cluster |  |  |  |
+| `azurePVCUpdateEnabled` _boolean_ | AzurePVCUpdateEnabled shows if the PVC online upgrade is enabled for this cluster |  |  |  |
+| `image` _string_ | Image contains the image name used by the pods |  |  |  |
+| `pluginStatus` _[PluginStatus](#pluginstatus) array_ | PluginStatus is the status of the loaded plugins |  |  |  |
+| `switchReplicaClusterStatus` _[SwitchReplicaClusterStatus](#switchreplicaclusterstatus)_ | SwitchReplicaClusterStatus is the status of the switch to replica cluster |  |  |  |
+| `demotionToken` _string_ | DemotionToken is a JSON token containing the information<br />from pg_controldata such as Database system identifier, Latest checkpoint's<br />TimeLineID, Latest checkpoint's REDO location, Latest checkpoint's REDO<br />WAL file, and Time of latest checkpoint |  |  |  |
+| `systemID` _string_ | SystemID is the latest detected PostgreSQL SystemID |  |  |  |
+
+
+
+
+
+
+
+
+#### ConfigMapResourceVersion
+
+
+
+ConfigMapResourceVersion is the resource versions of the secrets
+managed by the operator
+
+
+
+_Appears in:_
+
+- [ClusterStatus](#clusterstatus)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `metrics` _object (keys:string, values:string)_ | A map with the versions of all the config maps used to pass metrics.<br />Map keys are the config map names, map values are the versions |  |  |  |
+
+
+
+
+#### DataDurabilityLevel
+
+_Underlying type:_ _string_
+
+DataDurabilityLevel specifies how strictly to enforce synchronous replication
+when cluster instances are unavailable. Options are `required` or `preferred`.
+
+
+
+_Appears in:_
+
+- [SynchronousReplicaConfiguration](#synchronousreplicaconfiguration)
+
+| Field | Description |
+| --- | --- |
+| `required` | DataDurabilityLevelRequired means that data durability is strictly enforced<br /> |
+| `preferred` | DataDurabilityLevelPreferred means that data durability is enforced<br />only when healthy replicas are available<br /> |
+
+
+#### DataSource
+
+
+
+DataSource contains the configuration required to bootstrap a
+PostgreSQL cluster from an existing storage
+
+
+
+_Appears in:_
+
+- [BootstrapRecovery](#bootstraprecovery)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `storage` _[TypedLocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#typedlocalobjectreference-v1-core)_ | Configuration of the storage of the instances | True |  |  |
+| `walStorage` _[TypedLocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#typedlocalobjectreference-v1-core)_ | Configuration of the storage for PostgreSQL WAL (Write-Ahead Log) |  |  |  |
+| `tablespaceStorage` _object (keys:string, values:[TypedLocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#typedlocalobjectreference-v1-core))_ | Configuration of the storage for PostgreSQL tablespaces |  |  |  |
+
+
+#### Database
+
+
+
+Database is the Schema for the databases API
+
+
+
+
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiVersion` _string_ | `postgresql.cnpg.io/v1` | True | | |
+| `kind` _string_ | `Database` | True | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
+| `spec` _[DatabaseSpec](#databasespec)_ | Specification of the desired Database.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | True |  |  |
+| `status` _[DatabaseStatus](#databasestatus)_ | Most recently observed status of the Database. This data may not be up to<br />date. Populated by the system. Read-only.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |  |
+
+
+#### DatabaseReclaimPolicy
+
+_Underlying type:_ _string_
+
+DatabaseReclaimPolicy describes a policy for end-of-life maintenance of databases.
+
+
+
+_Appears in:_
+
+- [DatabaseSpec](#databasespec)
+
+| Field | Description |
+| --- | --- |
+| `delete` | DatabaseReclaimDelete means the database will be deleted from its PostgreSQL Cluster on release<br />from its claim.<br /> |
+| `retain` | DatabaseReclaimRetain means the database will be left in its current phase for manual<br />reclamation by the administrator. The default policy is Retain.<br /> |
+
+
+#### DatabaseRoleRef
+
+
+
+DatabaseRoleRef is a reference an a role available inside PostgreSQL
+
+
+
+_Appears in:_
+
+- [TablespaceConfiguration](#tablespaceconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ |  |  |  |  |
+
+
+#### DatabaseSpec
+
+
+
+DatabaseSpec is the specification of a Postgresql Database, built around the
+`CREATE DATABASE`, `ALTER DATABASE`, and `DROP DATABASE` SQL commands of
+PostgreSQL.
+
+
+
+_Appears in:_
+
+- [Database](#database)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `cluster` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#localobjectreference-v1-core)_ | The name of the PostgreSQL cluster hosting the database. | True |  |  |
+| `ensure` _[EnsureOption](#ensureoption)_ | Ensure the PostgreSQL database is `present` or `absent` - defaults to "present". |  | present | Enum: [present absent] <br /> |
+| `name` _string_ | The name of the database to create inside PostgreSQL. This setting cannot be changed. | True |  |  |
+| `owner` _string_ | Maps to the `OWNER` parameter of `CREATE DATABASE`.<br />Maps to the `OWNER TO` command of `ALTER DATABASE`.<br />The role name of the user who owns the database inside PostgreSQL. | True |  |  |
+| `template` _string_ | Maps to the `TEMPLATE` parameter of `CREATE DATABASE`. This setting<br />cannot be changed. The name of the template from which to create<br />this database. |  |  |  |
+| `encoding` _string_ | Maps to the `ENCODING` parameter of `CREATE DATABASE`. This setting<br />cannot be changed. Character set encoding to use in the database. |  |  |  |
+| `locale` _string_ | Maps to the `LOCALE` parameter of `CREATE DATABASE`. This setting<br />cannot be changed. Sets the default collation order and character<br />classification in the new database. |  |  |  |
+| `localeProvider` _string_ | Maps to the `LOCALE_PROVIDER` parameter of `CREATE DATABASE`. This<br />setting cannot be changed. This option sets the locale provider for<br />databases created in the new cluster. Available from PostgreSQL 16. |  |  |  |
+| `localeCollate` _string_ | Maps to the `LC_COLLATE` parameter of `CREATE DATABASE`. This<br />setting cannot be changed. |  |  |  |
+| `localeCType` _string_ | Maps to the `LC_CTYPE` parameter of `CREATE DATABASE`. This setting<br />cannot be changed. |  |  |  |
+| `icuLocale` _string_ | Maps to the `ICU_LOCALE` parameter of `CREATE DATABASE`. This<br />setting cannot be changed. Specifies the ICU locale when the ICU<br />provider is used. This option requires `localeProvider` to be set to<br />`icu`. Available from PostgreSQL 15. |  |  |  |
+| `icuRules` _string_ | Maps to the `ICU_RULES` parameter of `CREATE DATABASE`. This setting<br />cannot be changed. Specifies additional collation rules to customize<br />the behavior of the default collation. This option requires<br />`localeProvider` to be set to `icu`. Available from PostgreSQL 16. |  |  |  |
+| `builtinLocale` _string_ | Maps to the `BUILTIN_LOCALE` parameter of `CREATE DATABASE`. This<br />setting cannot be changed. Specifies the locale name when the<br />builtin provider is used. This option requires `localeProvider` to<br />be set to `builtin`. Available from PostgreSQL 17. |  |  |  |
+| `collationVersion` _string_ | Maps to the `COLLATION_VERSION` parameter of `CREATE DATABASE`. This<br />setting cannot be changed. |  |  |  |
+| `isTemplate` _boolean_ | Maps to the `IS_TEMPLATE` parameter of `CREATE DATABASE` and `ALTER<br />DATABASE`. If true, this database is considered a template and can<br />be cloned by any user with `CREATEDB` privileges. |  |  |  |
+| `allowConnections` _boolean_ | Maps to the `ALLOW_CONNECTIONS` parameter of `CREATE DATABASE` and<br />`ALTER DATABASE`. If false then no one can connect to this database. |  |  |  |
+| `connectionLimit` _integer_ | Maps to the `CONNECTION LIMIT` clause of `CREATE DATABASE` and<br />`ALTER DATABASE`. How many concurrent connections can be made to<br />this database. -1 (the default) means no limit. |  |  |  |
+| `tablespace` _string_ | Maps to the `TABLESPACE` parameter of `CREATE DATABASE`.<br />Maps to the `SET TABLESPACE` command of `ALTER DATABASE`.<br />The name of the tablespace (in PostgreSQL) that will be associated<br />with the new database. This tablespace will be the default<br />tablespace used for objects created in this database. |  |  |  |
+| `databaseReclaimPolicy` _[DatabaseReclaimPolicy](#databasereclaimpolicy)_ | The policy for end-of-life maintenance of this database. |  | retain | Enum: [delete retain] <br /> |
+
+
+#### DatabaseStatus
+
+
+
+DatabaseStatus defines the observed state of Database
+
+
+
+_Appears in:_
+
+- [Database](#database)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `observedGeneration` _integer_ | A sequence number representing the latest<br />desired state that was synchronized |  |  |  |
+| `applied` _boolean_ | Applied is true if the database was reconciled correctly |  |  |  |
+| `message` _string_ | Message is the reconciliation output message |  |  |  |
+
+
+#### EmbeddedObjectMetadata
+
+
+
+EmbeddedObjectMetadata contains metadata to be inherited by all resources related to a Cluster
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `labels` _object (keys:string, values:string)_ |  |  |  |  |
+| `annotations` _object (keys:string, values:string)_ |  |  |  |  |
+
+
+#### EnsureOption
+
+_Underlying type:_ _string_
+
+EnsureOption represents whether we should enforce the presence or absence of
+a Role in a PostgreSQL instance
+
+
+
+_Appears in:_
+
+- [DatabaseSpec](#databasespec)
+- [RoleConfiguration](#roleconfiguration)
+
+| Field | Description |
+| --- | --- |
+| `present` |  |
+| `absent` |  |
+
+
+#### EphemeralVolumesSizeLimitConfiguration
+
+
+
+EphemeralVolumesSizeLimitConfiguration contains the configuration of the ephemeral
+storage
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `shm` _[Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#quantity-resource-api)_ | Shm is the size limit of the shared memory volume |  |  |  |
+| `temporaryData` _[Quantity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#quantity-resource-api)_ | TemporaryData is the size limit of the temporary data volume |  |  |  |
+
+
+#### ExternalCluster
+
+
+
+ExternalCluster represents the connection parameters to an
+external cluster which is used in the other sections of the configuration
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | The server name, required | True |  |  |
+| `connectionParameters` _object (keys:string, values:string)_ | The list of connection parameters, such as dbname, host, username, etc |  |  |  |
+| `sslCert` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#secretkeyselector-v1-core)_ | The reference to an SSL certificate to be used to connect to this<br />instance |  |  |  |
+| `sslKey` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#secretkeyselector-v1-core)_ | The reference to an SSL private key to be used to connect to this<br />instance |  |  |  |
+| `sslRootCert` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#secretkeyselector-v1-core)_ | The reference to an SSL CA public key to be used to connect to this<br />instance |  |  |  |
+| `password` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#secretkeyselector-v1-core)_ | The reference to the password to be used to connect to the server.<br />If a password is provided, CloudNativePG creates a PostgreSQL<br />passfile at `/controller/external/NAME/pass` (where "NAME" is the<br />cluster's name). This passfile is automatically referenced in the<br />connection string when establishing a connection to the remote<br />PostgreSQL server from the current PostgreSQL `Cluster`. This ensures<br />secure and efficient password management for external clusters. |  |  |  |
+| `barmanObjectStore` _[BarmanObjectStoreConfiguration](https://pkg.go.dev/github.com/cloudnative-pg/barman-cloud/pkg/api#BarmanObjectStoreConfiguration)_ | The configuration for the barman-cloud tool suite |  |  |  |
+| `plugin` _[PluginConfiguration](#pluginconfiguration)_ | The configuration of the plugin that is taking care<br />of WAL archiving and backups for this external cluster | True |  |  |
+
+
+
+
+
+
+#### ImageCatalog
+
+
+
+ImageCatalog is the Schema for the imagecatalogs API
+
+
+
+
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiVersion` _string_ | `postgresql.cnpg.io/v1` | True | | |
+| `kind` _string_ | `ImageCatalog` | True | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
+| `spec` _[ImageCatalogSpec](#imagecatalogspec)_ | Specification of the desired behavior of the ImageCatalog.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | True |  |  |
+
+
+#### ImageCatalogRef
+
+
+
+ImageCatalogRef defines the reference to a major version in an ImageCatalog
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiGroup` _string_ | APIGroup is the group for the resource being referenced.<br />If APIGroup is not specified, the specified Kind must be in the core API group.<br />For any other third-party types, APIGroup is required. |  |  |  |
+| `kind` _string_ | Kind is the type of resource being referenced | True |  |  |
+| `name` _string_ | Name is the name of resource being referenced | True |  |  |
+| `major` _integer_ | The major version of PostgreSQL we want to use from the ImageCatalog | True |  |  |
+
+
+#### ImageCatalogSpec
+
+
+
+ImageCatalogSpec defines the desired ImageCatalog
+
+
+
+_Appears in:_
+
+- [ClusterImageCatalog](#clusterimagecatalog)
+- [ImageCatalog](#imagecatalog)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `images` _[CatalogImage](#catalogimage) array_ | List of CatalogImages available in the catalog | True |  | MaxItems: 8 <br />MinItems: 1 <br /> |
+
+
+#### Import
+
+
+
+Import contains the configuration to init a database from a logic snapshot of an externalCluster
+
+
+
+_Appears in:_
+
+- [BootstrapInitDB](#bootstrapinitdb)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `source` _[ImportSource](#importsource)_ | The source of the import | True |  |  |
+| `type` _[SnapshotType](#snapshottype)_ | The import type. Can be `microservice` or `monolith`. | True |  | Enum: [microservice monolith] <br /> |
+| `databases` _string array_ | The databases to import | True |  |  |
+| `roles` _string array_ | The roles to import |  |  |  |
+| `postImportApplicationSQL` _string array_ | List of SQL queries to be executed as a superuser in the application<br />database right after is imported - to be used with extreme care<br />(by default empty). Only available in microservice type. |  |  |  |
+| `schemaOnly` _boolean_ | When set to true, only the `pre-data` and `post-data` sections of<br />`pg_restore` are invoked, avoiding data import. Default: `false`. |  |  |  |
+| `pgDumpExtraOptions` _string array_ | List of custom options to pass to the `pg_dump` command. IMPORTANT:<br />Use these options with caution and at your own risk, as the operator<br />does not validate their content. Be aware that certain options may<br />conflict with the operator's intended functionality or design. |  |  |  |
+| `pgRestoreExtraOptions` _string array_ | List of custom options to pass to the `pg_restore` command. IMPORTANT:<br />Use these options with caution and at your own risk, as the operator<br />does not validate their content. Be aware that certain options may<br />conflict with the operator's intended functionality or design. |  |  |  |
+
+
+#### ImportSource
+
+
+
+ImportSource describes the source for the logical snapshot
+
+
+
+_Appears in:_
+
+- [Import](#import)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `externalCluster` _string_ | The name of the externalCluster used for import | True |  |  |
+
+
+#### InstanceID
+
+
+
+InstanceID contains the information to identify an instance
+
+
+
+_Appears in:_
+
+- [BackupStatus](#backupstatus)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `podName` _string_ | The pod name |  |  |  |
+| `ContainerID` _string_ | The container ID |  |  |  |
+
+
+#### InstanceReportedState
+
+
+
+InstanceReportedState describes the last reported state of an instance during a reconciliation loop
+
+
+
+_Appears in:_
+
+- [ClusterStatus](#clusterstatus)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `isPrimary` _boolean_ | indicates if an instance is the primary one | True |  |  |
+| `timeLineID` _integer_ | indicates on which TimelineId the instance is |  |  |  |
+
+
+
+
+#### LDAPBindAsAuth
+
+
+
+LDAPBindAsAuth provides the required fields to use the
+bind authentication for LDAP
+
+
+
+_Appears in:_
+
+- [LDAPConfig](#ldapconfig)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `prefix` _string_ | Prefix for the bind authentication option |  |  |  |
+| `suffix` _string_ | Suffix for the bind authentication option |  |  |  |
+
+
+#### LDAPBindSearchAuth
+
+
+
+LDAPBindSearchAuth provides the required fields to use
+the bind+search LDAP authentication process
+
+
+
+_Appears in:_
+
+- [LDAPConfig](#ldapconfig)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `baseDN` _string_ | Root DN to begin the user search |  |  |  |
+| `bindDN` _string_ | DN of the user to bind to the directory |  |  |  |
+| `bindPassword` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#secretkeyselector-v1-core)_ | Secret with the password for the user to bind to the directory |  |  |  |
+| `searchAttribute` _string_ | Attribute to match against the username |  |  |  |
+| `searchFilter` _string_ | Search filter to use when doing the search+bind authentication |  |  |  |
+
+
+#### LDAPConfig
+
+
+
+LDAPConfig contains the parameters needed for LDAP authentication
+
+
+
+_Appears in:_
+
+- [PostgresConfiguration](#postgresconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `server` _string_ | LDAP hostname or IP address |  |  |  |
+| `port` _integer_ | LDAP server port |  |  |  |
+| `scheme` _[LDAPScheme](#ldapscheme)_ | LDAP schema to be used, possible options are `ldap` and `ldaps` |  |  | Enum: [ldap ldaps] <br /> |
+| `bindAsAuth` _[LDAPBindAsAuth](#ldapbindasauth)_ | Bind as authentication configuration |  |  |  |
+| `bindSearchAuth` _[LDAPBindSearchAuth](#ldapbindsearchauth)_ | Bind+Search authentication configuration |  |  |  |
+| `tls` _boolean_ | Set to 'true' to enable LDAP over TLS. 'false' is default |  |  |  |
+
+
+#### LDAPScheme
+
+_Underlying type:_ _string_
+
+LDAPScheme defines the possible schemes for LDAP
+
+
+
+_Appears in:_
+
+- [LDAPConfig](#ldapconfig)
+
 | Field | Description |
-|-------|-------------|
-| `initdb` <br/> _BootstrapInitDB_ | Bootstrap the cluster via initdb |
-| `recovery` <br/> _BootstrapRecovery_ | Bootstrap the cluster from a backup |
-| `pg_basebackup` <br/> _BootstrapPgBaseBackup_ | Bootstrap the cluster taking a physical backup of another compatible PostgreSQL instance |
+| --- | --- |
+| `ldap` |  |
+| `ldaps` |  |
+
+
+
+
+#### ManagedConfiguration
+
+
+
+ManagedConfiguration represents the portions of PostgreSQL that are managed
+by the instance manager
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `roles` _[RoleConfiguration](#roleconfiguration) array_ | Database roles managed by the `Cluster` |  |  |  |
+| `services` _[ManagedServices](#managedservices)_ | Services roles managed by the `Cluster` |  |  |  |
 
-## BootstrapInitDB     {#postgresql-cnpg-io-v1-BootstrapInitDB}
 
-**Appears in:**
+#### ManagedRoles
 
-- [BootstrapConfiguration](#postgresql-cnpg-io-v1-BootstrapConfiguration)
 
-<p>BootstrapInitDB is the configuration of the bootstrap process when initdb is used. Refer to the Bootstrap page of the documentation for more information.</p>
 
-| Field | Description |
-|-------|-------------|
-| `database` <br/> _string_ | Name of the database used by the application. Default: `app`. |
-| `owner` <br/> _string_ | Name of the owner of the database in the instance to be used by applications. Defaults to value of `database`. |
-| `secret` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ | Name of the secret containing the initial credentials for the owner database. If empty a new secret will be created. |
-| `options` <br/> _[]string_ | The list of options passed to initdb. Deprecated: may lead to inconsistent configurations; use explicit parameters instead. |
-| `dataChecksums` <br/> _bool_ | Whether the `-k` option should be passed to initdb, enabling checksums on data pages (default: `false`) |
-| `encoding` <br/> _string_ | Value to pass as `--encoding` for initdb (default: `UTF8`) |
-| `localeCollate` <br/> _string_ | Value to pass as `--lc-collate` for initdb (default: `C`) |
-| `localeCType` <br/> _string_ | Value to pass as `--lc-ctype` for initdb (default: `C`) |
-| `locale` <br/> _string_ | Sets default collation order and character classification in the new database. |
-| `localeProvider` <br/> _string_ | Sets the locale provider for databases created in new cluster. Available from PostgreSQL 16. |
-| `icuLocale` <br/> _string_ | Specifies ICU locale when `localeProvider` is `icu`. Requires PostgreSQL >=15. |
-| `icuRules` <br/> _string_ | Specifies additional collation rules when `localeProvider` is `icu`. Requires PostgreSQL >=16. |
-| `builtinLocale` <br/> _string_ | Specifies the locale name when `localeProvider` is `builtin`. Requires PostgreSQL >=17. |
-| `walSegmentSize` <br/> _int_ | Value in MB (1 to 1024) for `--wal-segsize` option for initdb (default PostgreSQL: 16MB) |
-| `postInitSQL` <br/> _[]string_ | List of SQL queries to execute as superuser in `postgres` DB right after cluster creation |
-| `postInitApplicationSQL` <br/> _[]string_ | List of SQL queries to execute as superuser in application DB after cluster creation |
-| `postInitTemplateSQL` <br/> _[]string_ | List of SQL queries to execute as superuser in `template1` DB after cluster creation |
-| `import` <br/> _Import_ | Bootstraps the new cluster by importing data from an existing PostgreSQL instance using logical backup (`pg_dump` and `pg_restore`) |
-| `postInitApplicationSQLRefs` <br/> _SQLRefs_ | References to ConfigMaps or Secrets with SQL files to execute in application DB after cluster creation. Secrets processed first, then ConfigMaps. |
-| `postInitTemplateSQLRefs` <br/> _SQLRefs_ | References to ConfigMaps or Secrets with SQL files to execute in `template1` DB after cluster creation. Secrets processed first, then ConfigMaps. |
-| `postInitSQLRefs` <br/> _SQLRefs_ | References to ConfigMaps or Secrets with SQL files to execute in `postgres` DB after cluster creation. Secrets processed first, then ConfigMaps. |
-
-## BootstrapPgBaseBackup     {#postgresql-cnpg-io-v1-BootstrapPgBaseBackup}
-
-**Appears in:**
-
-- [BootstrapConfiguration](#postgresql-cnpg-io-v1-BootstrapConfiguration)
-
-<p>BootstrapPgBaseBackup contains the configuration required to take a physical backup of an existing PostgreSQL cluster</p>
+ManagedRoles tracks the status of a cluster's managed roles
 
-| Field | Description |
-|-------|-------------|
-| `source` <br/> _string_ **[Required]** | The name of the server to take a physical backup from |
-| `database` <br/> _string_ | Name of the database used by the application. Default: `app`. |
-| `owner` <br/> _string_ | Name of the owner of the database in the instance to be used by applications. Defaults to `database`. |
-| `secret` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ | Name of the secret containing the initial credentials for the owner database. If empty a new secret will be created. |
 
-## BootstrapRecovery     {#postgresql-cnpg-io-v1-BootstrapRecovery}
 
-**Appears in:**
+_Appears in:_
 
-- [BootstrapConfiguration](#postgresql-cnpg-io-v1-BootstrapConfiguration)
+- [ClusterStatus](#clusterstatus)
 
-<p>BootstrapRecovery contains the configuration required to restore from an existing cluster using external cluster, volume snapshots or backup objects. Full recovery and Point-In-Time Recovery are supported. The method can also be used to create clusters in continuous recovery (replica clusters), also supporting cascading replication when `instances` &gt; ...</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `byStatus` _object (keys:[RoleStatus](#rolestatus), values:string array)_ | ByStatus gives the list of roles in each state |  |  |  |
+| `cannotReconcile` _object (keys:string, values:string array)_ | CannotReconcile lists roles that cannot be reconciled in PostgreSQL,<br />with an explanation of the cause |  |  |  |
+| `passwordStatus` _object (keys:string, values:[PasswordState](#passwordstate))_ | PasswordStatus gives the last transaction id and password secret version for each managed role |  |  |  |
 
-<ol>
-<li>Once the cluster exits recovery, the password for the superuser will be changed through the provided secret. Refer to the Bootstrap page of the documentation for more information.</li>
-</ol>
 
-| Field | Description |
-|-------|-------------|
-| `backup` <br/> _BackupSource_ | The backup object containing the physical base backup from which to initiate the recovery procedure. Mutually exclusive with `source` and `volumeSnapshots`. |
-| `source` <br/> _string_ | The external cluster whose backup we will restore. Also used as the name of the folder under which the backup is stored. Mutually exclusive with `backup`. |
-| `volumeSnapshots` <br/> _DataSource_ | The static PVC data source(s) from which to initiate the recovery procedure. Supports `VolumeSnapshot` and `PersistentVolumeClaim` resources. Mutually exclusive with `backup`. |
-| `recoveryTarget` <br/> _RecoveryTarget_ | Configure recovery stop point (timestamp, XID, LSN, ...). More: https://www.postgresql.org/docs/current/runtime-config-wal.html#RUNTIME-CONFIG-WAL-RECOVERY-TARGET |
-| `database` <br/> _string_ | Name of the database used by the application. Default: `app`. |
-| `owner` <br/> _string_ | Name of the owner of the database in the instance to be used by applications. Defaults to `database`. |
-| `secret` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ | Name of the secret containing the initial credentials for the owner database. If empty a new secret will be created. |
+#### ManagedService
 
-## CatalogImage     {#postgresql-cnpg-io-v1-CatalogImage}
 
-**Appears in:**
 
-- [ImageCatalogSpec](#postgresql-cnpg-io-v1-ImageCatalogSpec)
+ManagedService represents a specific service managed by the cluster.
+It includes the type of service and its associated template specification.
 
-<p>CatalogImage defines the image and major version</p>
 
-| Field | Description |
-|-------|-------------|
-| `image` <br/> _string_ **[Required]** | The image reference |
-| `major` <br/> _int_ **[Required]** | The PostgreSQL major version of the image. Must be unique within the catalog. |
 
-## CertificatesConfiguration     {#postgresql-cnpg-io-v1-CertificatesConfiguration}
+_Appears in:_
 
-**Appears in:**
+- [ManagedServices](#managedservices)
 
-- [CertificatesStatus](#postgresql-cnpg-io-v1-CertificatesStatus)
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `selectorType` _[ServiceSelectorType](#serviceselectortype)_ | SelectorType specifies the type of selectors that the service will have.<br />Valid values are "rw", "r", and "ro", representing read-write, read, and read-only services. | True |  | Enum: [rw r ro] <br /> |
+| `updateStrategy` _[ServiceUpdateStrategy](#serviceupdatestrategy)_ | UpdateStrategy describes how the service differences should be reconciled |  | patch | Enum: [patch replace] <br /> |
+| `serviceTemplate` _[ServiceTemplateSpec](#servicetemplatespec)_ | ServiceTemplate is the template specification for the service. | True |  |  |
 
-<p>CertificatesConfiguration contains the needed configurations to handle server certificates.</p>
 
-| Field | Description |
-|-------|-------------|
-| `serverCASecret` <br/> _string_ | The secret containing the Server CA certificate. If not defined, a new secret will be created with a self-signed CA and will be used to generate the TLS certificate ServerTLSSecret. Contains: `ca.crt` (CA cert used as `sslrootcert`) and optionally `ca.key`. |
-| `serverTLSSecret` <br/> _string_ | The secret of type `kubernetes.io/tls` containing the server TLS certificate and key that will be set as `ssl_cert_file` and `ssl_key_file`. If not defined, ServerCASecret must provide `ca.key` and a new secret will be created. |
-| `replicationTLSSecret` <br/> _string_ | The secret of type `kubernetes.io/tls` containing the client certificate to authenticate as `streaming_replica`. If not defined, ClientCASecret must provide `ca.key`. |
-| `clientCASecret` <br/> _string_ | The secret containing the Client CA certificate. If not defined, a new secret will be created with a self-signed CA. Contains: `ca.crt` (used as `ssl_ca_file`) and optionally `ca.key`. |
-| `serverAltDNSNames` <br/> _[]string_ | The list of server alternative DNS names to be added to generated server TLS certificates, when required. |
+#### ManagedServices
 
-## CertificatesStatus     {#postgresql-cnpg-io-v1-CertificatesStatus}
 
-**Appears in:**
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
+ManagedServices represents the services managed by the cluster.
 
-<p>CertificatesStatus contains configuration certificates and related expiration dates.</p>
 
-| Field | Description |
-|-------|-------------|
-| `CertificatesConfiguration` <br/> _CertificatesConfiguration_ | (Members embedded) Needed configurations to handle server certificates, initialized with default values if needed. |
-| `expirations` <br/> _map[string]string_ | Expiration dates for all certificates. |
 
-## ClusterMonitoringTLSConfiguration     {#postgresql-cnpg-io-v1-ClusterMonitoringTLSConfiguration}
+_Appears in:_
 
-**Appears in:**
+- [ManagedConfiguration](#managedconfiguration)
 
-- [MonitoringConfiguration](#postgresql-cnpg-io-v1-MonitoringConfiguration)
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `disabledDefaultServices` _[ServiceSelectorType](#serviceselectortype) array_ | DisabledDefaultServices is a list of service types that are disabled by default.<br />Valid values are "r", and "ro", representing read, and read-only services. |  |  | Enum: [rw r ro] <br /> |
+| `additional` _[ManagedService](#managedservice) array_ | Additional is a list of additional managed services specified by the user. |  |  |  |
 
-<p>ClusterMonitoringTLSConfiguration is the type containing the TLS configuration for the cluster's monitoring</p>
 
-| Field | Description |
-|-------|-------------|
-| `enabled` <br/> _bool_ | Enable TLS for the monitoring endpoint. Changing this option will force a rollout of all instances. |
+#### Metadata
 
-## ClusterSpec     {#postgresql-cnpg-io-v1-ClusterSpec}
 
-**Appears in:**
 
-- [Cluster](#postgresql-cnpg-io-v1-Cluster)
+Metadata is a structure similar to the metav1.ObjectMeta, but still
+parseable by controller-gen to create a suitable CRD for the user.
+The comment of PodTemplateSpec has an explanation of why we are
+not using the core data types.
 
-<p>ClusterSpec defines the desired state of a PostgreSQL cluster managed by CloudNativePG.</p>
 
-| Field | Description |
-|-------|-------------|
-| `description` <br/> _string_ | Description of this PostgreSQL cluster |
-| `inheritedMetadata` <br/> _EmbeddedObjectMetadata_ | Metadata that will be inherited by all objects related to the Cluster |
-| `imageName` <br/> _string_ | Name of the container image, supporting tags and digests for deterministic and repeatable deployments |
-| `imageCatalogRef` <br/> _ImageCatalogRef_ | Defines the major PostgreSQL version to use within an ImageCatalog |
-| `imagePullPolicy` <br/> _core/v1.PullPolicy_ | Image pull policy (`Always`, `Never`, `IfNotPresent`). Defaults to `IfNotPresent`. Cannot be updated. |
-| `schedulerName` <br/> _string_ | If specified, pods will be dispatched by specified Kubernetes scheduler. |
-| `postgresUID` <br/> _int64_ | The UID of the `postgres` user inside the image, defaults to `26` |
-| `postgresGID` <br/> _int64_ | The GID of the `postgres` user inside the image, defaults to `26` |
-| `instances` <br/> _int_ **[Required]** | Number of instances required in the cluster |
-| `minSyncReplicas` <br/> _int_ | Minimum number of instances required in synchronous replication with the primary |
-| `maxSyncReplicas` <br/> _int_ | Target value for synchronous replication quorum; can be decreased if not enough ready standbys |
-| `postgresql` <br/> _PostgresConfiguration_ | Configuration of the PostgreSQL server |
-| `replicationSlots` <br/> _ReplicationSlotsConfiguration_ | Replication slots management configuration |
-| `bootstrap` <br/> _BootstrapConfiguration_ | Instructions to bootstrap this cluster |
-| `replica` <br/> _ReplicaClusterConfiguration_ | Replica cluster configuration |
-| `superuserSecret` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ | The secret containing the superuser password. If not defined a new secret will be created with a randomly generated password |
-| `enableSuperuserAccess` <br/> _bool_ | When enabled, operator will use the SuperuserSecret to update `postgres` user password. Disabled by default. |
-| `certificates` <br/> _CertificatesConfiguration_ | The configuration for the CA and related certificates |
-| `imagePullSecrets` <br/> _[]github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ | The list of pull secrets to pull images |
-| `storage` <br/> _StorageConfiguration_ | Configuration of the storage of the instances |
-| `serviceAccountTemplate` <br/> _ServiceAccountTemplate_ | Configure the generation of the service account |
-| `walStorage` <br/> _StorageConfiguration_ | Configuration of the storage for PostgreSQL WAL (Write-Ahead Log) |
-| `ephemeralVolumeSource` <br/> _core/v1.EphemeralVolumeSource_ | Configure the source of ephemeral volumes. |
-| `startDelay` <br/> _int32_ | Allowed time in seconds for a PostgreSQL instance to start (default 3600). Startup probe failure threshold = ceiling(startDelay / 10). |
-| `stopDelay` <br/> _int32_ | Allowed time in seconds for PostgreSQL instance to gracefully shutdown (default 1800) |
-| `smartShutdownTimeout` <br/> _int32_ | Window in seconds reserved for smart shutdown to complete. Default 180 seconds. |
-| `switchoverDelay` <br/> _int32_ | Time in seconds allowed for primary to gracefully shutdown during switchover (default 3600) |
-| `failoverDelay` <br/> _int32_ | Time in seconds to wait before triggering failover after primary detected unhealthy |
-| `livenessProbeTimeout` <br/> _int32_ | Time in seconds allowed for instance to respond to liveness probe (default 30). Failure threshold = ceiling(livenessProbeTimeout / 10). |
-| `affinity` <br/> _AffinityConfiguration_ | Affinity/Anti-affinity rules for Pods |
-| `topologySpreadConstraints` <br/> _[]core/v1.TopologySpreadConstraint_ | How to spread matching pods among topology domains. |
-| `resources` <br/> _core/v1.ResourceRequirements_ | Resource requirements for generated Pods. |
-| `ephemeralVolumesSizeLimit` <br/> _EphemeralVolumesSizeLimitConfiguration_ | Limits for ephemeral volumes |
-| `priorityClassName` <br/> _string_ | Priority class name for generated Pods |
-| `primaryUpdateStrategy` <br/> _PrimaryUpdateStrategy_ | Strategy to upgrade primary during rolling update (`unsupervised` default or `supervised`) |
-| `primaryUpdateMethod` <br/> _PrimaryUpdateMethod_ | Method to upgrade primary during rolling update (`switchover` or `restart` default) |
-| `backup` <br/> _BackupConfiguration_ | Configuration to be used for backups |
-| `nodeMaintenanceWindow` <br/> _NodeMaintenanceWindow_ | Define a maintenance window for Kubernetes nodes |
-| `monitoring` <br/> _MonitoringConfiguration_ | Configuration of monitoring infrastructure |
-| `externalClusters` <br/> _[]ExternalCluster_ | The list of external clusters used in configuration |
-| `logLevel` <br/> _string_ | Instances' log level: `error`, `warning`, `info` (default), `debug`, `trace` |
-| `projectedVolumeTemplate` <br/> _core/v1.ProjectedVolumeSource_ | Template for projected volumes; will be mounted under `/projected` |
-| `env` <br/> _[]core/v1.EnvVar_ | Environment variables to pass to pods |
-| `envFrom` <br/> _[]core/v1.EnvFromSource_ | Environment variable sources to be used by `env` |
-| `managed` <br/> _ManagedConfiguration_ | Configuration used by portions of PostgreSQL managed by instance manager |
-| `seccompProfile` <br/> _core/v1.SeccompProfile_ | SeccompProfile applied to every Pod and Container (default `RuntimeDefault`) |
-| `tablespaces` <br/> _[]TablespaceConfiguration_ | Tablespaces configuration |
-| `enablePDB` <br/> _bool_ | Manage PodDisruptionBudget resources. Default `true`. Setting to `false` results in no PDB resources. |
-| `plugins` <br/> _[]PluginConfiguration_ | Plugins configuration |
-| `probes` <br/> _ProbesConfiguration_ | Configuration of probes to inject in PostgreSQL Pods |
-
-## ClusterStatus     {#postgresql-cnpg-io-v1-ClusterStatus}
-
-**Appears in:**
-
-- [Cluster](#postgresql-cnpg-io-v1-Cluster)
-
-<p>ClusterStatus defines the observed state of a PostgreSQL cluster managed by CloudNativePG.</p>
 
-| Field | Description |
-|-------|-------------|
-| `instances` <br/> _int_ | Total number of PVC Groups detected in the cluster. May differ from number of instance pods. |
-| `readyInstances` <br/> _int_ | Total number of ready instances in the cluster (ready instance pods). |
-| `instancesStatus` <br/> _map[PodStatus][]string_ | InstancesStatus indicates in which status the instances are |
-| `instancesReportedState` <br/> _map[PodName]InstanceReportedState_ | Reported state of instances during last reconciliation loop |
-| `managedRolesStatus` <br/> _ManagedRoles_ | Reports state of managed roles in the cluster |
-| `tablespacesStatus` <br/> _[]TablespaceState_ | State of declarative tablespaces in the cluster |
-| `timelineID` <br/> _int_ | Timeline of the Postgres cluster |
-| `topology` <br/> _Topology_ | Instances topology |
-| `latestGeneratedNode` <br/> _int_ | ID of latest generated node (used to avoid node name clashing) |
-| `currentPrimary` <br/> _string_ | Current primary instance |
-| `targetPrimary` <br/> _string_ | Target primary instance (different during switchover/failover) |
-| `lastPromotionToken` <br/> _string_ | Last verified promotion token used to promote a replica cluster |
-| `pvcCount` <br/> _int32_ | How many PVCs have been created by this cluster |
-| `jobCount` <br/> _int32_ | How many Jobs have been created by this cluster |
-| `danglingPVC` <br/> _[]string_ | PVCs created by this cluster that are available but not attached to a Pod |
-| `resizingPVC` <br/> _[]string_ | PVCs that have ResizingPVC condition |
-| `initializingPVC` <br/> _[]string_ | PVCs being initialized by this cluster |
-| `healthyPVC` <br/> _[]string_ | PVCs not dangling nor initializing |
-| `unusablePVC` <br/> _[]string_ | PVCs unusable because another PVC is missing |
-| `writeService` <br/> _string_ | Current write pod |
-| `readService` <br/> _string_ | Current list of read pods |
-| `phase` <br/> _string_ | Current phase of the cluster |
-| `phaseReason` <br/> _string_ | Reason for the current phase |
-| `secretsResourceVersion` <br/> _SecretsResourceVersion_ | Resource versions of secrets managed by the operator; used to refresh secret data |
-| `configMapResourceVersion` <br/> _ConfigMapResourceVersion_ | Resource versions of configmaps managed by the operator; used to refresh configmap data |
-| `certificates` <br/> _CertificatesStatus_ | Certificates status, initialized with defaults |
-| `firstRecoverabilityPoint` <br/> _string_ | First recoverability point as RFC3339 date (Deprecated for plugin backups) |
-| `firstRecoverabilityPointByMethod` <br/> _map[BackupMethod]meta/v1.Time_ | First recoverability point per backup method (Deprecated for plugin backups) |
-| `lastSuccessfulBackup` <br/> _string_ | Last successful backup as RFC3339 (Deprecated for plugin backups) |
-| `lastSuccessfulBackupByMethod` <br/> _map[BackupMethod]meta/v1.Time_ | Last successful backup per method (Deprecated for plugin backups) |
-| `lastFailedBackup` <br/> _string_ | Last failed backup as RFC3339 (Deprecated for plugin backups) |
-| `cloudNativePGCommitHash` <br/> _string_ | Commit hash of the operator running |
-| `currentPrimaryTimestamp` <br/> _string_ | Timestamp of last actual promotion to primary |
-| `currentPrimaryFailingSinceTimestamp` <br/> _string_ | Timestamp when the primary was detected unhealthy |
-| `targetPrimaryTimestamp` <br/> _string_ | Timestamp when last request for a new primary occurred |
-| `poolerIntegrations` <br/> _PoolerIntegrations_ | Integration info needed by poolers referencing the cluster |
-| `cloudNativePGOperatorHash` <br/> _string_ | Hash of the operator binary |
-| `availableArchitectures` <br/> _[]AvailableArchitecture_ | Available architectures of a cluster |
-| `conditions` <br/> _[]meta/v1.Condition_ | Conditions for cluster object |
-| `instanceNames` <br/> _[]string_ | List of instance names in the cluster |
-| `onlineUpdateEnabled` <br/> _bool_ | Shows if online upgrade is enabled inside the cluster |
-| `image` <br/> _string_ | Image name used by the pods |
-| `pgDataImageInfo` <br/> _ImageInfo_ | Details of the latest image that has run on the current data directory |
-| `pluginStatus` <br/> _[]PluginStatus_ | Status of loaded plugins |
-| `switchReplicaClusterStatus` <br/> _SwitchReplicaClusterStatus_ | Status of switch to replica cluster |
-| `demotionToken` <br/> _string_ | JSON token with info from pg_controldata |
-| `systemID` <br/> _string_ | Latest detected PostgreSQL SystemID |
-
-## ConfigMapResourceVersion     {#postgresql-cnpg-io-v1-ConfigMapResourceVersion}
-
-**Appears in:**
-
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
-
-<p>ConfigMapResourceVersion is the resource versions of the secrets managed by the operator</p>
+_Appears in:_
 
-| Field | Description |
-|-------|-------------|
-| `metrics` <br/> _map[string]string_ | A map with the versions of all config maps used to pass metrics. Keys are config map names, values are versions. |
+- [PodTemplateSpec](#podtemplatespec)
+- [ServiceAccountTemplate](#serviceaccounttemplate)
+- [ServiceTemplateSpec](#servicetemplatespec)
 
-## DataDurabilityLevel     {#postgresql-cnpg-io-v1-DataDurabilityLevel}
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | The name of the resource. Only supported for certain types |  |  |  |
+| `labels` _object (keys:string, values:string)_ | Map of string keys and values that can be used to organize and categorize<br />(scope and select) objects. May match selectors of replication controllers<br />and services.<br />More info: http://kubernetes.io/docs/user-guide/labels |  |  |  |
+| `annotations` _object (keys:string, values:string)_ | Annotations is an unstructured key value map stored with a resource that may be<br />set by external tools to store and retrieve arbitrary metadata. They are not<br />queryable and should be preserved when modifying objects.<br />More info: http://kubernetes.io/docs/user-guide/annotations |  |  |  |
 
-(Alias of `string`)
 
-**Appears in:**
+#### MonitoringConfiguration
 
-- [SynchronousReplicaConfiguration](#postgresql-cnpg-io-v1-SynchronousReplicaConfiguration)
 
-<p>DataDurabilityLevel specifies how strictly to enforce synchronous replication when cluster instances are unavailable. Options are `required` or `preferred`.</p>
 
-## DataSource     {#postgresql-cnpg-io-v1-DataSource}
+MonitoringConfiguration is the type containing all the monitoring
+configuration for a certain cluster
 
-**Appears in:**
 
-- [BootstrapRecovery](#postgresql-cnpg-io-v1-BootstrapRecovery)
 
-<p>DataSource contains the configuration required to bootstrap a PostgreSQL cluster from an existing storage</p>
+_Appears in:_
 
-| Field | Description |
-|-------|-------------|
-| `storage` <br/> _core/v1.TypedLocalObjectReference_ **[Required]** | Configuration of the storage of the instances |
-| `walStorage` <br/> _core/v1.TypedLocalObjectReference_ | Configuration of the storage for PostgreSQL WAL |
-| `tablespaceStorage` <br/> _map[string]core/v1.TypedLocalObjectReference_ | Configuration of the storage for PostgreSQL tablespaces |
+- [ClusterSpec](#clusterspec)
 
-## DatabaseObjectSpec     {#postgresql-cnpg-io-v1-DatabaseObjectSpec}
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `disableDefaultQueries` _boolean_ | Whether the default queries should be injected.<br />Set it to `true` if you don't want to inject default queries into the cluster.<br />Default: false. |  | false |  |
+| `customQueriesConfigMap` _[ConfigMapKeySelector](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#ConfigMapKeySelector) array_ | The list of config maps containing the custom queries |  |  |  |
+| `customQueriesSecret` _[SecretKeySelector](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#SecretKeySelector) array_ | The list of secrets containing the custom queries |  |  |  |
+| `enablePodMonitor` _boolean_ | Enable or disable the `PodMonitor`<br />Deprecated: This feature will be removed in an upcoming release. If<br />you need this functionality, you can create a PodMonitor manually. |  | false |  |
+| `tls` _[ClusterMonitoringTLSConfiguration](#clustermonitoringtlsconfiguration)_ | Configure TLS communication for the metrics endpoint.<br />Changing tls.enabled option will force a rollout of all instances. |  |  |  |
+| `podMonitorMetricRelabelings` _[RelabelConfig](https://pkg.go.dev/github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1#RelabelConfig) array_ | The list of metric relabelings for the `PodMonitor`. Applied to samples before ingestion.<br />Deprecated: This feature will be removed in an upcoming release. If<br />you need this functionality, you can create a PodMonitor manually. |  |  |  |
+| `podMonitorRelabelings` _[RelabelConfig](https://pkg.go.dev/github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1#RelabelConfig) array_ | The list of relabelings for the `PodMonitor`. Applied to samples before scraping.<br />Deprecated: This feature will be removed in an upcoming release. If<br />you need this functionality, you can create a PodMonitor manually. |  |  |  |
 
-**Appears in:**
 
-- [ExtensionSpec](#postgresql-cnpg-io-v1-ExtensionSpec)
-- [FDWSpec](#postgresql-cnpg-io-v1-FDWSpec)
-- [SchemaSpec](#postgresql-cnpg-io-v1-SchemaSpec)
-- [ServerSpec](#postgresql-cnpg-io-v1-ServerSpec)
+#### NodeMaintenanceWindow
 
-<p>DatabaseObjectSpec contains fields common to every database object</p>
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Name of the object (extension, schema, FDW, server) |
-| `ensure` <br/> _EnsureOption_ | Specifies whether an object should be present or absent. |
 
-## DatabaseObjectStatus     {#postgresql-cnpg-io-v1-DatabaseObjectStatus}
+NodeMaintenanceWindow contains information that the operator
+will use while upgrading the underlying node.
 
-**Appears in:**
+This option is only useful when the chosen storage prevents the Pods
+from being freely moved across nodes.
 
-- [DatabaseStatus](#postgresql-cnpg-io-v1-DatabaseStatus)
 
-<p>DatabaseObjectStatus is the status of the managed database objects</p>
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | The name of the object |
-| `applied` <br/> _bool_ **[Required]** | True if the object has been installed successfully in the database |
-| `message` <br/> _string_ | Reconciliation message |
+_Appears in:_
 
-## DatabaseReclaimPolicy     {#postgresql-cnpg-io-v1-DatabaseReclaimPolicy}
+- [ClusterSpec](#clusterspec)
 
-(Alias of `string`)
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `reusePVC` _boolean_ | Reuse the existing PVC (wait for the node to come<br />up again) or not (recreate it elsewhere - when `instances` >1) |  | true |  |
+| `inProgress` _boolean_ | Is there a node maintenance activity in progress? |  | false |  |
 
-**Appears in:**
 
-- [DatabaseSpec](#postgresql-cnpg-io-v1-DatabaseSpec)
+#### OnlineConfiguration
 
-<p>DatabaseReclaimPolicy describes a policy for end-of-life maintenance of databases.</p>
 
-## DatabaseRoleRef     {#postgresql-cnpg-io-v1-DatabaseRoleRef}
 
-**Appears in:**
+OnlineConfiguration contains the configuration parameters for the online volume snapshot
 
-- [TablespaceConfiguration](#postgresql-cnpg-io-v1-TablespaceConfiguration)
 
-<p>DatabaseRoleRef is a reference to a role available inside PostgreSQL</p>
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ | No description provided. |
+_Appears in:_
 
-## DatabaseSpec     {#postgresql-cnpg-io-v1-DatabaseSpec}
+- [BackupSpec](#backupspec)
+- [ScheduledBackupSpec](#scheduledbackupspec)
+- [VolumeSnapshotConfiguration](#volumesnapshotconfiguration)
 
-**Appears in:**
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `waitForArchive` _boolean_ | If false, the function will return immediately after the backup is completed,<br />without waiting for WAL to be archived.<br />This behavior is only useful with backup software that independently monitors WAL archiving.<br />Otherwise, WAL required to make the backup consistent might be missing and make the backup useless.<br />By default, or when this parameter is true, pg_backup_stop will wait for WAL to be archived when archiving is<br />enabled.<br />On a standby, this means that it will wait only when archive_mode = always.<br />If write activity on the primary is low, it may be useful to run pg_switch_wal on the primary in order to trigger<br />an immediate segment switch. |  | true |  |
+| `immediateCheckpoint` _boolean_ | Control whether the I/O workload for the backup initial checkpoint will<br />be limited, according to the `checkpoint_completion_target` setting on<br />the PostgreSQL server. If set to true, an immediate checkpoint will be<br />used, meaning PostgreSQL will complete the checkpoint as soon as<br />possible. `false` by default. |  |  |  |
 
-- [Database](#postgresql-cnpg-io-v1-Database)
 
-<p>DatabaseSpec is the specification of a PostgreSQL Database, built around `CREATE DATABASE`, `ALTER DATABASE`, and `DROP DATABASE` SQL commands.</p>
+#### PasswordState
 
-| Field | Description |
-|-------|-------------|
-| `cluster` <br/> _core/v1.LocalObjectReference_ **[Required]** | The name of the PostgreSQL cluster hosting the database. |
-| `ensure` <br/> _EnsureOption_ | Ensure the PostgreSQL database is `present` or `absent` - defaults to `present`. |
-| `name` <br/> _string_ **[Required]** | The name of the database to create inside PostgreSQL. Cannot be changed. |
-| `owner` <br/> _string_ **[Required]** | Role name of the user who owns the database inside PostgreSQL. |
-| `template` <br/> _string_ | Maps to `TEMPLATE` parameter of `CREATE DATABASE`. Cannot be changed. |
-| `encoding` <br/> _string_ | Maps to `ENCODING` parameter of `CREATE DATABASE`. Cannot be changed. |
-| `locale` <br/> _string_ | Maps to `LOCALE` parameter of `CREATE DATABASE`. Cannot be changed. |
-| `localeProvider` <br/> _string_ | Maps to `LOCALE_PROVIDER` parameter. Cannot be changed. Available from PostgreSQL 16. |
-| `localeCollate` <br/> _string_ | Maps to `LC_COLLATE` parameter of `CREATE DATABASE`. Cannot be changed. |
-| `localeCType` <br/> _string_ | Maps to `LC_CTYPE` parameter of `CREATE DATABASE`. Cannot be changed. |
-| `icuLocale` <br/> _string_ | Maps to `ICU_LOCALE` parameter. Requires `localeProvider` = `icu`. |
-| `icuRules` <br/> _string_ | Maps to `ICU_RULES` parameter. Requires `localeProvider` = `icu`. |
-| `builtinLocale` <br/> _string_ | Maps to `BUILTIN_LOCALE` parameter. Requires `localeProvider` = `builtin`. |
-| `collationVersion` <br/> _string_ | Maps to `COLLATION_VERSION` parameter. Cannot be changed. |
-| `isTemplate` <br/> _bool_ | Maps to `IS_TEMPLATE` parameter. If true, DB considered template and can be cloned by users with `CREATEDB`. |
-| `allowConnections` <br/> _bool_ | Maps to `ALLOW_CONNECTIONS` parameter. If false, no one can connect to DB. |
-| `connectionLimit` <br/> _int_ | Maps to `CONNECTION LIMIT`. -1 (default) means no limit. |
-| `tablespace` <br/> _string_ | Maps to `TABLESPACE` parameter. |
-| `databaseReclaimPolicy` <br/> _DatabaseReclaimPolicy_ | Policy for end-of-life maintenance of this database. |
-| `schemas` <br/> _[]SchemaSpec_ | List of schemas to be managed in the database |
-| `extensions` <br/> _[]ExtensionSpec_ | List of extensions to be managed in the database |
-| `fdws` <br/> _[]FDWSpec_ | List of foreign data wrappers to be managed |
-| `servers` <br/> _[]ServerSpec_ | List of foreign servers to be managed |
-
-## DatabaseStatus     {#postgresql-cnpg-io-v1-DatabaseStatus}
-
-**Appears in:**
-
-- [Database](#postgresql-cnpg-io-v1-Database)
-
-<p>DatabaseStatus defines the observed state of Database</p>
 
-| Field | Description |
-|-------|-------------|
-| `observedGeneration` <br/> _int64_ | Sequence number representing the latest desired state that was synchronized |
-| `applied` <br/> _bool_ | True if the database was reconciled correctly |
-| `message` <br/> _string_ | Reconciliation output message |
-| `schemas` <br/> _[]DatabaseObjectStatus_ | Status of managed schemas |
-| `extensions` <br/> _[]DatabaseObjectStatus_ | Status of managed extensions |
-| `fdws` <br/> _[]DatabaseObjectStatus_ | Status of managed FDWs |
-| `servers` <br/> _[]DatabaseObjectStatus_ | Status of managed servers |
 
-## EmbeddedObjectMetadata     {#postgresql-cnpg-io-v1-EmbeddedObjectMetadata}
+PasswordState represents the state of the password of a managed RoleConfiguration
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
 
-<p>EmbeddedObjectMetadata contains metadata to be inherited by all resources related to a Cluster</p>
+_Appears in:_
 
-| Field | Description |
-|-------|-------------|
-| `labels` <br/> _map[string]string_ | No description provided. |
-| `annotations` <br/> _map[string]string_ | No description provided. |
+- [ManagedRoles](#managedroles)
 
-## EnsureOption     {#postgresql-cnpg-io-v1-EnsureOption}
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `transactionID` _integer_ | the last transaction ID to affect the role definition in PostgreSQL |  |  |  |
+| `resourceVersion` _string_ | the resource version of the password secret |  |  |  |
 
-(Alias of `string`)
 
-**Appears in:**
+#### PgBouncerIntegrationStatus
 
-- [DatabaseObjectSpec](#postgresql-cnpg-io-v1-DatabaseObjectSpec)
-- [DatabaseSpec](#postgresql-cnpg-io-v1-DatabaseSpec)
-- [OptionSpec](#postgresql-cnpg-io-v1-OptionSpec)
-- [RoleConfiguration](#postgresql-cnpg-io-v1-RoleConfiguration)
 
-<p>EnsureOption represents whether we should enforce the presence or absence of a Role in a PostgreSQL instance</p>
 
-## EphemeralVolumesSizeLimitConfiguration     {#postgresql-cnpg-io-v1-EphemeralVolumesSizeLimitConfiguration}
+PgBouncerIntegrationStatus encapsulates the needed integration for the pgbouncer poolers referencing the cluster
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
 
-<p>EphemeralVolumesSizeLimitConfiguration contains the configuration of the ephemeral storage</p>
+_Appears in:_
 
-| Field | Description |
-|-------|-------------|
-| `shm` <br/> _k8s.io/apimachinery/pkg/api/resource.Quantity_ | Shm is the size limit of the shared memory volume |
-| `temporaryData` <br/> _k8s.io/apimachinery/pkg/api/resource.Quantity_ | TemporaryData is the size limit of the temporary data volume |
+- [PoolerIntegrations](#poolerintegrations)
 
-## ExtensionConfiguration     {#postgresql-cnpg-io-v1-ExtensionConfiguration}
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `secrets` _string array_ |  |  |  |  |
 
-**Appears in:**
 
-- [PostgresConfiguration](#postgresql-cnpg-io-v1-PostgresConfiguration)
+#### PgBouncerPoolMode
 
-<p>ExtensionConfiguration is the configuration used to add PostgreSQL extensions to the Cluster.</p>
+_Underlying type:_ _string_
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | The name of the extension, required |
-| `image` <br/> _core/v1.ImageVolumeSource_ **[Required]** | The image containing the extension, required |
-| `extension_control_path` <br/> _[]string_ | List of directories inside the image to add to extension_control_path (defaults to `/share`) |
-| `dynamic_library_path` <br/> _[]string_ | List of directories inside the image to add to dynamic_library_path (defaults to `/lib`) |
-| `ld_library_path` <br/> _[]string_ | List of directories inside the image to add to ld_library_path |
+PgBouncerPoolMode is the mode of PgBouncer
 
-## ExtensionSpec     {#postgresql-cnpg-io-v1-ExtensionSpec}
+_Validation:_
 
-**Appears in:**
+- Enum: [session transaction]
 
-- [DatabaseSpec](#postgresql-cnpg-io-v1-DatabaseSpec)
+_Appears in:_
 
-<p>ExtensionSpec configures an extension in a database</p>
+- [PgBouncerSpec](#pgbouncerspec)
 
-| Field | Description |
-|-------|-------------|
-| `DatabaseObjectSpec` <br/> _DatabaseObjectSpec_ | (Members embedded) Common fields |
-| `version` <br/> _string_ **[Required]** | Version of the extension to install. If empty, operator installs default version. |
-| `schema` <br/> _string_ **[Required]** | Schema in which to install extension objects. If not specified, default behavior applies. |
 
-## ExternalCluster     {#postgresql-cnpg-io-v1-ExternalCluster}
 
-**Appears in:**
+#### PgBouncerSecrets
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
 
-<p>ExternalCluster represents connection parameters to an external cluster used in the other sections</p>
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Server name |
-| `connectionParameters` <br/> _map[string]string_ | Connection parameters such as dbname, host, username, etc |
-| `sslCert` <br/> _core/v1.SecretKeySelector_ | Reference to an SSL certificate to connect to this instance |
-| `sslKey` <br/> _core/v1.SecretKeySelector_ | Reference to an SSL private key to connect to this instance |
-| `sslRootCert` <br/> _core/v1.SecretKeySelector_ | Reference to an SSL CA public key to connect to this instance |
-| `password` <br/> _core/v1.SecretKeySelector_ | Reference to the password to be used. CloudNativePG creates a passfile at `/controller/external/NAME/pass` when provided. |
-| `barmanObjectStore` <br/> _github.com/cloudnative-pg/barman-cloud/pkg/api.BarmanObjectStoreConfiguration_ | Configuration for the barman-cloud tool suite |
-| `plugin` <br/> _PluginConfiguration_ **[Required]** | Configuration of the plugin that manages WAL archiving and backups for this external cluster |
+PgBouncerSecrets contains the versions of the secrets used
+by pgbouncer
 
-## FDWSpec     {#postgresql-cnpg-io-v1-FDWSpec}
 
-**Appears in:**
 
-- [DatabaseSpec](#postgresql-cnpg-io-v1-DatabaseSpec)
+_Appears in:_
 
-<p>FDWSpec configures a Foreign Data Wrapper in a database</p>
+- [PoolerSecrets](#poolersecrets)
 
-| Field | Description |
-|-------|-------------|
-| `DatabaseObjectSpec` <br/> _DatabaseObjectSpec_ | (Members embedded) Common fields |
-| `handler` <br/> _string_ | Name of the handler function (e.g., `postgres_fdw_handler`) |
-| `validator` <br/> _string_ | Name of the validator function (e.g., `postgres_fdw_validator`) |
-| `owner` <br/> _string_ | Database role that will own the FDW |
-| `options` <br/> _[]OptionSpec_ | Options specifies the configuration options for the FDW |
-| `usage` <br/> _[]UsageSpec_ | List of roles for which `USAGE` privileges on the FDW are granted or revoked |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `authQuery` _[SecretVersion](#secretversion)_ | The auth query secret version |  |  |  |
 
-## FailoverQuorumStatus     {#postgresql-cnpg-io-v1-FailoverQuorumStatus}
 
-**Appears in:**
+#### PgBouncerSpec
 
-- [FailoverQuorum](#postgresql-cnpg-io-v1-FailoverQuorum)
 
-<p>FailoverQuorumStatus is the latest observed status of the failover quorum of the PG cluster.</p>
 
-| Field | Description |
-|-------|-------------|
-| `method` <br/> _string_ | Contains the latest reported Method value. |
-| `standbyNames` <br/> _[]string_ | List of potentially synchronous instance names. |
-| `standbyNumber` <br/> _int_ | Number of synchronous standbys transactions need to wait for. |
-| `primary` <br/> _string_ | Name of the primary instance that updated this object the latest time. |
+PgBouncerSpec defines how to configure PgBouncer
 
-## ImageCatalogRef     {#postgresql-cnpg-io-v1-ImageCatalogRef}
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+_Appears in:_
 
-<p>ImageCatalogRef defines the reference to a major version in an ImageCatalog</p>
+- [PoolerSpec](#poolerspec)
 
-| Field | Description |
-|-------|-------------|
-| `TypedLocalObjectReference` <br/> _core/v1.TypedLocalObjectReference_ | (Members embedded) |
-| `major` <br/> _int_ **[Required]** | Major version of PostgreSQL to use from the ImageCatalog |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `poolMode` _[PgBouncerPoolMode](#pgbouncerpoolmode)_ | The pool mode. Default: `session`. |  | session | Enum: [session transaction] <br /> |
+| `authQuerySecret` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | The credentials of the user that need to be used for the authentication<br />query. In case it is specified, also an AuthQuery<br />(e.g. "SELECT usename, passwd FROM pg_catalog.pg_shadow WHERE usename=$1")<br />has to be specified and no automatic CNPG Cluster integration will be triggered. |  |  |  |
+| `authQuery` _string_ | The query that will be used to download the hash of the password<br />of a certain user. Default: "SELECT usename, passwd FROM public.user_search($1)".<br />In case it is specified, also an AuthQuerySecret has to be specified and<br />no automatic CNPG Cluster integration will be triggered. |  |  |  |
+| `parameters` _object (keys:string, values:string)_ | Additional parameters to be passed to PgBouncer - please check<br />the CNPG documentation for a list of options you can configure |  |  |  |
+| `pg_hba` _string array_ | PostgreSQL Host Based Authentication rules (lines to be appended<br />to the pg_hba.conf file) |  |  |  |
+| `paused` _boolean_ | When set to `true`, PgBouncer will disconnect from the PostgreSQL<br />server, first waiting for all queries to complete, and pause all new<br />client connections until this value is set to `false` (default). Internally,<br />the operator calls PgBouncer's `PAUSE` and `RESUME` commands. |  | false |  |
 
-## ImageCatalogSpec     {#postgresql-cnpg-io-v1-ImageCatalogSpec}
 
-**Appears in:**
+#### PluginConfiguration
 
-- [ClusterImageCatalog](#postgresql-cnpg-io-v1-ClusterImageCatalog)
-- [ImageCatalog](#postgresql-cnpg-io-v1-ImageCatalog)
 
-<p>ImageCatalogSpec defines the desired ImageCatalog</p>
 
-| Field | Description |
-|-------|-------------|
-| `images` <br/> _[]CatalogImage_ **[Required]** | List of CatalogImages available in the catalog |
+PluginConfiguration specifies a plugin that need to be loaded for this
+cluster to be reconciled
 
-## ImageInfo     {#postgresql-cnpg-io-v1-ImageInfo}
 
-**Appears in:**
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
+_Appears in:_
 
-<p>ImageInfo contains the information about a PostgreSQL image</p>
+- [ClusterSpec](#clusterspec)
+- [ExternalCluster](#externalcluster)
 
-| Field | Description |
-|-------|-------------|
-| `image` <br/> _string_ **[Required]** | Image is the image name |
-| `majorVersion` <br/> _int_ **[Required]** | MajorVersion is the major version of the image |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | Name is the plugin name | True |  |  |
+| `enabled` _boolean_ | Enabled is true if this plugin will be used |  | true |  |
+| `isWALArchiver` _boolean_ | Marks the plugin as the WAL archiver. At most one plugin can be<br />designated as a WAL archiver. This cannot be enabled if the<br />`.spec.backup.barmanObjectStore` configuration is present. |  | false |  |
+| `parameters` _object (keys:string, values:string)_ | Parameters is the configuration of the plugin |  |  |  |
 
-## Import     {#postgresql-cnpg-io-v1-Import}
 
-**Appears in:**
+#### PluginStatus
 
-- [BootstrapInitDB](#postgresql-cnpg-io-v1-BootstrapInitDB)
 
-<p>Import contains configuration to initialize a database from a logical snapshot of an externalCluster</p>
 
-| Field | Description |
-|-------|-------------|
-| `source` <br/> _ImportSource_ **[Required]** | The source of the import |
-| `type` <br/> _SnapshotType_ **[Required]** | The import type. Can be `microservice` or `monolith`. |
-| `databases` <br/> _[]string_ **[Required]** | The databases to import |
-| `roles` <br/> _[]string_ | The roles to import |
-| `postImportApplicationSQL` <br/> _[]string_ | SQL queries to execute in application DB after import (only available in microservice type) |
-| `schemaOnly` <br/> _bool_ | If true, only `pre-data` and `post-data` sections of `pg_restore` are invoked (default `false`) |
-| `pgDumpExtraOptions` <br/> _[]string_ | Custom options to pass to `pg_dump`. Use with caution; operator does not validate them. |
-| `pgRestoreExtraOptions` <br/> _[]string_ | Custom options to pass to `pg_restore`. Use with caution. |
-| `pgRestorePredataOptions` <br/> _[]string_ | Custom options to pass during `pre-data` section; overrides `pgRestoreExtraOptions`. |
-| `pgRestoreDataOptions` <br/> _[]string_ | Custom options to pass during `data` section; overrides `pgRestoreExtraOptions`. |
-| `pgRestorePostdataOptions` <br/> _[]string_ | Custom options to pass during `post-data` section; overrides `pgRestoreExtraOptions`. |
-
-## ImportSource     {#postgresql-cnpg-io-v1-ImportSource}
-
-**Appears in:**
-
-- [Import](#postgresql-cnpg-io-v1-Import)
-
-<p>ImportSource describes the source for the logical snapshot</p>
+PluginStatus is the status of a loaded plugin
 
-| Field | Description |
-|-------|-------------|
-| `externalCluster` <br/> _string_ **[Required]** | The name of the externalCluster used for import |
 
-## InstanceID     {#postgresql-cnpg-io-v1-InstanceID}
 
-**Appears in:**
+_Appears in:_
 
-- [BackupStatus](#postgresql-cnpg-io-v1-BackupStatus)
+- [ClusterStatus](#clusterstatus)
 
-<p>InstanceID contains the information to identify an instance</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | Name is the name of the plugin | True |  |  |
+| `version` _string_ | Version is the version of the plugin loaded by the<br />latest reconciliation loop | True |  |  |
+| `capabilities` _string array_ | Capabilities are the list of capabilities of the<br />plugin |  |  |  |
+| `operatorCapabilities` _string array_ | OperatorCapabilities are the list of capabilities of the<br />plugin regarding the reconciler |  |  |  |
+| `walCapabilities` _string array_ | WALCapabilities are the list of capabilities of the<br />plugin regarding the WAL management |  |  |  |
+| `backupCapabilities` _string array_ | BackupCapabilities are the list of capabilities of the<br />plugin regarding the Backup management |  |  |  |
+| `restoreJobHookCapabilities` _string array_ | RestoreJobHookCapabilities are the list of capabilities of the<br />plugin regarding the RestoreJobHook management |  |  |  |
+| `status` _string_ | Status contain the status reported by the plugin through the SetStatusInCluster interface |  |  |  |
 
-| Field | Description |
-|-------|-------------|
-| `podName` <br/> _string_ | The pod name |
-| `ContainerID` <br/> _string_ | The container ID |
 
-## InstanceReportedState     {#postgresql-cnpg-io-v1-InstanceReportedState}
+#### PodName
 
-**Appears in:**
+_Underlying type:_ _string_
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
+PodName is the name of a Pod
 
-<p>InstanceReportedState describes the last reported state of an instance during a reconciliation loop</p>
 
-| Field | Description |
-|-------|-------------|
-| `isPrimary` <br/> _bool_ **[Required]** | Indicates if an instance is the primary one |
-| `timeLineID` <br/> _int_ | TimelineId the instance is on |
-| `ip` <br/> _string_ **[Required]** | IP address of the instance |
 
-## IsolationCheckConfiguration     {#postgresql-cnpg-io-v1-IsolationCheckConfiguration}
+_Appears in:_
 
-**Appears in:**
+- [ClusterStatus](#clusterstatus)
+- [Topology](#topology)
 
-- [LivenessProbe](#postgresql-cnpg-io-v1-LivenessProbe)
 
-<p>IsolationCheckConfiguration contains configuration for the isolation check functionality in the liveness probe</p>
 
-| Field | Description |
-|-------|-------------|
-| `enabled` <br/> _bool_ | Whether primary isolation checking is enabled for the liveness probe |
-| `requestTimeout` <br/> _int_ | Timeout in milliseconds for requests during the primary isolation check |
-| `connectionTimeout` <br/> _int_ | Timeout in milliseconds for connections during the primary isolation check |
+#### PodStatus
 
-## LDAPBindAsAuth     {#postgresql-cnpg-io-v1-LDAPBindAsAuth}
+_Underlying type:_ _string_
 
-**Appears in:**
+PodStatus represent the possible status of pods
 
-- [LDAPConfig](#postgresql-cnpg-io-v1-LDAPConfig)
 
-<p>LDAPBindAsAuth provides required fields to use bind authentication for LDAP</p>
 
-| Field | Description |
-|-------|-------------|
-| `prefix` <br/> _string_ | Prefix for the bind authentication option |
-| `suffix` <br/> _string_ | Suffix for the bind authentication option |
+_Appears in:_
 
-## LDAPBindSearchAuth     {#postgresql-cnpg-io-v1-LDAPBindSearchAuth}
+- [ClusterStatus](#clusterstatus)
 
-**Appears in:**
 
-- [LDAPConfig](#postgresql-cnpg-io-v1-LDAPConfig)
 
-<p>LDAPBindSearchAuth provides required fields to use bind+search LDAP authentication</p>
+#### PodTemplateSpec
 
-| Field | Description |
-|-------|-------------|
-| `baseDN` <br/> _string_ | Root DN to begin the user search |
-| `bindDN` <br/> _string_ | DN of the user to bind to the directory |
-| `bindPassword` <br/> _core/v1.SecretKeySelector_ | Secret with the password for the user to bind |
-| `searchAttribute` <br/> _string_ | Attribute to match against the username |
-| `searchFilter` <br/> _string_ | Search filter to use when doing search+bind authentication |
 
-## LDAPConfig     {#postgresql-cnpg-io-v1-LDAPConfig}
 
-**Appears in:**
+PodTemplateSpec is a structure allowing the user to set
+a template for Pod generation.
 
-- [PostgresConfiguration](#postgresql-cnpg-io-v1-PostgresConfiguration)
+Unfortunately we can't use the corev1.PodTemplateSpec
+type because the generated CRD won't have the field for the
+metadata section.
 
-<p>LDAPConfig contains parameters needed for LDAP authentication</p>
+References:
+https://github.com/kubernetes-sigs/controller-tools/issues/385
+https://github.com/kubernetes-sigs/controller-tools/issues/448
+https://github.com/prometheus-operator/prometheus-operator/issues/3041
 
-| Field | Description |
-|-------|-------------|
-| `server` <br/> _string_ | LDAP hostname or IP address |
-| `port` <br/> _int_ | LDAP server port |
-| `scheme` <br/> _LDAPScheme_ | LDAP scheme: `ldap` or `ldaps` |
-| `bindAsAuth` <br/> _LDAPBindAsAuth_ | Bind as authentication configuration |
-| `bindSearchAuth` <br/> _LDAPBindSearchAuth_ | Bind+Search authentication configuration |
-| `tls` <br/> _bool_ | Set to `true` to enable LDAP over TLS (default `false`) |
 
-## LDAPScheme     {#postgresql-cnpg-io-v1-LDAPScheme}
 
-(Alias of `string`)
+_Appears in:_
 
-**Appears in:**
+- [PoolerSpec](#poolerspec)
 
-- [LDAPConfig](#postgresql-cnpg-io-v1-LDAPConfig)
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `metadata` _[Metadata](#metadata)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |  |
+| `spec` _[PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podspec-v1-core)_ | Specification of the desired behavior of the pod.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |  |
 
-<p>LDAPScheme defines possible schemes for LDAP</p>
 
-## LivenessProbe     {#postgresql-cnpg-io-v1-LivenessProbe}
+#### PodTopologyLabels
 
-**Appears in:**
+_Underlying type:_ _object_
 
-- [ProbesConfiguration](#postgresql-cnpg-io-v1-ProbesConfiguration)
+PodTopologyLabels represent the topology of a Pod. map[labelName]labelValue
 
-<p>LivenessProbe is the configuration of the liveness probe</p>
 
-| Field | Description |
-|-------|-------------|
-| `Probe` <br/> _Probe_ | (Members of `Probe` are embedded into this type.) Standard probe configuration |
-| `isolationCheck` <br/> _IsolationCheckConfiguration_ | Configure feature that extends liveness probe for a primary instance. Verifies isolation from API server and replicas. Enabled by default. |
 
-## ManagedConfiguration     {#postgresql-cnpg-io-v1-ManagedConfiguration}
+_Appears in:_
 
-**Appears in:**
+- [Topology](#topology)
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
 
-<p>ManagedConfiguration represents portions of PostgreSQL managed by the instance manager</p>
 
-| Field | Description |
-|-------|-------------|
-| `roles` <br/> _[]RoleConfiguration_ | Database roles managed by the Cluster |
-| `services` <br/> _ManagedServices_ | Services roles managed by the Cluster |
+#### Pooler
 
-## ManagedRoles     {#postgresql-cnpg-io-v1-ManagedRoles}
 
-**Appears in:**
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
+Pooler is the Schema for the poolers API
 
-<p>ManagedRoles tracks the status of a cluster's managed roles</p>
 
-| Field | Description |
-|-------|-------------|
-| `byStatus` <br/> _map[RoleStatus][]string_ | Lists roles in each state |
-| `cannotReconcile` <br/> _map[string][]string_ | Roles that cannot be reconciled with explanation |
-| `passwordStatus` <br/> _map[string]PasswordState_ | Last transaction id and password secret version for each managed role |
 
-## ManagedService     {#postgresql-cnpg-io-v1-ManagedService}
 
-**Appears in:**
 
-- [ManagedServices](#postgresql-cnpg-io-v1-ManagedServices)
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiVersion` _string_ | `postgresql.cnpg.io/v1` | True | | |
+| `kind` _string_ | `Pooler` | True | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
+| `spec` _[PoolerSpec](#poolerspec)_ | Specification of the desired behavior of the Pooler.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | True |  |  |
+| `status` _[PoolerStatus](#poolerstatus)_ | Most recently observed status of the Pooler. This data may not be up to<br />date. Populated by the system. Read-only.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |  |
 
-<p>ManagedService represents a specific service managed by the cluster.</p>
 
-| Field | Description |
-|-------|-------------|
-| `selectorType` <br/> _ServiceSelectorType_ **[Required]** | SelectorType specifies type of selectors: `rw`, `r`, `ro` |
-| `updateStrategy` <br/> _ServiceUpdateStrategy_ | UpdateStrategy describes how service differences should be reconciled |
-| `serviceTemplate` <br/> _ServiceTemplateSpec_ **[Required]** | Template spec for the service |
+#### PoolerIntegrations
 
-## ManagedServices     {#postgresql-cnpg-io-v1-ManagedServices}
 
-**Appears in:**
 
-- [ManagedConfiguration](#postgresql-cnpg-io-v1-ManagedConfiguration)
+PoolerIntegrations encapsulates the needed integration for the poolers referencing the cluster
 
-<p>ManagedServices represents services managed by the cluster.</p>
 
-| Field | Description |
-|-------|-------------|
-| `disabledDefaultServices` <br/> _[]ServiceSelectorType_ | Services disabled by default (`r`, `ro`) |
-| `additional` <br/> _[]ManagedService_ | Additional managed services specified by user |
 
-## Metadata     {#postgresql-cnpg-io-v1-Metadata}
+_Appears in:_
 
-**Appears in:**
+- [ClusterStatus](#clusterstatus)
 
-- [PodTemplateSpec](#postgresql-cnpg-io-v1-PodTemplateSpec)
-- [ServiceAccountTemplate](#postgresql-cnpg-io-v1-ServiceAccountTemplate)
-- [ServiceTemplateSpec](#postgresql-cnpg-io-v1-ServiceTemplateSpec)
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `pgBouncerIntegration` _[PgBouncerIntegrationStatus](#pgbouncerintegrationstatus)_ |  |  |  |  |
 
-<p>Metadata is similar to metav1.ObjectMeta but parseable by controller-gen to create a suitable CRD for the user.</p>
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ | Name of the resource. Only supported for certain types |
-| `labels` <br/> _map[string]string_ | Map of string keys/values to organize and categorize objects |
-| `annotations` <br/> _map[string]string_ | Unstructured key-value map stored with a resource for arbitrary metadata |
+#### PoolerMonitoringConfiguration
 
-## MonitoringConfiguration     {#postgresql-cnpg-io-v1-MonitoringConfiguration}
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+PoolerMonitoringConfiguration is the type containing all the monitoring
+configuration for a certain Pooler.
 
-<p>MonitoringConfiguration contains monitoring configuration for a cluster</p>
+Mirrors the Cluster's MonitoringConfiguration but without the custom queries
+part for now.
 
-| Field | Description |
-|-------|-------------|
-| `disableDefaultQueries` <br/> _bool_ | Whether default queries should be injected. Default: `false`. |
-| `customQueriesConfigMap` <br/> _[]github.com/cloudnative-pg/machinery/pkg/api.ConfigMapKeySelector_ | ConfigMaps containing custom queries |
-| `customQueriesSecret` <br/> _[]github.com/cloudnative-pg/machinery/pkg/api.SecretKeySelector_ | Secrets containing custom queries |
-| `enablePodMonitor` <br/> _bool_ | Enable/disable `PodMonitor`. Deprecated: will be removed. |
-| `tls` <br/> _ClusterMonitoringTLSConfiguration_ | Configure TLS for metrics endpoint. |
-| `podMonitorMetricRelabelings` <br/> _[]prometheus RelabelConfig_ | Metric relabelings for PodMonitor. Deprecated. |
-| `podMonitorRelabelings` <br/> _[]prometheus RelabelConfig_ | Relabelings for PodMonitor. Deprecated. |
 
-## NodeMaintenanceWindow     {#postgresql-cnpg-io-v1-NodeMaintenanceWindow}
 
-**Appears in:**
+_Appears in:_
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+- [PoolerSpec](#poolerspec)
 
-<p>NodeMaintenanceWindow contains information operator will use while upgrading the underlying node.</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `enablePodMonitor` _boolean_ | Enable or disable the `PodMonitor` |  | false |  |
+| `podMonitorMetricRelabelings` _[RelabelConfig](https://pkg.go.dev/github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1#RelabelConfig) array_ | The list of metric relabelings for the `PodMonitor`. Applied to samples before ingestion. |  |  |  |
+| `podMonitorRelabelings` _[RelabelConfig](https://pkg.go.dev/github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1#RelabelConfig) array_ | The list of relabelings for the `PodMonitor`. Applied to samples before scraping. |  |  |  |
 
-| Field | Description |
-|-------|-------------|
-| `reusePVC` <br/> _bool_ | Reuse existing PVC (wait for node) or recreate it elsewhere when `instances` &gt; 1 |
-| `inProgress` <br/> _bool_ | Is there a node maintenance activity in progress? |
 
-## OnlineConfiguration     {#postgresql-cnpg-io-v1-OnlineConfiguration}
+#### PoolerSecrets
 
-**Appears in:**
 
-- [BackupSpec](#postgresql-cnpg-io-v1-BackupSpec)
-- [ScheduledBackupSpec](#postgresql-cnpg-io-v1-ScheduledBackupSpec)
-- [VolumeSnapshotConfiguration](#postgresql-cnpg-io-v1-VolumeSnapshotConfiguration)
 
-<p>OnlineConfiguration contains configuration parameters for online volume snapshot</p>
+PoolerSecrets contains the versions of all the secrets used
 
-| Field | Description |
-|-------|-------------|
-| `waitForArchive` <br/> _bool_ | If false, returns immediately after backup completed without waiting for WAL to be archived. Default: true (waits). |
-| `immediateCheckpoint` <br/> _bool_ | Control whether I/O workload for initial checkpoint is limited. If true, immediate checkpoint used (default `false`). |
 
-## OptionSpec     {#postgresql-cnpg-io-v1-OptionSpec}
 
-**Appears in:**
+_Appears in:_
 
-- [FDWSpec](#postgresql-cnpg-io-v1-FDWSpec)
-- [ServerSpec](#postgresql-cnpg-io-v1-ServerSpec)
+- [PoolerStatus](#poolerstatus)
 
-<p>OptionSpec holds the name, value and ensure field for an option</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `serverTLS` _[SecretVersion](#secretversion)_ | The server TLS secret version |  |  |  |
+| `serverCA` _[SecretVersion](#secretversion)_ | The server CA secret version |  |  |  |
+| `clientCA` _[SecretVersion](#secretversion)_ | The client CA secret version |  |  |  |
+| `pgBouncerSecrets` _[PgBouncerSecrets](#pgbouncersecrets)_ | The version of the secrets used by PgBouncer |  |  |  |
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Name of the option |
-| `value` <br/> _string_ **[Required]** | Value of the option |
-| `ensure` <br/> _EnsureOption_ | Whether the option should be present or absent |
 
-## PasswordState     {#postgresql-cnpg-io-v1-PasswordState}
+#### PoolerSpec
 
-**Appears in:**
 
-- [ManagedRoles](#postgresql-cnpg-io-v1-ManagedRoles)
 
-<p>PasswordState represents the state of the password of a managed RoleConfiguration</p>
+PoolerSpec defines the desired state of Pooler
 
-| Field | Description |
-|-------|-------------|
-| `transactionID` <br/> _int64_ | Last transaction ID to affect role definition in PostgreSQL |
-| `resourceVersion` <br/> _string_ | Resource version of the password secret |
 
-## PgBouncerIntegrationStatus     {#postgresql-cnpg-io-v1-PgBouncerIntegrationStatus}
 
-**Appears in:**
+_Appears in:_
 
-- [PoolerIntegrations](#postgresql-cnpg-io-v1-PoolerIntegrations)
+- [Pooler](#pooler)
 
-<p>PgBouncerIntegrationStatus encapsulates integration needed for pgbouncer poolers referencing the cluster</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `cluster` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | This is the cluster reference on which the Pooler will work.<br />Pooler name should never match with any cluster name within the same namespace. | True |  |  |
+| `type` _[PoolerType](#poolertype)_ | Type of service to forward traffic to. Default: `rw`. |  | rw | Enum: [rw ro r] <br /> |
+| `instances` _integer_ | The number of replicas we want. Default: 1. |  | 1 |  |
+| `template` _[PodTemplateSpec](#podtemplatespec)_ | The template of the Pod to be created |  |  |  |
+| `pgbouncer` _[PgBouncerSpec](#pgbouncerspec)_ | The PgBouncer configuration | True |  |  |
+| `deploymentStrategy` _[DeploymentStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#deploymentstrategy-v1-apps)_ | The deployment strategy to use for pgbouncer to replace existing pods with new ones |  |  |  |
+| `monitoring` _[PoolerMonitoringConfiguration](#poolermonitoringconfiguration)_ | The configuration of the monitoring infrastructure of this pooler.<br />Deprecated: This feature will be removed in an upcoming release. If<br />you need this functionality, you can create a PodMonitor manually. |  |  |  |
+| `serviceTemplate` _[ServiceTemplateSpec](#servicetemplatespec)_ | Template for the Service to be created |  |  |  |
 
-| Field | Description |
-|-------|-------------|
-| `secrets` <br/> _[]string_ | No description provided. |
 
-## PgBouncerPoolMode     {#postgresql-cnpg-io-v1-PgBouncerPoolMode}
+#### PoolerStatus
 
-(Alias of `string`)
 
-**Appears in:**
 
-- [PgBouncerSpec](#postgresql-cnpg-io-v1-PgBouncerSpec)
+PoolerStatus defines the observed state of Pooler
 
-<p>PgBouncerPoolMode is the mode of PgBouncer</p>
 
-## PgBouncerSecrets     {#postgresql-cnpg-io-v1-PgBouncerSecrets}
 
-**Appears in:**
+_Appears in:_
 
-- [PoolerSecrets](#postgresql-cnpg-io-v1-PoolerSecrets)
+- [Pooler](#pooler)
 
-<p>PgBouncerSecrets contains versions of secrets used by pgbouncer</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `secrets` _[PoolerSecrets](#poolersecrets)_ | The resource version of the config object |  |  |  |
+| `instances` _integer_ | The number of pods trying to be scheduled |  |  |  |
 
-| Field | Description |
-|-------|-------------|
-| `authQuery` <br/> _SecretVersion_ | The auth query secret version |
 
-## PgBouncerSpec     {#postgresql-cnpg-io-v1-PgBouncerSpec}
+#### PoolerType
 
-**Appears in:**
+_Underlying type:_ _string_
 
-- [PoolerSpec](#postgresql-cnpg-io-v1-PoolerSpec)
+PoolerType is the type of the connection pool, meaning the service
+we are targeting. Allowed values are `rw` and `ro`.
 
-<p>PgBouncerSpec defines how to configure PgBouncer</p>
+_Validation:_
 
-| Field | Description |
-|-------|-------------|
-| `poolMode` <br/> _PgBouncerPoolMode_ | Pool mode. Default: `session`. |
-| `authQuerySecret` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ | Credentials of the user for auth query. If specified, automatic CNPG Cluster integration is not triggered. |
-| `authQuery` <br/> _string_ | Query used to download password hash. Default: `SELECT usename, passwd FROM public.user_search($1)`. If specified, `authQuerySecret` must be specified and no automatic integration is triggered. |
-| `parameters` <br/> _map[string]string_ | Additional parameters for PgBouncer |
-| `pg_hba` <br/> _[]string_ | PostgreSQL Host Based Authentication rules to append to `pg_hba.conf` |
-| `paused` <br/> _bool_ | If true, PgBouncer will pause new client connections. |
+- Enum: [rw ro r]
 
-## PluginConfiguration     {#postgresql-cnpg-io-v1-PluginConfiguration}
+_Appears in:_
 
-**Appears in:**
+- [PoolerSpec](#poolerspec)
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
-- [ExternalCluster](#postgresql-cnpg-io-v1-ExternalCluster)
 
-<p>PluginConfiguration specifies a plugin that needs to be loaded for cluster reconciliation</p>
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Plugin name |
-| `enabled` <br/> _bool_ | Whether plugin is enabled |
-| `isWALArchiver` <br/> _bool_ | Only one plugin can be WALArchiver. Cannot be active if `.spec.backup.barmanObjectStore` is present. |
-| `parameters` <br/> _map[string]string_ | Plugin configuration parameters |
+#### PostgresConfiguration
+
+
+
+PostgresConfiguration defines the PostgreSQL configuration
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
 
-## PluginStatus     {#postgresql-cnpg-io-v1-PluginStatus}
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `parameters` _object (keys:string, values:string)_ | PostgreSQL configuration options (postgresql.conf) |  |  |  |
+| `synchronous` _[SynchronousReplicaConfiguration](#synchronousreplicaconfiguration)_ | Configuration of the PostgreSQL synchronous replication feature |  |  |  |
+| `pg_hba` _string array_ | PostgreSQL Host Based Authentication rules (lines to be appended<br />to the pg_hba.conf file) |  |  |  |
+| `pg_ident` _string array_ | PostgreSQL User Name Maps rules (lines to be appended<br />to the pg_ident.conf file) |  |  |  |
+| `syncReplicaElectionConstraint` _[SyncReplicaElectionConstraints](#syncreplicaelectionconstraints)_ | Requirements to be met by sync replicas. This will affect how the "synchronous_standby_names" parameter will be<br />set up. |  |  |  |
+| `shared_preload_libraries` _string array_ | Lists of shared preload libraries to add to the default ones |  |  |  |
+| `ldap` _[LDAPConfig](#ldapconfig)_ | Options to specify LDAP configuration |  |  |  |
+| `promotionTimeout` _integer_ | Specifies the maximum number of seconds to wait when promoting an instance to primary.<br />Default value is 40000000, greater than one year in seconds,<br />big enough to simulate an infinite timeout |  |  |  |
+| `enableAlterSystem` _boolean_ | If this parameter is true, the user will be able to invoke `ALTER SYSTEM`<br />on this CloudNativePG Cluster.<br />This should only be used for debugging and troubleshooting.<br />Defaults to false. |  |  |  |
 
-**Appears in:**
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
+#### PrimaryUpdateMethod
 
-<p>PluginStatus is the status of a loaded plugin</p>
+_Underlying type:_ _string_
 
+PrimaryUpdateMethod contains the method to use when upgrading
+the primary server of the cluster as part of rolling updates
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
 | Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Name of the plugin |
-| `version` <br/> _string_ **[Required]** | Version of the plugin loaded by latest reconciliation |
-| `capabilities` <br/> _[]string_ | List of plugin capabilities |
-| `operatorCapabilities` <br/> _[]string_ | Plugin capabilities regarding the reconciler |
-| `walCapabilities` <br/> _[]string_ | Plugin capabilities regarding WAL management |
-| `backupCapabilities` <br/> _[]string_ | Plugin capabilities regarding Backup management |
-| `restoreJobHookCapabilities` <br/> _[]string_ | Plugin capabilities regarding RestoreJobHook management |
-| `status` <br/> _string_ | Status reported by plugin through SetStatusInCluster interface |
+| --- | --- |
+| `switchover` | PrimaryUpdateMethodSwitchover means that the operator will switchover to another updated<br />replica when it needs to upgrade the primary instance<br /> |
+| `restart` | PrimaryUpdateMethodRestart means that the operator will restart the primary instance in-place<br />when it needs to upgrade it<br /> |
+
+
+#### PrimaryUpdateStrategy
+
+_Underlying type:_ _string_
 
-## PodTemplateSpec     {#postgresql-cnpg-io-v1-PodTemplateSpec}
+PrimaryUpdateStrategy contains the strategy to follow when upgrading
+the primary server of the cluster as part of rolling updates
 
-**Appears in:**
 
-- [PoolerSpec](#postgresql-cnpg-io-v1-PoolerSpec)
 
-<p>PodTemplateSpec allows the user to set a template for Pod generation. Cannot use corev1.PodTemplateSpec because generated CRD won't have metadata field.</p>
+_Appears in:_
 
+- [ClusterSpec](#clusterspec)
+
 | Field | Description |
-|-------|-------------|
-| `metadata` <br/> _Metadata_ | Standard object's metadata. |
-| `spec` <br/> _core/v1.PodSpec_ | Specification of desired pod behavior. |
+| --- | --- |
+| `supervised` | PrimaryUpdateStrategySupervised means that the operator need to wait for the<br />user to manually issue a switchover request before updating the primary<br />server (`supervised`)<br /> |
+| `unsupervised` | PrimaryUpdateStrategyUnsupervised means that the operator will proceed with the<br />selected PrimaryUpdateMethod to another updated replica and then automatically update<br />the primary server (`unsupervised`, default)<br /> |
 
-## PodTopologyLabels     {#postgresql-cnpg-io-v1-PodTopologyLabels}
 
-(Alias of `map[string]string`)
+#### Probe
 
-**Appears in:**
 
-- [Topology](#postgresql-cnpg-io-v1-Topology)
 
-<p>PodTopologyLabels represent the topology of a Pod. map[labelName]labelValue</p>
+Probe describes a health check to be performed against a container to determine whether it is
+alive or ready to receive traffic.
 
-## PoolerIntegrations     {#postgresql-cnpg-io-v1-PoolerIntegrations}
 
-**Appears in:**
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
+_Appears in:_
 
-<p>PoolerIntegrations encapsulates needed integration for the poolers referencing the cluster</p>
+- [ProbesConfiguration](#probesconfiguration)
 
-| Field | Description |
-|-------|-------------|
-| `pgBouncerIntegration` <br/> _PgBouncerIntegrationStatus_ | No description provided. |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `initialDelaySeconds` _integer_ | Number of seconds after the container has started before liveness probes are initiated.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes |  |  |  |
+| `timeoutSeconds` _integer_ | Number of seconds after which the probe times out.<br />Defaults to 1 second. Minimum value is 1.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes |  |  |  |
+| `periodSeconds` _integer_ | How often (in seconds) to perform the probe.<br />Default to 10 seconds. Minimum value is 1. |  |  |  |
+| `successThreshold` _integer_ | Minimum consecutive successes for the probe to be considered successful after having failed.<br />Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1. |  |  |  |
+| `failureThreshold` _integer_ | Minimum consecutive failures for the probe to be considered failed after having succeeded.<br />Defaults to 3. Minimum value is 1. |  |  |  |
+| `terminationGracePeriodSeconds` _integer_ | Optional duration in seconds the pod needs to terminate gracefully upon probe failure.<br />The grace period is the duration in seconds after the processes running in the pod are sent<br />a termination signal and the time when the processes are forcibly halted with a kill signal.<br />Set this value longer than the expected cleanup time for your process.<br />If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this<br />value overrides the value provided by the pod spec.<br />Value must be non-negative integer. The value zero indicates stop immediately via<br />the kill signal (no opportunity to shut down).<br />This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.<br />Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset. |  |  |  |
 
-## PoolerMonitoringConfiguration     {#postgresql-cnpg-io-v1-PoolerMonitoringConfiguration}
 
-**Appears in:**
+#### ProbesConfiguration
 
-- [PoolerSpec](#postgresql-cnpg-io-v1-PoolerSpec)
 
-<p>PoolerMonitoringConfiguration contains monitoring configuration for a Pooler.</p>
 
-| Field | Description |
-|-------|-------------|
-| `enablePodMonitor` <br/> _bool_ | Enable or disable `PodMonitor` |
-| `podMonitorMetricRelabelings` <br/> _[]prometheus RelabelConfig_ | Metric relabelings for PodMonitor |
-| `podMonitorRelabelings` <br/> _[]prometheus RelabelConfig_ | Relabelings for PodMonitor |
+ProbesConfiguration represent the configuration for the probes
+to be injected in the PostgreSQL Pods
 
-## PoolerSecrets     {#postgresql-cnpg-io-v1-PoolerSecrets}
 
-**Appears in:**
 
-- [PoolerStatus](#postgresql-cnpg-io-v1-PoolerStatus)
+_Appears in:_
 
-<p>PoolerSecrets contains versions of all secrets used</p>
+- [ClusterSpec](#clusterspec)
 
-| Field | Description |
-|-------|-------------|
-| `serverTLS` <br/> _SecretVersion_ | The server TLS secret version |
-| `serverCA` <br/> _SecretVersion_ | The server CA secret version |
-| `clientCA` <br/> _SecretVersion_ | The client CA secret version |
-| `pgBouncerSecrets` <br/> _PgBouncerSecrets_ | Version of secrets used by PgBouncer |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `startup` _[Probe](#probe)_ | The startup probe configuration | True |  |  |
+| `liveness` _[Probe](#probe)_ | The liveness probe configuration | True |  |  |
+| `readiness` _[Probe](#probe)_ | The readiness probe configuration | True |  |  |
 
-## PoolerSpec     {#postgresql-cnpg-io-v1-PoolerSpec}
 
-**Appears in:**
+#### Publication
 
-- [Pooler](#postgresql-cnpg-io-v1-Pooler)
 
-<p>PoolerSpec defines the desired state of Pooler</p>
 
-| Field | Description |
-|-------|-------------|
-| `cluster` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ **[Required]** | Cluster reference the Pooler will work on. Pooler name should not match any cluster name in same namespace. |
-| `type` <br/> _PoolerType_ | Type of service to forward traffic to. Default: `rw`. |
-| `instances` <br/> _int32_ | Number of replicas desired. Default: 1. |
-| `template` <br/> _PodTemplateSpec_ | Template for Pod creation |
-| `pgbouncer` <br/> _PgBouncerSpec_ **[Required]** | PgBouncer configuration |
-| `deploymentStrategy` <br/> _apps/v1.DeploymentStrategy_ | Deployment strategy for pgbouncer to replace existing pods |
-| `monitoring` <br/> _PoolerMonitoringConfiguration_ | Monitoring configuration (Deprecated: will be removed) |
-| `serviceTemplate` <br/> _ServiceTemplateSpec_ | Template for Service to be created |
+Publication is the Schema for the publications API
+
+
+
 
-## PoolerStatus     {#postgresql-cnpg-io-v1-PoolerStatus}
 
-**Appears in:**
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiVersion` _string_ | `postgresql.cnpg.io/v1` | True | | |
+| `kind` _string_ | `Publication` | True | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
+| `spec` _[PublicationSpec](#publicationspec)_ |  | True |  |  |
+| `status` _[PublicationStatus](#publicationstatus)_ |  | True |  |  |
 
-- [Pooler](#postgresql-cnpg-io-v1-Pooler)
 
-<p>PoolerStatus defines the observed state of Pooler</p>
+#### PublicationReclaimPolicy
 
+_Underlying type:_ _string_
+
+PublicationReclaimPolicy defines a policy for end-of-life maintenance of Publications.
+
+
+
+_Appears in:_
+
+- [PublicationSpec](#publicationspec)
+
 | Field | Description |
-|-------|-------------|
-| `secrets` <br/> _PoolerSecrets_ | Resource version of the config object |
-| `instances` <br/> _int32_ | Number of pods trying to be scheduled |
+| --- | --- |
+| `delete` | PublicationReclaimDelete means the publication will be deleted from Kubernetes on release<br />from its claim.<br /> |
+| `retain` | PublicationReclaimRetain means the publication will be left in its current phase for manual<br />reclamation by the administrator. The default policy is Retain.<br /> |
 
-## PoolerType     {#postgresql-cnpg-io-v1-PoolerType}
 
-(Alias of `string`)
+#### PublicationSpec
 
-**Appears in:**
 
-- [PoolerSpec](#postgresql-cnpg-io-v1-PoolerSpec)
 
-<p>PoolerType is the type of the connection pool: `rw` or `ro`.</p>
+PublicationSpec defines the desired state of Publication
 
-## PostgresConfiguration     {#postgresql-cnpg-io-v1-PostgresConfiguration}
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+_Appears in:_
 
-<p>PostgresConfiguration defines the PostgreSQL configuration</p>
+- [Publication](#publication)
 
-| Field | Description |
-|-------|-------------|
-| `parameters` <br/> _map[string]string_ | PostgreSQL configuration options (postgresql.conf) |
-| `synchronous` <br/> _SynchronousReplicaConfiguration_ | Configuration of PostgreSQL synchronous replication feature |
-| `pg_hba` <br/> _[]string_ | Host Based Authentication rules appended to pg_hba.conf |
-| `pg_ident` <br/> _[]string_ | User Name Maps rules appended to pg_ident.conf |
-| `syncReplicaElectionConstraint` <br/> _SyncReplicaElectionConstraints_ | Requirements for sync replicas affecting `synchronous_standby_names` |
-| `shared_preload_libraries` <br/> _[]string_ | List of shared preload libraries to add |
-| `ldap` <br/> _LDAPConfig_ | LDAP authentication configuration |
-| `promotionTimeout` <br/> _int32_ | Max seconds to wait when promoting an instance to primary. Default large value (~>1 year seconds). |
-| `enableAlterSystem` <br/> _bool_ | If true, user can invoke `ALTER SYSTEM`. Defaults to false. |
-| `extensions` <br/> _[]ExtensionConfiguration_ | Configuration of extensions to add |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `cluster` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#localobjectreference-v1-core)_ | The name of the PostgreSQL cluster that identifies the "publisher" | True |  |  |
+| `name` _string_ | The name of the publication inside PostgreSQL | True |  |  |
+| `dbname` _string_ | The name of the database where the publication will be installed in<br />the "publisher" cluster | True |  |  |
+| `parameters` _object (keys:string, values:string)_ | Publication parameters part of the `WITH` clause as expected by<br />PostgreSQL `CREATE PUBLICATION` command |  |  |  |
+| `target` _[PublicationTarget](#publicationtarget)_ | Target of the publication as expected by PostgreSQL `CREATE PUBLICATION` command | True |  |  |
+| `publicationReclaimPolicy` _[PublicationReclaimPolicy](#publicationreclaimpolicy)_ | The policy for end-of-life maintenance of this publication |  | retain | Enum: [delete retain] <br /> |
 
-## PrimaryUpdateMethod     {#postgresql-cnpg-io-v1-PrimaryUpdateMethod}
 
-(Alias of `string`)
+#### PublicationStatus
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
 
-<p>PrimaryUpdateMethod contains method to use when upgrading primary server as part of rolling updates</p>
+PublicationStatus defines the observed state of Publication
 
-## PrimaryUpdateStrategy     {#postgresql-cnpg-io-v1-PrimaryUpdateStrategy}
 
-(Alias of `string`)
 
-**Appears in:**
+_Appears in:_
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+- [Publication](#publication)
 
-<p>PrimaryUpdateStrategy contains strategy to follow when upgrading primary server during rolling updates</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `observedGeneration` _integer_ | A sequence number representing the latest<br />desired state that was synchronized |  |  |  |
+| `applied` _boolean_ | Applied is true if the publication was reconciled correctly |  |  |  |
+| `message` _string_ | Message is the reconciliation output message |  |  |  |
 
-## Probe     {#postgresql-cnpg-io-v1-Probe}
 
-**Appears in:**
+#### PublicationTarget
 
-- [LivenessProbe](#postgresql-cnpg-io-v1-LivenessProbe)
-- [ProbeWithStrategy](#postgresql-cnpg-io-v1-ProbeWithStrategy)
 
-<p>Probe describes a health check to be performed against a container</p>
 
-| Field | Description |
-|-------|-------------|
-| `initialDelaySeconds` <br/> _int32_ | Seconds after start before liveness probes initiated |
-| `timeoutSeconds` <br/> _int32_ | Seconds after which probe times out. Defaults to 1. |
-| `periodSeconds` <br/> _int32_ | How often (seconds) to perform the probe. Default 10 seconds. |
-| `successThreshold` <br/> _int32_ | Minimum consecutive successes after failure. Defaults to 1. |
-| `failureThreshold` <br/> _int32_ | Minimum consecutive failures after success. Defaults to 3. |
-| `terminationGracePeriodSeconds` <br/> _int64_ | Optional duration in seconds for pod to terminate gracefully upon probe failure. |
+PublicationTarget is what this publication should publish
 
-## ProbeStrategyType     {#postgresql-cnpg-io-v1-ProbeStrategyType}
 
-(Alias of `string`)
 
-**Appears in:**
+_Appears in:_
 
-- [ProbeWithStrategy](#postgresql-cnpg-io-v1-ProbeWithStrategy)
+- [PublicationSpec](#publicationspec)
 
-<p>ProbeStrategyType is type of strategy used to declare a PostgreSQL instance ready</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `allTables` _boolean_ | Marks the publication as one that replicates changes for all tables<br />in the database, including tables created in the future.<br />Corresponding to `FOR ALL TABLES` in PostgreSQL. |  |  |  |
+| `objects` _[PublicationTargetObject](#publicationtargetobject) array_ | Just the following schema objects |  |  | MaxItems: 100000 <br /> |
 
-## ProbeWithStrategy     {#postgresql-cnpg-io-v1-ProbeWithStrategy}
 
-**Appears in:**
+#### PublicationTargetObject
 
-- [ProbesConfiguration](#postgresql-cnpg-io-v1-ProbesConfiguration)
 
-<p>ProbeWithStrategy is configuration of the startup probe</p>
 
-| Field | Description |
-|-------|-------------|
-| `Probe` <br/> _Probe_ | (Members embedded) Standard probe configuration |
-| `type` <br/> _ProbeStrategyType_ | The probe strategy |
-| `maximumLag` <br/> _k8s.io/apimachinery/pkg/api/resource.Quantity_ | Lag limit; used only for `streaming` strategy |
+PublicationTargetObject is an object to publish
 
-## ProbesConfiguration     {#postgresql-cnpg-io-v1-ProbesConfiguration}
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+_Appears in:_
 
-<p>ProbesConfiguration represent configuration for probes to be injected in PostgreSQL Pods</p>
+- [PublicationTarget](#publicationtarget)
 
-| Field | Description |
-|-------|-------------|
-| `startup` <br/> _ProbeWithStrategy_ **[Required]** | Startup probe configuration |
-| `liveness` <br/> _LivenessProbe_ **[Required]** | Liveness probe configuration |
-| `readiness` <br/> _ProbeWithStrategy_ **[Required]** | Readiness probe configuration |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `tablesInSchema` _string_ | Marks the publication as one that replicates changes for all tables<br />in the specified list of schemas, including tables created in the<br />future. Corresponding to `FOR TABLES IN SCHEMA` in PostgreSQL. |  |  |  |
+| `table` _[PublicationTargetTable](#publicationtargettable)_ | Specifies a list of tables to add to the publication. Corresponding<br />to `FOR TABLE` in PostgreSQL. |  |  |  |
 
-## PublicationReclaimPolicy     {#postgresql-cnpg-io-v1-PublicationReclaimPolicy}
 
-(Alias of `string`)
+#### PublicationTargetTable
 
-**Appears in:**
 
-- [PublicationSpec](#postgresql-cnpg-io-v1-PublicationSpec)
 
-<p>PublicationReclaimPolicy defines a policy for end-of-life maintenance of Publications.</p>
+PublicationTargetTable is a table to publish
 
-## PublicationSpec     {#postgresql-cnpg-io-v1-PublicationSpec}
 
-**Appears in:**
 
-- [Publication](#postgresql-cnpg-io-v1-Publication)
+_Appears in:_
 
-<p>PublicationSpec defines desired state of Publication</p>
+- [PublicationTargetObject](#publicationtargetobject)
 
-| Field | Description |
-|-------|-------------|
-| `cluster` <br/> _core/v1.LocalObjectReference_ **[Required]** | Name of PostgreSQL cluster identifying the "publisher" |
-| `name` <br/> _string_ **[Required]** | Name of the publication inside PostgreSQL |
-| `dbname` <br/> _string_ **[Required]** | Database name where publication will be installed in publisher cluster |
-| `parameters` <br/> _map[string]string_ | Publication parameters part of `WITH` clause for `CREATE PUBLICATION` |
-| `target` <br/> _PublicationTarget_ **[Required]** | Target of the publication as expected by `CREATE PUBLICATION` |
-| `publicationReclaimPolicy` <br/> _PublicationReclaimPolicy_ | Policy for end-of-life maintenance of this publication |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `only` _boolean_ | Whether to limit to the table only or include all its descendants |  |  |  |
+| `name` _string_ | The table name | True |  |  |
+| `schema` _string_ | The schema name |  |  |  |
+| `columns` _string array_ | The columns to publish |  |  |  |
 
-## PublicationStatus     {#postgresql-cnpg-io-v1-PublicationStatus}
 
-**Appears in:**
+#### RecoveryTarget
 
-- [Publication](#postgresql-cnpg-io-v1-Publication)
 
-<p>PublicationStatus defines the observed state of Publication</p>
 
-| Field | Description |
-|-------|-------------|
-| `observedGeneration` <br/> _int64_ | Sequence number representing latest desired state that was synchronized |
-| `applied` <br/> _bool_ | True if the publication was reconciled correctly |
-| `message` <br/> _string_ | Reconciliation output message |
+RecoveryTarget allows to configure the moment where the recovery process
+will stop. All the target options except TargetTLI are mutually exclusive.
 
-## PublicationTarget     {#postgresql-cnpg-io-v1-PublicationTarget}
 
-**Appears in:**
 
-- [PublicationSpec](#postgresql-cnpg-io-v1-PublicationSpec)
+_Appears in:_
 
-<p>PublicationTarget is what this publication should publish</p>
+- [BootstrapRecovery](#bootstraprecovery)
 
-| Field | Description |
-|-------|-------------|
-| `allTables` <br/> _bool_ | Replicates changes for all tables in database, including future tables (`FOR ALL TABLES`) |
-| `objects` <br/> _[]PublicationTargetObject_ | Specific schema objects to publish |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `backupID` _string_ | The ID of the backup from which to start the recovery process.<br />If empty (default) the operator will automatically detect the backup<br />based on targetTime or targetLSN if specified. Otherwise use the<br />latest available backup in chronological order. |  |  |  |
+| `targetTLI` _string_ | The target timeline ("latest" or a positive integer) |  |  |  |
+| `targetXID` _string_ | The target transaction ID |  |  |  |
+| `targetName` _string_ | The target name (to be previously created<br />with `pg_create_restore_point`) |  |  |  |
+| `targetLSN` _string_ | The target LSN (Log Sequence Number) |  |  |  |
+| `targetTime` _string_ | The target time as a timestamp in the RFC3339 standard |  |  |  |
+| `targetImmediate` _boolean_ | End recovery as soon as a consistent state is reached |  |  |  |
+| `exclusive` _boolean_ | Set the target to be exclusive. If omitted, defaults to false, so that<br />in Postgres, `recovery_target_inclusive` will be true |  |  |  |
 
-## PublicationTargetObject     {#postgresql-cnpg-io-v1-PublicationTargetObject}
 
-**Appears in:**
+#### ReplicaClusterConfiguration
 
-- [PublicationTarget](#postgresql-cnpg-io-v1-PublicationTarget)
 
-<p>PublicationTargetObject is an object to publish</p>
 
-| Field | Description |
-|-------|-------------|
-| `tablesInSchema` <br/> _string_ | Replicates changes for all tables in specified schemas (`FOR TABLES IN SCHEMA`) |
-| `table` <br/> _PublicationTargetTable_ | Specifies a list of tables to add to the publication (`FOR TABLE`) |
+ReplicaClusterConfiguration encapsulates the configuration of a replica
+cluster
 
-## PublicationTargetTable     {#postgresql-cnpg-io-v1-PublicationTargetTable}
 
-**Appears in:**
 
-- [PublicationTargetObject](#postgresql-cnpg-io-v1-PublicationTargetObject)
+_Appears in:_
 
-<p>PublicationTargetTable is a table to publish</p>
+- [ClusterSpec](#clusterspec)
 
-| Field | Description |
-|-------|-------------|
-| `only` <br/> _bool_ | Whether to limit to the table only or include all descendants |
-| `name` <br/> _string_ **[Required]** | Table name |
-| `schema` <br/> _string_ | Schema name |
-| `columns` <br/> _[]string_ | Columns to publish |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `self` _string_ | Self defines the name of this cluster. It is used to determine if this is a primary<br />or a replica cluster, comparing it with `primary` |  |  |  |
+| `primary` _string_ | Primary defines which Cluster is defined to be the primary in the distributed PostgreSQL cluster, based on the<br />topology specified in externalClusters |  |  |  |
+| `source` _string_ | The name of the external cluster which is the replication origin | True |  | MinLength: 1 <br /> |
+| `enabled` _boolean_ | If replica mode is enabled, this cluster will be a replica of an<br />existing cluster. Replica cluster can be created from a recovery<br />object store or via streaming through pg_basebackup.<br />Refer to the Replica clusters page of the documentation for more information. |  |  |  |
+| `promotionToken` _string_ | A demotion token generated by an external cluster used to<br />check if the promotion requirements are met. |  |  |  |
+| `minApplyDelay` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#duration-v1-meta)_ | When replica mode is enabled, this parameter allows you to replay<br />transactions only when the system time is at least the configured<br />time past the commit time. This provides an opportunity to correct<br />data loss errors. Note that when this parameter is set, a promotion<br />token cannot be used. |  |  |  |
 
-## RecoveryTarget     {#postgresql-cnpg-io-v1-RecoveryTarget}
 
-**Appears in:**
+#### ReplicationSlotsConfiguration
 
-- [BootstrapRecovery](#postgresql-cnpg-io-v1-BootstrapRecovery)
 
-<p>RecoveryTarget allows configuring where recovery stops. All target options except TargetTLI are mutually exclusive.</p>
 
-| Field | Description |
-|-------|-------------|
-| `backupID` <br/> _string_ | ID of the backup from which to start recovery. If empty, operator auto-detects backup. |
-| `targetTLI` <br/> _string_ | Target timeline (`latest` or positive integer) |
-| `targetXID` <br/> _string_ | Target transaction ID |
-| `targetName` <br/> _string_ | Target name created with `pg_create_restore_point` |
-| `targetLSN` <br/> _string_ | Target LSN (Log Sequence Number) |
-| `targetTime` <br/> _string_ | Target time as RFC3339 timestamp |
-| `targetImmediate` <br/> _bool_ | End recovery as soon as consistent state is reached |
-| `exclusive` <br/> _bool_ | If omitted, defaults to false so `recovery_target_inclusive` will be true |
+ReplicationSlotsConfiguration encapsulates the configuration
+of replication slots
 
-## ReplicaClusterConfiguration     {#postgresql-cnpg-io-v1-ReplicaClusterConfiguration}
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+_Appears in:_
 
-<p>ReplicaClusterConfiguration encapsulates configuration of a replica cluster</p>
+- [ClusterSpec](#clusterspec)
 
-| Field | Description |
-|-------|-------------|
-| `self` <br/> _string_ | Name of this cluster used to determine if this is primary or replica |
-| `primary` <br/> _string_ | Which Cluster is defined to be the primary in distributed PostgreSQL cluster |
-| `source` <br/> _string_ **[Required]** | Name of the external cluster which is the replication origin |
-| `enabled` <br/> _bool_ | If enabled, cluster will be a replica of existing cluster |
-| `promotionToken` <br/> _string_ | Demotion token generated by external cluster used to check promotion requirements |
-| `minApplyDelay` <br/> _meta/v1.Duration_ | When enabled, replay transactions only when system time is at least configured time past commit time |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `highAvailability` _[ReplicationSlotsHAConfiguration](#replicationslotshaconfiguration)_ | Replication slots for high availability configuration |  | \{ enabled:true \} |  |
+| `updateInterval` _integer_ | Standby will update the status of the local replication slots<br />every `updateInterval` seconds (default 30). |  | 30 | Minimum: 1 <br /> |
+| `synchronizeReplicas` _[SynchronizeReplicasConfiguration](#synchronizereplicasconfiguration)_ | Configures the synchronization of the user defined physical replication slots |  |  |  |
 
-## ReplicationSlotsConfiguration     {#postgresql-cnpg-io-v1-ReplicationSlotsConfiguration}
 
-**Appears in:**
+#### ReplicationSlotsHAConfiguration
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
 
-<p>ReplicationSlotsConfiguration encapsulates configuration of replication slots</p>
 
-| Field | Description |
-|-------|-------------|
-| `highAvailability` <br/> _ReplicationSlotsHAConfiguration_ | Replication slots for high availability configuration |
-| `updateInterval` <br/> _int_ | Standby updates status of local replication slots every `updateInterval` seconds (default 30) |
-| `synchronizeReplicas` <br/> _SynchronizeReplicasConfiguration_ | Configures synchronization of user-defined physical replication slots |
+ReplicationSlotsHAConfiguration encapsulates the configuration
+of the replication slots that are automatically managed by
+the operator to control the streaming replication connections
+with the standby instances for high availability (HA) purposes.
+Replication slots are a PostgreSQL feature that makes sure
+that PostgreSQL automatically keeps WAL files in the primary
+when a streaming client (in this specific case a replica that
+is part of the HA cluster) gets disconnected.
 
-## ReplicationSlotsHAConfiguration     {#postgresql-cnpg-io-v1-ReplicationSlotsHAConfiguration}
 
-**Appears in:**
 
-- [ReplicationSlotsConfiguration](#postgresql-cnpg-io-v1-ReplicationSlotsConfiguration)
+_Appears in:_
 
-<p>ReplicationSlotsHAConfiguration encapsulates configuration of replication slots automatically managed by operator for HA streaming replication</p>
+- [ReplicationSlotsConfiguration](#replicationslotsconfiguration)
 
-| Field | Description |
-|-------|-------------|
-| `enabled` <br/> _bool_ | If enabled (default), operator manages replication slots on primary and uses them for streaming replication. |
-| `slotPrefix` <br/> _string_ | Prefix for replication slots managed by operator for HA. Lowercase letters, numbers, underscore only. Default `_cnpg_`. |
-| `synchronizeLogicalDecoding` <br/> _bool_ | When enabled, operator manages synchronization of logical decoding slots across HA clusters. Requires PostgreSQL >=17 or pg_failover_slots extension for &lt; 17. |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `enabled` _boolean_ | If enabled (default), the operator will automatically manage replication slots<br />on the primary instance and use them in streaming replication<br />connections with all the standby instances that are part of the HA<br />cluster. If disabled, the operator will not take advantage<br />of replication slots in streaming connections with the replicas.<br />This feature also controls replication slots in replica cluster,<br />from the designated primary to its cascading replicas. |  | true |  |
+| `slotPrefix` _string_ | Prefix for replication slots managed by the operator for HA.<br />It may only contain lower case letters, numbers, and the underscore character.<br />This can only be set at creation time. By default set to `_cnpg_`. |  | _cnpg_ | Pattern: `^[0-9a-z_]*$` <br /> |
 
-## RoleConfiguration     {#postgresql-cnpg-io-v1-RoleConfiguration}
 
-**Appears in:**
+#### RoleConfiguration
 
-- [ManagedConfiguration](#postgresql-cnpg-io-v1-ManagedConfiguration)
 
-<p>RoleConfiguration is the representation of a PostgreSQL role with Ensure field specifying presence/absence</p>
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Name of the role |
-| `comment` <br/> _string_ | Description of the role |
-| `ensure` <br/> _EnsureOption_ | Ensure role is `present` or `absent` (default `present`) |
-| `passwordSecret` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ | Secret containing role password. If null, password ignored unless DisablePassword set |
-| `connectionLimit` <br/> _int64_ | If role can log in, max concurrent connections. `-1` default = no limit |
-| `validUntil` <br/> _meta/v1.Time_ | Date/time after which the role's password is no longer valid |
-| `inRoles` <br/> _[]string_ | Roles this role will be added as member of |
-| `inherit` <br/> _bool_ | Whether role inherits privileges of roles it's a member of (default `true`) |
-| `disablePassword` <br/> _bool_ | Indicates role's password should be set to NULL in Postgres |
-| `superuser` <br/> _bool_ | Whether role is a superuser (dangerous). Default `false`. |
-| `createdb` <br/> _bool_ | Whether role can create databases. Default `false`. |
-| `createrole` <br/> _bool_ | Whether role can create/alter/drop roles. Default `false`. |
-| `login` <br/> _bool_ | Whether role is allowed to log in. Default `false`. |
-| `replication` <br/> _bool_ | Whether role is a replication role (privileged). Default `false`. |
-| `bypassrls` <br/> _bool_ | Whether role bypasses row-level security. Default `false`. |
-
-## SQLRefs     {#postgresql-cnpg-io-v1-SQLRefs}
-
-**Appears in:**
-
-- [BootstrapInitDB](#postgresql-cnpg-io-v1-BootstrapInitDB)
-
-<p>SQLRefs holds references to ConfigMaps or Secrets containing SQL files. Secrets processed first, then ConfigMaps.</p>
+RoleConfiguration is the representation, in Kubernetes, of a PostgreSQL role
+with the additional field Ensure specifying whether to ensure the presence or
+absence of the role in the database
 
-| Field | Description |
-|-------|-------------|
-| `secretRefs` <br/> _[]github.com/cloudnative-pg/machinery/pkg/api.SecretKeySelector_ | List of references to Secrets |
-| `configMapRefs` <br/> _[]github.com/cloudnative-pg/machinery/pkg/api.ConfigMapKeySelector_ | List of references to ConfigMaps |
+The defaults of the CREATE ROLE command are applied
+Reference: https://www.postgresql.org/docs/current/sql-createrole.html
 
-## ScheduledBackupSpec     {#postgresql-cnpg-io-v1-ScheduledBackupSpec}
 
-**Appears in:**
 
-- [ScheduledBackup](#postgresql-cnpg-io-v1-ScheduledBackup)
+_Appears in:_
 
-<p>ScheduledBackupSpec defines the desired state of ScheduledBackup</p>
+- [ManagedConfiguration](#managedconfiguration)
 
-| Field | Description |
-|-------|-------------|
-| `suspend` <br/> _bool_ | If this backup is suspended |
-| `immediate` <br/> _bool_ | If the first backup should start immediately after creation |
-| `schedule` <br/> _string_ **[Required]** | Schedule string with seconds specifier; see https://pkg.go.dev/github.com/robfig/cron#hdr-CRON_Expression_Format |
-| `cluster` <br/> _github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference_ **[Required]** | The cluster to backup |
-| `backupOwnerReference` <br/> _string_ | Which ownerReference should be put inside created backup resources: `none`, `self`, or `cluster` |
-| `target` <br/> _BackupTarget_ | Policy to decide which instance should perform backup |
-| `method` <br/> _BackupMethod_ | Backup method: `barmanObjectStore`, `volumeSnapshot`, or `plugin` (default `barmanObjectStore`) |
-| `pluginConfiguration` <br/> _BackupPluginConfiguration_ | Configuration parameters for backup plugin |
-| `online` <br/> _bool_ | Whether volume snapshot backups are online/hot (`true` default) or offline/cold (`false`) |
-| `onlineConfiguration` <br/> _OnlineConfiguration_ | Configuration parameters for online/hot volume snapshot backups |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | Name of the role | True |  |  |
+| `comment` _string_ | Description of the role |  |  |  |
+| `ensure` _[EnsureOption](#ensureoption)_ | Ensure the role is `present` or `absent` - defaults to "present" |  | present | Enum: [present absent] <br /> |
+| `passwordSecret` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | Secret containing the password of the role (if present)<br />If null, the password will be ignored unless DisablePassword is set |  |  |  |
+| `connectionLimit` _integer_ | If the role can log in, this specifies how many concurrent<br />connections the role can make. `-1` (the default) means no limit. |  | -1 |  |
+| `validUntil` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#time-v1-meta)_ | Date and time after which the role's password is no longer valid.<br />When omitted, the password will never expire (default). |  |  |  |
+| `inRoles` _string array_ | List of one or more existing roles to which this role will be<br />immediately added as a new member. Default empty. |  |  |  |
+| `inherit` _boolean_ | Whether a role "inherits" the privileges of roles it is a member of.<br />Defaults is `true`. |  | true |  |
+| `disablePassword` _boolean_ | DisablePassword indicates that a role's password should be set to NULL in Postgres |  |  |  |
+| `superuser` _boolean_ | Whether the role is a `superuser` who can override all access<br />restrictions within the database - superuser status is dangerous and<br />should be used only when really needed. You must yourself be a<br />superuser to create a new superuser. Defaults is `false`. |  |  |  |
+| `createdb` _boolean_ | When set to `true`, the role being defined will be allowed to create<br />new databases. Specifying `false` (default) will deny a role the<br />ability to create databases. |  |  |  |
+| `createrole` _boolean_ | Whether the role will be permitted to create, alter, drop, comment<br />on, change the security label for, and grant or revoke membership in<br />other roles. Default is `false`. |  |  |  |
+| `login` _boolean_ | Whether the role is allowed to log in. A role having the `login`<br />attribute can be thought of as a user. Roles without this attribute<br />are useful for managing database privileges, but are not users in<br />the usual sense of the word. Default is `false`. |  |  |  |
+| `replication` _boolean_ | Whether a role is a replication role. A role must have this<br />attribute (or be a superuser) in order to be able to connect to the<br />server in replication mode (physical or logical replication) and in<br />order to be able to create or drop replication slots. A role having<br />the `replication` attribute is a very highly privileged role, and<br />should only be used on roles actually used for replication. Default<br />is `false`. |  |  |  |
+| `bypassrls` _boolean_ | Whether a role bypasses every row-level security (RLS) policy.<br />Default is `false`. |  |  |  |
+
+
+#### RoleStatus
 
-## ScheduledBackupStatus     {#postgresql-cnpg-io-v1-ScheduledBackupStatus}
+_Underlying type:_ _string_
 
-**Appears in:**
+RoleStatus represents the status of a managed role in the cluster
 
-- [ScheduledBackup](#postgresql-cnpg-io-v1-ScheduledBackup)
 
-<p>ScheduledBackupStatus defines the observed state of ScheduledBackup</p>
 
+_Appears in:_
+
+- [ManagedRoles](#managedroles)
+
 | Field | Description |
-|-------|-------------|
-| `lastCheckTime` <br/> _meta/v1.Time_ | Latest time the schedule was checked |
-| `lastScheduleTime` <br/> _meta/v1.Time_ | Last time backup was successfully scheduled |
-| `nextScheduleTime` <br/> _meta/v1.Time_ | Next time a backup will run |
+| --- | --- |
+| `reconciled` | RoleStatusReconciled indicates the role in DB matches the Spec<br /> |
+| `not-managed` | RoleStatusNotManaged indicates the role is not in the Spec, therefore not managed<br /> |
+| `pending-reconciliation` | RoleStatusPendingReconciliation indicates the role in Spec requires updated/creation in DB<br /> |
+| `reserved` | RoleStatusReserved indicates this is one of the roles reserved by the operator. E.g. `postgres`<br /> |
 
-## SchemaSpec     {#postgresql-cnpg-io-v1-SchemaSpec}
 
-**Appears in:**
 
-- [DatabaseSpec](#postgresql-cnpg-io-v1-DatabaseSpec)
 
-<p>SchemaSpec configures a schema in a database</p>
+#### SQLRefs
 
-| Field | Description |
-|-------|-------------|
-| `DatabaseObjectSpec` <br/> _DatabaseObjectSpec_ | (Members embedded) Common fields |
-| `owner` <br/> _string_ **[Required]** | Role name who owns the schema (maps to `AUTHORIZATION` in `CREATE SCHEMA`) |
 
-## SecretVersion     {#postgresql-cnpg-io-v1-SecretVersion}
 
-**Appears in:**
+SQLRefs holds references to ConfigMaps or Secrets
+containing SQL files. The references are processed in a specific order:
+first, all Secrets are processed, followed by all ConfigMaps.
+Within each group, the processing order follows the sequence specified
+in their respective arrays.
 
-- [PgBouncerSecrets](#postgresql-cnpg-io-v1-PgBouncerSecrets)
-- [PoolerSecrets](#postgresql-cnpg-io-v1-PoolerSecrets)
 
-<p>SecretVersion contains a secret name and its ResourceVersion</p>
 
-| Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ | The name of the secret |
-| `version` <br/> _string_ | The ResourceVersion of the secret |
+_Appears in:_
 
-## SecretsResourceVersion     {#postgresql-cnpg-io-v1-SecretsResourceVersion}
+- [BootstrapInitDB](#bootstrapinitdb)
 
-**Appears in:**
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `secretRefs` _[SecretKeySelector](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#SecretKeySelector) array_ | SecretRefs holds a list of references to Secrets |  |  |  |
+| `configMapRefs` _[ConfigMapKeySelector](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#ConfigMapKeySelector) array_ | ConfigMapRefs holds a list of references to ConfigMaps |  |  |  |
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
 
-<p>SecretsResourceVersion is the resource versions of the secrets managed by the operator</p>
+#### ScheduledBackup
 
-| Field | Description |
-|-------|-------------|
-| `superuserSecretVersion` <br/> _string_ | Resource version of the `postgres` user secret |
-| `replicationSecretVersion` <br/> _string_ | Resource version of the `streaming_replica` user secret |
-| `applicationSecretVersion` <br/> _string_ | Resource version of the `app` user secret |
-| `managedRoleSecretVersion` <br/> _map[string]string_ | Resource versions of managed roles secrets |
-| `caSecretVersion` <br/> _string_ | Unused. Retained for compatibility |
-| `clientCaSecretVersion` <br/> _string_ | Resource version of client CA secret |
-| `serverCaSecretVersion` <br/> _string_ | Resource version of server CA secret |
-| `serverSecretVersion` <br/> _string_ | Resource version of server secret |
-| `barmanEndpointCA` <br/> _string_ | Resource version of Barman Endpoint CA if provided |
-| `externalClusterSecretVersion` <br/> _map[string]string_ | Resource versions of external cluster secrets |
-| `metrics` <br/> _map[string]string_ | Map with versions of all secrets used to pass metrics |
-
-## ServerSpec     {#postgresql-cnpg-io-v1-ServerSpec}
-
-**Appears in:**
-
-- [DatabaseSpec](#postgresql-cnpg-io-v1-DatabaseSpec)
-
-<p>ServerSpec configures a server of a foreign data wrapper</p>
 
-| Field | Description |
-|-------|-------------|
-| `DatabaseObjectSpec` <br/> _DatabaseObjectSpec_ | (Members embedded) Common fields |
-| `fdw` <br/> _string_ **[Required]** | Name of the Foreign Data Wrapper (FDW) |
-| `options` <br/> _[]OptionSpec_ | Options specifying configuration for the server |
-| `usage` <br/> _[]UsageSpec_ | List of roles for which `USAGE` privileges on server are granted/revoked |
 
-## ServiceAccountTemplate     {#postgresql-cnpg-io-v1-ServiceAccountTemplate}
+ScheduledBackup is the Schema for the scheduledbackups API
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
 
-<p>ServiceAccountTemplate contains template to generate service accounts</p>
 
-| Field | Description |
-|-------|-------------|
-| `metadata` <br/> _Metadata_ **[Required]** | Metadata to be used for generated service account |
 
-## ServiceSelectorType     {#postgresql-cnpg-io-v1-ServiceSelectorType}
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiVersion` _string_ | `postgresql.cnpg.io/v1` | True | | |
+| `kind` _string_ | `ScheduledBackup` | True | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
+| `spec` _[ScheduledBackupSpec](#scheduledbackupspec)_ | Specification of the desired behavior of the ScheduledBackup.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | True |  |  |
+| `status` _[ScheduledBackupStatus](#scheduledbackupstatus)_ | Most recently observed status of the ScheduledBackup. This data may not be up<br />to date. Populated by the system. Read-only.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |  |
 
-(Alias of `string`)
 
-**Appears in:**
+#### ScheduledBackupSpec
 
-- [ManagedService](#postgresql-cnpg-io-v1-ManagedService)
-- [ManagedServices](#postgresql-cnpg-io-v1-ManagedServices)
 
-<p>ServiceSelectorType describes valid values for generating service selectors (`rw`, `r`, `ro`).</p>
 
-## ServiceTemplateSpec     {#postgresql-cnpg-io-v1-ServiceTemplateSpec}
+ScheduledBackupSpec defines the desired state of ScheduledBackup
 
-**Appears in:**
 
-- [ManagedService](#postgresql-cnpg-io-v1-ManagedService)
-- [PoolerSpec](#postgresql-cnpg-io-v1-PoolerSpec)
 
-<p>ServiceTemplateSpec allows user to set a template for Service generation.</p>
+_Appears in:_
 
-| Field | Description |
-|-------|-------------|
-| `metadata` <br/> _Metadata_ | Standard object's metadata. |
-| `spec` <br/> _core/v1.ServiceSpec_ | Specification of desired service behavior. |
+- [ScheduledBackup](#scheduledbackup)
 
-## ServiceUpdateStrategy     {#postgresql-cnpg-io-v1-ServiceUpdateStrategy}
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `suspend` _boolean_ | If this backup is suspended or not |  |  |  |
+| `immediate` _boolean_ | If the first backup has to be immediately start after creation or not |  |  |  |
+| `schedule` _string_ | The schedule does not follow the same format used in Kubernetes CronJobs<br />as it includes an additional seconds specifier,<br />see https://pkg.go.dev/github.com/robfig/cron#hdr-CRON_Expression_Format | True |  |  |
+| `cluster` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | The cluster to backup | True |  |  |
+| `backupOwnerReference` _string_ | Indicates which ownerReference should be put inside the created backup resources.<br />- none: no owner reference for created backup objects (same behavior as before the field was introduced)<br />- self: sets the Scheduled backup object as owner of the backup<br />- cluster: set the cluster as owner of the backup<br /> |  | none | Enum: [none self cluster] <br /> |
+| `target` _[BackupTarget](#backuptarget)_ | The policy to decide which instance should perform this backup. If empty,<br />it defaults to `cluster.spec.backup.target`.<br />Available options are empty string, `primary` and `prefer-standby`.<br />`primary` to have backups run always on primary instances,<br />`prefer-standby` to have backups run preferably on the most updated<br />standby, if available. |  |  | Enum: [primary prefer-standby] <br /> |
+| `method` _[BackupMethod](#backupmethod)_ | The backup method to be used, possible options are `barmanObjectStore`,<br />`volumeSnapshot` or `plugin`. Defaults to: `barmanObjectStore`. |  | barmanObjectStore | Enum: [barmanObjectStore volumeSnapshot plugin] <br /> |
+| `pluginConfiguration` _[BackupPluginConfiguration](#backuppluginconfiguration)_ | Configuration parameters passed to the plugin managing this backup |  |  |  |
+| `online` _boolean_ | Whether the default type of backup with volume snapshots is<br />online/hot (`true`, default) or offline/cold (`false`)<br />Overrides the default setting specified in the cluster field '.spec.backup.volumeSnapshot.online' |  |  |  |
+| `onlineConfiguration` _[OnlineConfiguration](#onlineconfiguration)_ | Configuration parameters to control the online/hot backup with volume snapshots<br />Overrides the default settings specified in the cluster '.backup.volumeSnapshot.onlineConfiguration' stanza |  |  |  |
 
-(Alias of `string`)
 
-**Appears in:**
+#### ScheduledBackupStatus
 
-- [ManagedService](#postgresql-cnpg-io-v1-ManagedService)
 
-<p>ServiceUpdateStrategy describes how changes to managed services should be handled</p>
 
-## SnapshotOwnerReference     {#postgresql-cnpg-io-v1-SnapshotOwnerReference}
+ScheduledBackupStatus defines the observed state of ScheduledBackup
 
-(Alias of `string`)
 
-**Appears in:**
 
-- [VolumeSnapshotConfiguration](#postgresql-cnpg-io-v1-VolumeSnapshotConfiguration)
+_Appears in:_
 
-<p>SnapshotOwnerReference defines reference type for owner of snapshot.</p>
+- [ScheduledBackup](#scheduledbackup)
 
-## SnapshotType     {#postgresql-cnpg-io-v1-SnapshotType}
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `lastCheckTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#time-v1-meta)_ | The latest time the schedule |  |  |  |
+| `lastScheduleTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#time-v1-meta)_ | Information when was the last time that backup was successfully scheduled. |  |  |  |
+| `nextScheduleTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#time-v1-meta)_ | Next time we will run a backup |  |  |  |
 
-(Alias of `string`)
 
-**Appears in:**
 
-- [Import](#postgresql-cnpg-io-v1-Import)
 
-<p>SnapshotType is a type of allowed import</p>
+#### SecretVersion
 
-## StorageConfiguration     {#postgresql-cnpg-io-v1-StorageConfiguration}
 
-**Appears in:**
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
-- [TablespaceConfiguration](#postgresql-cnpg-io-v1-TablespaceConfiguration)
+SecretVersion contains a secret name and its ResourceVersion
 
-<p>StorageConfiguration is used to create and reconcile PVCs for WAL, PGDATA, or tablespaces</p>
 
-| Field | Description |
-|-------|-------------|
-| `storageClass` <br/> _string_ | StorageClass to use for PVCs. If not specified, generated PVCs use default storage class |
-| `size` <br/> _string_ | Size of storage. Required if not in PVC template. Cannot be decreased. |
-| `resizeInUseVolumes` <br/> _bool_ | Resize existing PVCs (defaults to true) |
-| `pvcTemplate` <br/> _core/v1.PersistentVolumeClaimSpec_ | Template used to generate PersistentVolumeClaim |
 
-## SubscriptionReclaimPolicy     {#postgresql-cnpg-io-v1-SubscriptionReclaimPolicy}
+_Appears in:_
 
-(Alias of `string`)
+- [PgBouncerSecrets](#pgbouncersecrets)
+- [PoolerSecrets](#poolersecrets)
 
-**Appears in:**
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | The name of the secret |  |  |  |
+| `version` _string_ | The ResourceVersion of the secret |  |  |  |
 
-- [SubscriptionSpec](#postgresql-cnpg-io-v1-SubscriptionSpec)
 
-<p>SubscriptionReclaimPolicy describes a policy for end-of-life maintenance of Subscriptions.</p>
+#### SecretsResourceVersion
 
-## SubscriptionSpec     {#postgresql-cnpg-io-v1-SubscriptionSpec}
 
-**Appears in:**
 
-- [Subscription](#postgresql-cnpg-io-v1-Subscription)
+SecretsResourceVersion is the resource versions of the secrets
+managed by the operator
 
-<p>SubscriptionSpec defines desired state of Subscription</p>
 
-| Field | Description |
-|-------|-------------|
-| `cluster` <br/> _core/v1.LocalObjectReference_ **[Required]** | Name of PostgreSQL cluster identifying the "subscriber" |
-| `name` <br/> _string_ **[Required]** | Name of subscription inside PostgreSQL |
-| `dbname` <br/> _string_ **[Required]** | Database name where publication will be installed in subscriber cluster |
-| `parameters` <br/> _map[string]string_ | Subscription parameters included in `WITH` clause for `CREATE SUBSCRIPTION` |
-| `publicationName` <br/> _string_ **[Required]** | Name of the publication inside the publisher |
-| `publicationDBName` <br/> _string_ | Database name containing publication on external cluster; defaults to external cluster definition |
-| `externalClusterName` <br/> _string_ **[Required]** | Name of external cluster with publication (publisher) |
-| `subscriptionReclaimPolicy` <br/> _SubscriptionReclaimPolicy_ | Policy for end-of-life maintenance of this subscription |
 
-## SubscriptionStatus     {#postgresql-cnpg-io-v1-SubscriptionStatus}
+_Appears in:_
 
-**Appears in:**
+- [ClusterStatus](#clusterstatus)
 
-- [Subscription](#postgresql-cnpg-io-v1-Subscription)
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `superuserSecretVersion` _string_ | The resource version of the "postgres" user secret |  |  |  |
+| `replicationSecretVersion` _string_ | The resource version of the "streaming_replica" user secret |  |  |  |
+| `applicationSecretVersion` _string_ | The resource version of the "app" user secret |  |  |  |
+| `managedRoleSecretVersion` _object (keys:string, values:string)_ | The resource versions of the managed roles secrets |  |  |  |
+| `caSecretVersion` _string_ | Unused. Retained for compatibility with old versions. |  |  |  |
+| `clientCaSecretVersion` _string_ | The resource version of the PostgreSQL client-side CA secret version |  |  |  |
+| `serverCaSecretVersion` _string_ | The resource version of the PostgreSQL server-side CA secret version |  |  |  |
+| `serverSecretVersion` _string_ | The resource version of the PostgreSQL server-side secret version |  |  |  |
+| `barmanEndpointCA` _string_ | The resource version of the Barman Endpoint CA if provided |  |  |  |
+| `externalClusterSecretVersion` _object (keys:string, values:string)_ | The resource versions of the external cluster secrets |  |  |  |
+| `metrics` _object (keys:string, values:string)_ | A map with the versions of all the secrets used to pass metrics.<br />Map keys are the secret names, map values are the versions |  |  |  |
 
-<p>SubscriptionStatus defines observed state of Subscription</p>
 
-| Field | Description |
-|-------|-------------|
-| `observedGeneration` <br/> _int64_ | Sequence number representing latest desired state synchronized |
-| `applied` <br/> _bool_ | True if subscription was reconciled correctly |
-| `message` <br/> _string_ | Reconciliation output message |
+#### ServiceAccountTemplate
 
-## SwitchReplicaClusterStatus     {#postgresql-cnpg-io-v1-SwitchReplicaClusterStatus}
 
-**Appears in:**
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
+ServiceAccountTemplate contains the template needed to generate the service accounts
 
-<p>SwitchReplicaClusterStatus contains statuses regarding switch of a cluster to a replica cluster</p>
 
-| Field | Description |
-|-------|-------------|
-| `inProgress` <br/> _bool_ | Indicates if there is an ongoing switch to replica cluster |
 
-## SyncReplicaElectionConstraints     {#postgresql-cnpg-io-v1-SyncReplicaElectionConstraints}
+_Appears in:_
 
-**Appears in:**
+- [ClusterSpec](#clusterspec)
 
-- [PostgresConfiguration](#postgresql-cnpg-io-v1-PostgresConfiguration)
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `metadata` _[Metadata](#metadata)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
 
-<p>SyncReplicaElectionConstraints contains constraints for sync replicas election. Two instances are considered in same location if all label values match.</p>
 
-| Field | Description |
-|-------|-------------|
-| `nodeLabelsAntiAffinity` <br/> _[]string_ | List of node label values to extract and compare to evaluate topology |
-| `enabled` <br/> _bool_ **[Required]** | Enables constraints for sync replicas |
+#### ServiceSelectorType
+
+_Underlying type:_ _string_
 
-## SynchronizeReplicasConfiguration     {#postgresql-cnpg-io-v1-SynchronizeReplicasConfiguration}
+ServiceSelectorType describes a valid value for generating the service selectors.
+It indicates which type of service the selector applies to, such as read-write, read, or read-only
 
-**Appears in:**
+_Validation:_
 
-- [ReplicationSlotsConfiguration](#postgresql-cnpg-io-v1-ReplicationSlotsConfiguration)
+- Enum: [rw r ro]
 
-<p>SynchronizeReplicasConfiguration contains configuration for synchronization of user-defined physical replication slots</p>
+_Appears in:_
 
+- [ManagedService](#managedservice)
+- [ManagedServices](#managedservices)
+
 | Field | Description |
-|-------|-------------|
-| `enabled` <br/> _bool_ **[Required]** | When true, every replication slot on primary is synchronized on each standby |
-| `excludePatterns` <br/> _[]string_ | Regular expression patterns to exclude certain replication slot names |
+| --- | --- |
+| `rw` | ServiceSelectorTypeRW selects the read-write service.<br /> |
+| `r` | ServiceSelectorTypeR selects the read service.<br /> |
+| `ro` | ServiceSelectorTypeRO selects the read-only service.<br /> |
 
-## SynchronousReplicaConfiguration     {#postgresql-cnpg-io-v1-SynchronousReplicaConfiguration}
 
-**Appears in:**
+#### ServiceTemplateSpec
 
-- [PostgresConfiguration](#postgresql-cnpg-io-v1-PostgresConfiguration)
 
-<p>SynchronousReplicaConfiguration contains configuration of PostgreSQL synchronous replication. Consider `.spec.minSyncReplicas` and `.spec.maxSyncReplicas` as well.</p>
 
-| Field | Description |
-|-------|-------------|
-| `method` <br/> _SynchronousReplicaConfigurationMethod_ **[Required]** | Method to select synchronous standbys: `any` (quorum) or `first` (priority) |
-| `number` <br/> _int_ **[Required]** | Number of synchronous standby servers transactions must wait for |
-| `maxStandbyNamesFromCluster` <br/> _int_ | Max number of local cluster pods automatically included in `synchronous_standby_names` |
-| `standbyNamesPre` <br/> _[]string_ | User-defined application names to add before local cluster pods |
-| `standbyNamesPost` <br/> _[]string_ | User-defined application names to add after local cluster pods |
-| `dataDurability` <br/> _DataDurabilityLevel_ | If `required`, strict durability enforced; if `preferred`, durability relaxed when replicas unavailable |
-| `failoverQuorum` <br/> _bool_ | Enables quorum-based check before failover |
+ServiceTemplateSpec is a structure allowing the user to set
+a template for Service generation.
 
-## SynchronousReplicaConfigurationMethod     {#postgresql-cnpg-io-v1-SynchronousReplicaConfigurationMethod}
 
-(Alias of `string`)
 
-**Appears in:**
+_Appears in:_
 
-- [SynchronousReplicaConfiguration](#postgresql-cnpg-io-v1-SynchronousReplicaConfiguration)
+- [ManagedService](#managedservice)
+- [PoolerSpec](#poolerspec)
 
-<p>Configures whether to use quorum-based replication or a priority list</p>
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `metadata` _[Metadata](#metadata)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |  |
+| `spec` _[ServiceSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#servicespec-v1-core)_ | Specification of the desired behavior of the service.<br />More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |  |
 
-## TablespaceConfiguration     {#postgresql-cnpg-io-v1-TablespaceConfiguration}
 
-**Appears in:**
+#### ServiceUpdateStrategy
 
-- [ClusterSpec](#postgresql-cnpg-io-v1-ClusterSpec)
+_Underlying type:_ _string_
 
-<p>TablespaceConfiguration is configuration of a tablespace and includes storage specification</p>
+ServiceUpdateStrategy describes how the changes to the managed service should be handled
 
+_Validation:_
+
+- Enum: [patch replace]
+
+_Appears in:_
+
+- [ManagedService](#managedservice)
+
+
+
+#### SnapshotOwnerReference
+
+_Underlying type:_ _string_
+
+SnapshotOwnerReference defines the reference type for the owner of the snapshot.
+This specifies which owner the processed resources should relate to.
+
+
+
+_Appears in:_
+
+- [VolumeSnapshotConfiguration](#volumesnapshotconfiguration)
+
 | Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | The name of the tablespace |
-| `storage` <br/> _StorageConfiguration_ **[Required]** | Storage configuration for the tablespace |
-| `owner` <br/> _DatabaseRoleRef_ | Owner is PostgreSQL user owning the tablespace |
-| `temporary` <br/> _bool_ | If true, tablespace added as `temp_tablespaces` entry in PostgreSQL |
+| --- | --- |
+| `none` | SnapshotOwnerReferenceNone indicates that the snapshot does not have any owner reference.<br /> |
+| `backup` | SnapshotOwnerReferenceBackup indicates that the snapshot is owned by the backup resource.<br /> |
+| `cluster` | SnapshotOwnerReferenceCluster indicates that the snapshot is owned by the cluster resource.<br /> |
+
+
+#### SnapshotType
+
+_Underlying type:_ _string_
 
-## TablespaceState     {#postgresql-cnpg-io-v1-TablespaceState}
+SnapshotType is a type of allowed import
 
-**Appears in:**
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
 
-<p>TablespaceState represents state of a tablespace in a cluster</p>
+_Appears in:_
 
+- [Import](#import)
+
 | Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Name of the tablespace |
-| `owner` <br/> _string_ | Owner of the tablespace |
-| `state` <br/> _TablespaceStatus_ **[Required]** | Latest reconciliation state |
-| `error` <br/> _string_ | Reconciliation error, if any |
+| --- | --- |
+| `monolith` | MonolithSnapshotType indicates to execute the monolith clone typology<br /> |
+| `microservice` | MicroserviceSnapshotType indicates to execute the microservice clone typology<br /> |
 
-## TablespaceStatus     {#postgresql-cnpg-io-v1-TablespaceStatus}
 
-(Alias of `string`)
+#### StorageConfiguration
 
-**Appears in:**
 
-- [TablespaceState](#postgresql-cnpg-io-v1-TablespaceState)
 
-<p>TablespaceStatus represents status of a tablespace in the cluster</p>
+StorageConfiguration is the configuration used to create and reconcile PVCs,
+usable for WAL volumes, PGDATA volumes, or tablespaces
 
-## Topology     {#postgresql-cnpg-io-v1-Topology}
 
-**Appears in:**
 
-- [ClusterStatus](#postgresql-cnpg-io-v1-ClusterStatus)
+_Appears in:_
 
-<p>Topology contains the cluster topology</p>
+- [ClusterSpec](#clusterspec)
+- [TablespaceConfiguration](#tablespaceconfiguration)
 
-| Field | Description |
-|-------|-------------|
-| `instances` <br/> _map[PodName]PodTopologyLabels_ | Instances contains pod topology of the instances |
-| `nodesUsed` <br/> _int32_ | Count of distinct nodes accommodating instances. `1` implies all instances on single node (no HA). |
-| `successfullyExtracted` <br/> _bool_ | Indicates if topology data was extracted successfully; useful for fallback in sync replica election |
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `storageClass` _string_ | StorageClass to use for PVCs. Applied after<br />evaluating the PVC template, if available.<br />If not specified, the generated PVCs will use the<br />default storage class |  |  |  |
+| `size` _string_ | Size of the storage. Required if not already specified in the PVC template.<br />Changes to this field are automatically reapplied to the created PVCs.<br />Size cannot be decreased. |  |  |  |
+| `resizeInUseVolumes` _boolean_ | Resize existent PVCs, defaults to true |  | true |  |
+| `pvcTemplate` _[PersistentVolumeClaimSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#persistentvolumeclaimspec-v1-core)_ | Template to be used to generate the Persistent Volume Claim |  |  |  |
+
+
+#### Subscription
+
+
+
+Subscription is the Schema for the subscriptions API
+
+
+
+
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `apiVersion` _string_ | `postgresql.cnpg.io/v1` | True | | |
+| `kind` _string_ | `Subscription` | True | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. | True |  |  |
+| `spec` _[SubscriptionSpec](#subscriptionspec)_ |  | True |  |  |
+| `status` _[SubscriptionStatus](#subscriptionstatus)_ |  | True |  |  |
+
+
+#### SubscriptionReclaimPolicy
+
+_Underlying type:_ _string_
+
+SubscriptionReclaimPolicy describes a policy for end-of-life maintenance of Subscriptions.
 
-## UsageSpec     {#postgresql-cnpg-io-v1-UsageSpec}
 
-**Appears in:**
 
-- [FDWSpec](#postgresql-cnpg-io-v1-FDWSpec)
-- [ServerSpec](#postgresql-cnpg-io-v1-ServerSpec)
+_Appears in:_
 
-<p>UsageSpec configures a usage for a foreign data wrapper</p>
+- [SubscriptionSpec](#subscriptionspec)
 
 | Field | Description |
-|-------|-------------|
-| `name` <br/> _string_ **[Required]** | Name of the usage |
-| `type` <br/> _UsageSpecType_ | Type of usage |
+| --- | --- |
+| `delete` | SubscriptionReclaimDelete means the subscription will be deleted from Kubernetes on release<br />from its claim.<br /> |
+| `retain` | SubscriptionReclaimRetain means the subscription will be left in its current phase for manual<br />reclamation by the administrator. The default policy is Retain.<br /> |
+
+
+#### SubscriptionSpec
+
+
+
+SubscriptionSpec defines the desired state of Subscription
+
+
+
+_Appears in:_
+
+- [Subscription](#subscription)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `cluster` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#localobjectreference-v1-core)_ | The name of the PostgreSQL cluster that identifies the "subscriber" | True |  |  |
+| `name` _string_ | The name of the subscription inside PostgreSQL | True |  |  |
+| `dbname` _string_ | The name of the database where the publication will be installed in<br />the "subscriber" cluster | True |  |  |
+| `parameters` _object (keys:string, values:string)_ | Subscription parameters included in the `WITH` clause of the PostgreSQL<br />`CREATE SUBSCRIPTION` command. Most parameters cannot be changed<br />after the subscription is created and will be ignored if modified<br />later, except for a limited set documented at:<br />https://www.postgresql.org/docs/current/sql-altersubscription.html#SQL-ALTERSUBSCRIPTION-PARAMS-SET |  |  |  |
+| `publicationName` _string_ | The name of the publication inside the PostgreSQL database in the<br />"publisher" | True |  |  |
+| `publicationDBName` _string_ | The name of the database containing the publication on the external<br />cluster. Defaults to the one in the external cluster definition. |  |  |  |
+| `externalClusterName` _string_ | The name of the external cluster with the publication ("publisher") | True |  |  |
+| `subscriptionReclaimPolicy` _[SubscriptionReclaimPolicy](#subscriptionreclaimpolicy)_ | The policy for end-of-life maintenance of this subscription |  | retain | Enum: [delete retain] <br /> |
+
+
+#### SubscriptionStatus
+
+
+
+SubscriptionStatus defines the observed state of Subscription
+
+
+
+_Appears in:_
+
+- [Subscription](#subscription)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `observedGeneration` _integer_ | A sequence number representing the latest<br />desired state that was synchronized |  |  |  |
+| `applied` _boolean_ | Applied is true if the subscription was reconciled correctly |  |  |  |
+| `message` _string_ | Message is the reconciliation output message |  |  |  |
+
+
+#### SwitchReplicaClusterStatus
+
+
+
+SwitchReplicaClusterStatus contains all the statuses regarding the switch of a cluster to a replica cluster
+
+
+
+_Appears in:_
+
+- [ClusterStatus](#clusterstatus)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `inProgress` _boolean_ | InProgress indicates if there is an ongoing procedure of switching a cluster to a replica cluster. |  |  |  |
+
+
+#### SyncReplicaElectionConstraints
+
+
+
+SyncReplicaElectionConstraints contains the constraints for sync replicas election.
+
+For anti-affinity parameters two instances are considered in the same location
+if all the labels values match.
+
+In future synchronous replica election restriction by name will be supported.
+
+
+
+_Appears in:_
+
+- [PostgresConfiguration](#postgresconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `nodeLabelsAntiAffinity` _string array_ | A list of node labels values to extract and compare to evaluate if the pods reside in the same topology or not |  |  |  |
+| `enabled` _boolean_ | This flag enables the constraints for sync replicas | True |  |  |
+
+
+#### SynchronizeReplicasConfiguration
+
+
+
+SynchronizeReplicasConfiguration contains the configuration for the synchronization of user defined
+physical replication slots
+
 
-## UsageSpecType     {#postgresql-cnpg-io-v1-UsageSpecType}
 
-(Alias of `string`)
+_Appears in:_
 
-**Appears in:**
+- [ReplicationSlotsConfiguration](#replicationslotsconfiguration)
 
-- [UsageSpec](#postgresql-cnpg-io-v1-UsageSpec)
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `enabled` _boolean_ | When set to true, every replication slot that is on the primary is synchronized on each standby | True | true |  |
+| `excludePatterns` _string array_ | List of regular expression patterns to match the names of replication slots to be excluded (by default empty) |  |  |  |
 
-<p>UsageSpecType describes the type of usage specified in `usage` field of `Database` object.</p>
 
-## VolumeSnapshotConfiguration     {#postgresql-cnpg-io-v1-VolumeSnapshotConfiguration}
+#### SynchronousReplicaConfiguration
 
-**Appears in:**
 
-- [BackupConfiguration](#postgresql-cnpg-io-v1-BackupConfiguration)
 
-<p>VolumeSnapshotConfiguration represents configuration for execution of snapshot backups.</p>
+SynchronousReplicaConfiguration contains the configuration of the
+PostgreSQL synchronous replication feature.
+Important: at this moment, also `.spec.minSyncReplicas` and `.spec.maxSyncReplicas`
+need to be considered.
 
+
+
+_Appears in:_
+
+- [PostgresConfiguration](#postgresconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `method` _[SynchronousReplicaConfigurationMethod](#synchronousreplicaconfigurationmethod)_ | Method to select synchronous replication standbys from the listed<br />servers, accepting 'any' (quorum-based synchronous replication) or<br />'first' (priority-based synchronous replication) as values. | True |  | Enum: [any first] <br /> |
+| `number` _integer_ | Specifies the number of synchronous standby servers that<br />transactions must wait for responses from. | True |  |  |
+| `maxStandbyNamesFromCluster` _integer_ | Specifies the maximum number of local cluster pods that can be<br />automatically included in the `synchronous_standby_names` option in<br />PostgreSQL. |  |  |  |
+| `standbyNamesPre` _string array_ | A user-defined list of application names to be added to<br />`synchronous_standby_names` before local cluster pods (the order is<br />only useful for priority-based synchronous replication). |  |  |  |
+| `standbyNamesPost` _string array_ | A user-defined list of application names to be added to<br />`synchronous_standby_names` after local cluster pods (the order is<br />only useful for priority-based synchronous replication). |  |  |  |
+| `dataDurability` _[DataDurabilityLevel](#datadurabilitylevel)_ | If set to "required", data durability is strictly enforced. Write operations<br />with synchronous commit settings (`on`, `remote_write`, or `remote_apply`) will<br />block if there are insufficient healthy replicas, ensuring data persistence.<br />If set to "preferred", data durability is maintained when healthy replicas<br />are available, but the required number of instances will adjust dynamically<br />if replicas become unavailable. This setting relaxes strict durability enforcement<br />to allow for operational continuity. This setting is only applicable if both<br />`standbyNamesPre` and `standbyNamesPost` are unset (empty). |  |  | Enum: [required preferred] <br /> |
+
+
+#### SynchronousReplicaConfigurationMethod
+
+_Underlying type:_ _string_
+
+SynchronousReplicaConfigurationMethod configures whether to use
+quorum based replication or a priority list
+
+
+
+_Appears in:_
+
+- [SynchronousReplicaConfiguration](#synchronousreplicaconfiguration)
+
+
+
+#### TablespaceConfiguration
+
+
+
+TablespaceConfiguration is the configuration of a tablespace, and includes
+the storage specification for the tablespace
+
+
+
+_Appears in:_
+
+- [ClusterSpec](#clusterspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | The name of the tablespace | True |  |  |
+| `storage` _[StorageConfiguration](#storageconfiguration)_ | The storage configuration for the tablespace | True |  |  |
+| `owner` _[DatabaseRoleRef](#databaseroleref)_ | Owner is the PostgreSQL user owning the tablespace |  |  |  |
+| `temporary` _boolean_ | When set to true, the tablespace will be added as a `temp_tablespaces`<br />entry in PostgreSQL, and will be available to automatically house temp<br />database objects, or other temporary files. Please refer to PostgreSQL<br />documentation for more information on the `temp_tablespaces` GUC. |  | false |  |
+
+
+#### TablespaceState
+
+
+
+TablespaceState represents the state of a tablespace in a cluster
+
+
+
+_Appears in:_
+
+- [ClusterStatus](#clusterstatus)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | Name is the name of the tablespace | True |  |  |
+| `owner` _string_ | Owner is the PostgreSQL user owning the tablespace |  |  |  |
+| `state` _[TablespaceStatus](#tablespacestatus)_ | State is the latest reconciliation state | True |  |  |
+| `error` _string_ | Error is the reconciliation error, if any |  |  |  |
+
+
+#### TablespaceStatus
+
+_Underlying type:_ _string_
+
+TablespaceStatus represents the status of a tablespace in the cluster
+
+
+
+_Appears in:_
+
+- [TablespaceState](#tablespacestate)
+
 | Field | Description |
-|-------|-------------|
-| `labels` <br/> _map[string]string_ | Labels key-value pairs added to `.metadata.labels` of snapshot resources |
-| `annotations` <br/> _map[string]string_ | Annotations added to `.metadata.annotations` of snapshot resources |
-| `className` <br/> _string_ | Snapshot Class to use for PG_DATA PersistentVolumeClaim; default for other types if no specific class present |
-| `walClassName` <br/> _string_ | Snapshot Class to use for PG_WAL PersistentVolumeClaim |
-| `tablespaceClassName` <br/> _map[string]string_ | Snapshot Class to use for tablespaces; defaults to PGDATA Snapshot Class if set |
-| `snapshotOwnerReference` <br/> _SnapshotOwnerReference_ | Indicates type of owner reference snapshot should have |
-| `online` <br/> _bool_ | Whether volume snapshot backups are online/hot (`true` default) or offline/cold (`false`) |
-| `onlineConfiguration` <br/> _OnlineConfiguration_ | Configuration parameters to control online/hot volume snapshot backups |
+| --- | --- |
+| `reconciled` | TablespaceStatusReconciled indicates the tablespace in DB matches the Spec<br /> |
+| `pending` | TablespaceStatusPendingReconciliation indicates the tablespace in Spec requires creation in the DB<br /> |
+
+
+#### Topology
+
+
+
+Topology contains the cluster topology
+
+
+
+_Appears in:_
+
+- [ClusterStatus](#clusterstatus)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `instances` _object (keys:[PodName](#podname), values:[PodTopologyLabels](#podtopologylabels))_ | Instances contains the pod topology of the instances |  |  |  |
+| `nodesUsed` _integer_ | NodesUsed represents the count of distinct nodes accommodating the instances.<br />A value of '1' suggests that all instances are hosted on a single node,<br />implying the absence of High Availability (HA). Ideally, this value should<br />be the same as the number of instances in the Postgres HA cluster, implying<br />shared nothing architecture on the compute side. |  |  |  |
+| `successfullyExtracted` _boolean_ | SuccessfullyExtracted indicates if the topology data was extract. It is useful to enact fallback behaviors<br />in synchronous replica election in case of failures |  |  |  |
+
+
+#### VolumeSnapshotConfiguration
+
+
+
+VolumeSnapshotConfiguration represents the configuration for the execution of snapshot backups.
+
+
+
+_Appears in:_
+
+- [BackupConfiguration](#backupconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `labels` _object (keys:string, values:string)_ | Labels are key-value pairs that will be added to .metadata.labels snapshot resources. |  |  |  |
+| `annotations` _object (keys:string, values:string)_ | Annotations key-value pairs that will be added to .metadata.annotations snapshot resources. |  |  |  |
+| `className` _string_ | ClassName specifies the Snapshot Class to be used for PG_DATA PersistentVolumeClaim.<br />It is the default class for the other types if no specific class is present |  |  |  |
+| `walClassName` _string_ | WalClassName specifies the Snapshot Class to be used for the PG_WAL PersistentVolumeClaim. |  |  |  |
+| `tablespaceClassName` _object (keys:string, values:string)_ | TablespaceClassName specifies the Snapshot Class to be used for the tablespaces.<br />defaults to the PGDATA Snapshot Class, if set |  |  |  |
+| `snapshotOwnerReference` _[SnapshotOwnerReference](#snapshotownerreference)_ | SnapshotOwnerReference indicates the type of owner reference the snapshot should have |  | none | Enum: [none cluster backup] <br /> |
+| `online` _boolean_ | Whether the default type of backup with volume snapshots is<br />online/hot (`true`, default) or offline/cold (`false`) |  | true |  |
+| `onlineConfiguration` _[OnlineConfiguration](#onlineconfiguration)_ | Configuration parameters to control the online/hot backup with volume snapshots |  | \{ immediateCheckpoint:false waitForArchive:true \} |  |
+
+
+
 

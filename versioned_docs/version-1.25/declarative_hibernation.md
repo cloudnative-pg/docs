@@ -1,6 +1,6 @@
 ---
 id: declarative_hibernation
-sidebar_position: 44
+sidebar_position: 430
 title: Declarative hibernation
 ---
 
@@ -18,6 +18,15 @@ process is running.
 
 The declarative hibernation feature enables saving CPU power by removing the
 database Pods, while keeping the database PVCs.
+
+:::note
+    Declarative hibernation is different from the existing implementation
+    of [imperative hibernation via the `cnpg` plugin](kubectl-plugin.md#cluster-hibernation).
+    Imperative hibernation shuts down all Postgres instances in the High
+    Availability cluster, and keeps a static copy of the PVCs of the primary that
+    contain `PGDATA` and WALs. The plugin enables to exit the hibernation phase, by
+    resuming the primary and then recreating all the replicas - if they exist.
+:::
 
 ## Hibernation
 
@@ -57,7 +66,7 @@ $ kubectl cnpg status <cluster-name>
 Cluster Summary
 Name:              cluster-example
 Namespace:         default
-PostgreSQL Image:  ghcr.io/cloudnative-pg/postgresql:18.0-system-trixie
+PostgreSQL Image:  ghcr.io/cloudnative-pg/postgresql:18.1-system-trixie
 Primary instance:  cluster-example-2
 Status:            Cluster in healthy state 
 Instances:         3

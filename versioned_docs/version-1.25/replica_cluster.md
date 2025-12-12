@@ -1,7 +1,7 @@
 ---
 id: replica_cluster
-sidebar_position: 37
-title: Replica Clusters
+sidebar_position: 360
+title: Replica clusters
 ---
 
 # Replica clusters
@@ -33,7 +33,7 @@ For example, the diagram below — taken from the ["Architecture" section](archi
 clusters, with a symmetric replica cluster primarily serving disaster recovery
 purposes.
 
-![An example of multi-cluster deployment with a primary and a replica cluster](/img/multi-cluster.png)
+![An example of multi-cluster deployment with a primary and a replica cluster](./images/multi-cluster.png)
 
 ## Basic Concepts
 
@@ -95,8 +95,8 @@ recovery. There are three main options:
    seamless data transfer.
 2. **WAL Archive**: Use the WAL (Write-Ahead Logging) archive stored in an
    object store. WAL files are regularly transferred from the source cluster to
-   the object store, from where a CNPG-I plugin like [Barman Cloud](https://cloudnative-pg.io/plugin-barman-cloud/)
-   retrieves them for the replica cluster via the `restore_command`.
+   the object store, from where the `barman-cloud-wal-restore` utility retrieves
+   them for the replica cluster.
 3. **Hybrid Approach**: Combine both streaming replication and WAL archive
    methods. PostgreSQL can manage and switch between these two approaches as
    needed to ensure data consistency and availability.
@@ -105,27 +105,17 @@ recovery. There are three main options:
 
 When configuring the external cluster, you have the following options:
 
-- **`plugin` section**:
-    - Enables bootstrapping the replica cluster using a [CNPG-I](https://github.com/cloudnative-pg/cnpg-i)
-      plugin that support the
-      [`restore_job`](https://github.com/cloudnative-pg/cnpg-i/blob/main/docs/protocol.md#restore_job-proto)
-      and the [`wal`](https://github.com/cloudnative-pg/cnpg-i/blob/main/docs/protocol.md#wal-proto) protocols.
-    - CloudNativePG supports the [Barman Cloud Plugin](https://cloudnative-pg.io/plugin-barman-cloud/docs/usage/#restoring-a-cluster)
-      to allow bootstrapping the replica cluster from an object store.
-
+- **`barmanObjectStore` section**:
+    - Enables use of the WAL archive, with CloudNativePG automatically setting
+      the `restore_command` in the designated primary instance.
+    - Allows bootstrapping the replica cluster from an object store using the
+      `recovery` section if volume snapshots are not feasible.
 - **`connectionParameters` section**:
     - Enables bootstrapping the replica cluster via streaming replication using
       the `pg_basebackup` section.
     - CloudNativePG automatically sets the `primary_conninfo` option in the
       designated primary instance, initiating a WAL receiver process to connect
       to the source cluster and receive data.
-
-You still have access to the **`barmanObjectStore` section**, although deprecated:
-
-- Enables use of the WAL archive, with CloudNativePG automatically setting
-  the `restore_command` in the designated primary instance.
-- Allows bootstrapping the replica cluster from an object store using the
- `recovery` section if volume snapshots are not feasible.
 
 ### Backup and Symmetric Architectures
 
@@ -212,23 +202,19 @@ replication with WAL shipping as a fallback—as described in the
 section.
 
 Here’s how you would configure the `externalClusters` section for both
-`Cluster` resources, relying on Barman Cloud Plugin for the object store:
+`Cluster` resources:
 
 ```yaml
 # Distributed topology configuration
 externalClusters:
   - name: cluster-eu-south
-    plugin:
-      name: barman-cloud.cloudnative-pg.io
-      parameters:
-        barmanObjectName: cluster-eu-south
-        serverName: cluster-eu-south
+    barmanObjectStore:
+      destinationPath: s3://cluster-eu-south/
+      # Additional configuration
   - name: cluster-eu-central
-    plugin:
-      name: barman-cloud.cloudnative-pg.io
-      parameters:
-        barmanObjectName: cluster-eu-central
-        serverName: cluster-eu-central
+    barmanObjectStore:
+      destinationPath: s3://cluster-eu-central/
+      # Additional configuration
 ```
 
 The `.spec.replica` stanza for the `cluster-eu-south` PostgreSQL primary
@@ -268,7 +254,7 @@ involving:
 
 These processes are described in the next sections.
 
-:::important
+:::info[Important]
     Before you proceed, ensure you review the ["About PostgreSQL Roles" section](#about-postgresql-roles)
     above and use identical role definitions, including secrets, in all
     `Cluster` objects participating in the distributed topology.
@@ -389,7 +375,7 @@ clusters.
 
 ## Standalone Replica Clusters
 
-:::important
+:::info[Important]
     Standalone Replica Clusters were previously known as Replica Clusters
     before the introduction of the Distributed Topology strategy in CloudNativePG
     1.24.
@@ -412,7 +398,7 @@ from the original source.
     and the source cluster become two independent clusters definitively.
 :::
 
-:::important
+:::info[Important]
     Standalone replica clusters are suitable for several use cases, primarily
     involving read-only workloads. If you are planning to setup a disaster
     recovery solution, look into "Distributed Topology" above.
@@ -526,12 +512,10 @@ a backup of the source cluster has been created already.
 ```yaml
   externalClusters:
   - name: <MAIN-CLUSTER>
-    # Example with Barman Cloud Plugin
-    plugin:
-      name: barman-cloud.cloudnative-pg.io
-      parameters:
-        barmanObjectName: <MAIN-CLUSTER>
-        serverName: <MAIN-CLUSTER>
+    barmanObjectStore:
+      destinationPath: s3://backups/
+      endpointURL: http://minio:9000
+      s3Credentials:
         …
     connectionParameters:
       host: <MAIN-CLUSTER>-rw.default.svc
@@ -575,7 +559,7 @@ See ["About PostgreSQL Roles"](#about-postgresql-roles) for more details.
 ## Delayed replicas
 
 CloudNativePG supports the creation of **delayed replicas** through the
-[`.spec.replica.minApplyDelay` option](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ReplicaClusterConfiguration),
+[`.spec.replica.minApplyDelay` option](cloudnative-pg.v1.md#replicaclusterconfiguration),
 leveraging PostgreSQL's
 [`recovery_min_apply_delay`](https://www.postgresql.org/docs/current/runtime-config-replication.html#GUC-RECOVERY-MIN-APPLY-DELAY).
 
@@ -633,7 +617,7 @@ the resilience and data protection capabilities of your PostgreSQL environment.
 Adjust the delay duration based on your specific needs and the criticality of
 your data.
 
-:::important
+:::info[Important]
     Always measure your goals. Depending on your environment, it might be more
     efficient to rely on volume snapshot-based recovery for faster outcomes.
     Evaluate and choose the approach that best aligns with your unique requirements

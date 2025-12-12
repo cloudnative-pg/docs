@@ -1,6 +1,6 @@
 ---
 id: quickstart
-sidebar_position: 7
+sidebar_position: 60
 title: Quickstart
 ---
 
@@ -23,7 +23,7 @@ regular manifests written in YAML.
 By following the instructions on this page you should be able to start a PostgreSQL
 cluster on your local Kubernetes installation and experiment with it.
 
-:::important
+:::info[Important]
     Make sure that you have `kubectl` installed on your machine in order
     to connect to the Kubernetes cluster. Please follow the Kubernetes documentation
     on [how to install `kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/).
@@ -103,7 +103,7 @@ spec:
     size: 1Gi
 ```
 
-:::note "There's more"
+:::note[There's more]
     For more detailed information about the available options, please refer
     to the ["API Reference" section](cloudnative-pg.v1.md).
 :::
@@ -130,7 +130,7 @@ label on all objects relevant to a particular cluster. For example:
 kubectl get pods -l cnpg.io/cluster=<CLUSTER>
 ```
 
-:::important
+:::info[Important]
     Note that we are using `cnpg.io/cluster` as the label. In the past you may
     have seen or used `postgresql`. This label is being deprecated, and
     will be dropped in the future. Please use `cnpg.io/cluster`.
@@ -152,7 +152,7 @@ spec:
    #[...]
 ```
 
-:::important
+:::info[Important]
     The immutable infrastructure paradigm requires that you always
     point to a specific version of the container image.
     Never use tags like `latest` or `13` in a production environment
@@ -162,14 +162,14 @@ spec:
     to the image name, through the `<image>:<tag>@sha256:<digestValue>` format.
 :::
 
-:::note "There's more"
+:::note[There's more]
     There are some examples cluster configurations bundled with the operator.
     Please refer to the ["Examples" section](samples.md).
 :::
 
 ## Part 4: Monitor clusters with Prometheus and Grafana
 
-:::important
+:::info[Important]
     Installing Prometheus and Grafana is beyond the scope of this project.
     The instructions in this section are provided for experimentation and
     illustration only.
@@ -219,7 +219,7 @@ configured with the `kube-stack-config.yaml` file:
   watching for **any** `PodMonitor` (see [*monitoring*](monitoring.md)).
 - Alert Manager and Grafana are both enabled.
 
-:::info
+:::note[Seealso]
     For further information about the above helm commands, refer to the [helm
     install](https://helm.sh/docs/helm/helm_install/)
     documentation.
@@ -294,7 +294,7 @@ Then access the Prometheus console locally at: [`http://localhost:9090/`](http:/
 You should find a series of metrics relating to CloudNativePG clusters.
 Please refer to the [monitoring section](monitoring.md) for more information.
 
-![local prometheus](/img/prometheus-local.png)
+![local prometheus](images/prometheus-local.png)
 
 You can also monitor the CloudNativePG operator by creating a PodMonitor to
 target it. See the relevant section in the [monitoring page](monitoring.md#monitoring-the-operator-with-prometheus).
@@ -338,7 +338,7 @@ You can download the file
 and manually import it via the GUI (menu: Dashboards > New > Import).
 You can now click on the `CloudNativePG` dashboard just created:
 
-![local grafana](/img/grafana-local.png)
+![local grafana](images/grafana-local.png)
 
 :::warning
     Some graphs in the previous dashboard make use of metrics that are in alpha stage by the time
@@ -346,8 +346,6 @@ You can now click on the `CloudNativePG` dashboard just created:
     producing some graphs to show `No data`.
 :::
 
-:::note
 Note that in our local setup, Prometheus and Grafana are configured to
 automatically discover and monitor any CloudNativePG clusters deployed with the
 Monitoring feature enabled.
-:::

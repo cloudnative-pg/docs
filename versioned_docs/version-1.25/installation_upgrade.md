@@ -1,7 +1,7 @@
 ---
 id: installation_upgrade
-sidebar_position: 6
-title: Installation and Upgrade
+sidebar_position: 50
+title: Installation and upgrades
 ---
 
 # Installation and upgrades
@@ -14,19 +14,18 @@ title: Installation and Upgrade
 The operator can be installed like any other resource in Kubernetes,
 through a YAML manifest applied via `kubectl`.
 
-You can install the [latest operator manifest](https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml)
+You can install the [latest operator manifest](https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.25/releases/cnpg-1.25.4.yaml)
 for this minor release as follows:
 
 ```sh
 kubectl apply --server-side -f \
-  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml
+  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.25/releases/cnpg-1.25.4.yaml
 ```
 
 You can verify that with:
 
 ```sh
-kubectl rollout status deployment \
-  -n cnpg-system cnpg-controller-manager
+kubectl get deployment -n cnpg-system cnpg-controller-manager
 ```
 
 ### Using the `cnpg` plugin for `kubectl`
@@ -81,11 +80,11 @@ specific minor release, you can just run:
 
 ```sh
 curl -sSfL \
-  https://raw.githubusercontent.com/cloudnative-pg/artifacts/release-1.27/manifests/operator-manifest.yaml | \
+  https://raw.githubusercontent.com/cloudnative-pg/artifacts/release-1.25/manifests/operator-manifest.yaml | \
   kubectl apply --server-side -f -
 ```
 
-:::important
+:::info[Important]
     Snapshots are not supported by the CloudNativePG Community, and are not
     intended for use in production.
 :::
@@ -144,7 +143,7 @@ tolerations to make sure that the operator does not run on the same nodes where
 the actual PostgreSQL clusters are running (this might even include the control
 plane for self-managed Kubernetes installations).
 
-:::info Operator configuration
+:::note[Operator configuration]
     You can change the default behavior of the operator by overriding
     some default options. For more information, please refer to the
     ["Operator configuration"](operator_conf.md) section.
@@ -152,7 +151,7 @@ plane for self-managed Kubernetes installations).
 
 ## Upgrades
 
-:::important
+:::info[Important]
     Please carefully read the [release notes](release_notes.md)
     before performing an upgrade as some versions might require
     extra steps.
@@ -177,11 +176,11 @@ update concludes with a switchover, which is governed by the
 the switchover automatically. If set to `supervised`, the user must manually
 promote the new primary instance using the `cnpg` plugin for `kubectl`.
 
-:::info Rolling updates
+:::note[Rolling updates]
     This process is discussed in-depth on the [Rolling Updates](rolling_update.md) page.
 :::
 
-:::important
+:::info[Important]
     In case `primaryUpdateStrategy` is set to the default value of `unsupervised`,
     an upgrade of the operator will trigger a switchover on your PostgreSQL cluster,
     causing a (normally negligible) downtime. If your PostgreSQL Cluster has only one
@@ -266,108 +265,13 @@ When versions are not directly upgradable, the old version needs to be
 removed before installing the new one. This won't affect user data but
 only the operator itself.
 
-
-<!--
-### Upgrading to 1.28.0 or 1.27.x
-
-:::important
-    We strongly recommend that all CloudNativePG users upgrade to version
-    1.28.0, or at least to the latest stable version of your current minor release
-    (e.g., 1.27.x).
-:::
-
--->
-
-### Upgrading to 1.27.0 or 1.26.1
-
-:::important
-    We strongly recommend that all CloudNativePG users upgrade to version
-    1.27.0, or at least to the latest stable version of your current minor release
-    (e.g., 1.26.1).
-:::
-
-Version 1.27 introduces a change in the default behavior of the
-[liveness probe](instance_manager.md#liveness-probe): it now enforces the
-[shutdown of an isolated primary](instance_manager.md#primary-isolation)
-within the `livenessProbeTimeout` (30 seconds).
-
-If this behavior is not suitable for your environment, you can disable the
-*isolation check* in the liveness probe with the following configuration:
-
-```yaml
-spec:
-  probes:
-    liveness:
-      isolationCheck:
-        enabled: false
-```
-
-### Upgrading to 1.26 from a previous minor version
-
-:::important
-    We strongly recommend that all CloudNativePG users upgrade to version
-    1.26.1, or at a minimum, to the latest stable version of your current minor
-    release (for example, 1.25.x).
-:::
-
-:::warning
-    Due to changes in the startup probe for the manager component
-    ([#6623](https://github.com/cloudnative-pg/cloudnative-pg/pull/6623)),
-    upgrading the operator will trigger a restart of your PostgreSQL clusters,
-    even if in-place updates are enabled (`ENABLE_INSTANCE_MANAGER_INPLACE_UPDATES=true`).
-    Your applications will need to reconnect to PostgreSQL after the upgrade.
-:::
-
-#### Deprecation of backup metrics and fields in the `Cluster` `.status`
-
-With the transition to a backup and recovery agnostic approach based on CNPG-I
-plugins in CloudNativePG, which began with version 1.26.0 for Barman Cloud, we
-are starting the deprecation period for the following fields in the `.status`
-section of the `Cluster` resource:
-
-- `firstRecoverabilityPoint`
-- `firstRecoverabilityPointByMethod`
-- `lastSuccessfulBackup`
-- `lastSuccessfulBackupByMethod`
-- `lastFailedBackup`
-
-The following Prometheus metrics are also deprecated:
-
-- `cnpg_collector_first_recoverability_point`
-- `cnpg_collector_last_failed_backup_timestamp`
-- `cnpg_collector_last_available_backup_timestamp`
-
-:::warning
-    If you have migrated to a plugin-based backup and recovery solution such as
-    Barman Cloud, these fields and metrics are no longer synchronized and will
-    not be updated. Users still relying on the in-core support for Barman Cloud
-    and volume snapshots can continue to use these fields for the time being.
-:::
-
-Under the new plugin-based approach, multiple backup methods can operate
-simultaneously, each with its own timeline for backup and recovery. For
-example, some plugins may provide snapshots without WAL archiving, while others
-support continuous archiving.
-
-Because of this flexibility, maintaining centralized status fields in the
-`Cluster` resource could be misleading or confusing, as they would not
-accurately represent the state across all configured backup methods.
-For this reason, these fields are being deprecated.
-
-Instead, each plugin is responsible for exposing its own backup status
-information and providing metrics back to the instance manager for monitoring
-and operational awareness.
-
-#### Declarative Hibernation in the `cnpg` plugin
-
-In this release, the `cnpg` plugin for `kubectl` transitions from an imperative
-to a [declarative approach for cluster hibernation](declarative_hibernation.md).
-The `hibernate on` and `hibernate off` commands are now convenient shortcuts
-that apply declarative changes to enable or disable hibernation.
-The `hibernate status` command has been removed, as its purpose is now
-fulfilled by the standard `status` command.
-
 ### Upgrading to 1.25 from a previous minor version
+
+:::info[Important]
+    We strongly recommend that all CloudNativePG users upgrade to version
+    1.25.1 or at least to the latest stable version of the minor release you are
+    currently using (namely 1.24.x).
+:::
 
 :::warning
     Every time you are upgrading to a higher minor release, make sure you

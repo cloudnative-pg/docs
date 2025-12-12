@@ -1,97 +1,76 @@
 ---
 id: recovery
-sidebar_position: 21
+sidebar_position: 200
 title: Recovery
 ---
 
 # Recovery
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-In PostgreSQL, **recovery** refers to the process of starting an instance from
-an existing physical backup. PostgreSQL's recovery system is robust and
-feature-rich, supporting **Point-In-Time Recovery (PITR)**—the ability to
-restore a cluster to any specific moment, from the earliest available backup to
-the latest archived WAL file.
+In PostgreSQL terminology, recovery is the process of starting a PostgreSQL
+instance using an existing backup. The PostgreSQL recovery mechanism
+is very solid and rich. It also supports point-in-time recovery (PITR), which allows
+you to restore a given cluster up to any point in time, from the first available
+backup in your catalog to the last archived WAL. (The WAL
+archive is mandatory in this case.)
 
-:::important
-    A valid WAL archive is required to perform PITR.
-:::
-
-In CloudNativePG, recovery is **not performed in-place** on an existing
-cluster. Instead, it is used to **bootstrap a new cluster** from a physical
-backup.
+In CloudNativePG, you can't perform recovery in place on an existing
+cluster. Recovery is instead a way to bootstrap a new Postgres cluster
+starting from an available physical backup.
 
 :::note
-    For more details on configuring the `bootstrap` stanza, refer to
+    For details on the `bootstrap` stanza, see
     [Bootstrap](bootstrap.md).
 :::
 
-The `recovery` bootstrap mode allows you to initialize a cluster from a
-physical base backup and replay the associated WAL files to bring the system to
-a consistent and optionally point-in-time state.
+The `recovery` bootstrap mode lets you create a cluster from an existing
+physical base backup. You then reapply the WAL files containing the REDO log
+from the archive.
 
-CloudNativePG supports recovery via:
+WAL files are pulled from the defined *recovery object store*.
 
-- A **pluggable backup and recovery interface (CNPG-I)**, enabling integration
-  with external tools such as the [Barman Cloud Plugin](https://cloudnative-pg.io/plugin-barman-cloud/).
-- **Native recovery from volume snapshots**, where supported by the underlying
-  Kubernetes storage infrastructure.
-- **Native recovery from object stores via Barman Cloud**, which is
-  **deprecated** as of version 1.26 in favor of the plugin-based approach.
-
-With the deprecation of native Barman Cloud support in version 1.26, this
-section now focuses on two supported recovery methods: using the **Barman Cloud
-Plugin** for recovery from object stores, and the **native interface** for
-recovery from volume snapshots.
-
-:::important
-    For legacy documentation, see
-    [Appendix B – Recovery from an Object Store](appendixes/backup_barmanobjectstore.md#recovery-from-an-object-store).
-:::
-
-## Recovery from an Object Store with the Barman Cloud Plugin
-
-This section outlines how to recover a PostgreSQL cluster from an object store
-using the recommended Barman Cloud Plugin.
-
-:::important
-    The object store must contain backup data produced by a CloudNativePG
-    `Cluster`—either using the **deprecated native Barman Cloud integration** or
-    the **Barman Cloud Plugin**.
-:::
+Base backups can be taken either on object stores or using volume snapshots.
 
 :::info
-    For full details, refer to the
-    [“Recovery of a Postgres Cluster” section in the Barman Cloud Plugin documentation](https://cloudnative-pg.io/plugin-barman-cloud/docs/concepts/#recovery-of-a-postgres-cluster).
+    Starting with version 1.25, CloudNativePG includes experimental support for
+    backup and recovery using plugins, such as the
+    [Barman Cloud plugin](https://github.com/cloudnative-pg/plugin-barman-cloud).
 :::
 
-Begin by defining the object store that holds both your base backups and WAL
-files. The Barman Cloud Plugin uses a custom `ObjectStore` resource for this
-purpose. The following example shows how to configure one for Azure Blob
-Storage:
+You can achieve recovery from a *recovery object store* in two ways:
 
-```yaml
-apiVersion: barmancloud.cnpg.io/v1
-kind: ObjectStore
-metadata:
-  name: cluster-example-backup
-spec:
-  configuration:
-    destinationPath: https://STORAGEACCOUNTNAME.blob.core.windows.net/CONTAINERNAME/
-    azureCredentials:
-      storageAccount:
-        name: recovery-object-store-secret
-        key: storage_account_name
-      storageKey:
-        name: recovery-object-store-secret
-        key: storage_account_key
-    wal:
-      maxParallel: 8
-```
+- We recommend using a recovery object store, that is, a backup of another cluster
+  created by Barman Cloud and defined by way of the `barmanObjectStore` option
+  in the `externalClusters` section.
+- Alternatively, you can use an existing `Backup` object in the same namespace.
 
-Next, configure the `Cluster` resource to use the `ObjectStore` you defined. In
-the `bootstrap` section, specify the recovery source, and define an
-`externalCluster` entry that references the plugin:
+Both recovery methods enable either full recovery (up to the last
+available WAL) or up to a [point in time](#point-in-time-recovery-pitr).
+When performing a full recovery, you can also start the cluster
+in replica mode (see [replica clusters](replica_cluster.md) for reference).
+
+:::info[Important]
+    If using replica mode, make sure that the PostgreSQL configuration
+    (`.spec.postgresql.parameters`) of the recovered cluster is compatible with
+    the original one from a physical replication standpoint.
+:::
+
+For recovery using *volume snapshots*:
+
+- Use a consistent set of `VolumeSnapshot` objects that all belong to the
+  same backup and are identified by the same `cnpg.io/cluster` and
+  `cnpg.io/backupName` labels. Then, recover through the `volumeSnapshots`
+  option in the `.spec.bootstrap.recovery` stanza, as described in
+  [Recovery from `VolumeSnapshot` objects](#recovery-from-volumesnapshot-objects).
+
+## Recovery from an object store
+
+You can recover from a backup created by Barman Cloud and stored on a supported
+object store. After you define the external cluster, including all the required
+configuration in the `barmanObjectStore` section, you need to reference it in
+the `.spec.recovery.source` option.
+
+This example defines a recovery object store in a blob container in Azure:
 
 ```yaml
 apiVersion: postgresql.cnpg.io/v1
@@ -106,40 +85,58 @@ spec:
 
   bootstrap:
     recovery:
-      source: origin
+      source: clusterBackup
 
   externalClusters:
-    - name: origin
-      plugin:
-        name: barman-cloud.cloudnative-pg.io
-        parameters:
-          barmanObjectName: cluster-example-backup
-          serverName: cluster-example
+    - name: clusterBackup
+      barmanObjectStore:
+        destinationPath: https://STORAGEACCOUNTNAME.blob.core.windows.net/CONTAINERNAME/
+        azureCredentials:
+          storageAccount:
+            name: recovery-object-store-secret
+            key: storage_account_name
+          storageKey:
+            name: recovery-object-store-secret
+            key: storage_account_key
+        wal:
+          maxParallel: 8
 ```
 
-## Recovery from `VolumeSnapshot` Objects
+The previous example assumes that the application database and its owning user
+are named `app` by default. If the PostgreSQL cluster being restored uses
+different names, you must specify these names before exiting the recovery phase,
+as documented in ["Configure the application database"](#configure-the-application-database).
 
-:::warning
-    When creating replicas after recovering a primary instance from a
-    `VolumeSnapshot`, the operator may fall back to using `pg_basebackup` to
-    synchronize them. This process can be significantly slower—especially for large
-    databases—because it involves a full base backup. This limitation will be
-    addressed in the future with support for online backups and PVC cloning in
-    the scale-up process.
+:::info[Important]
+    By default, the `recovery` method strictly uses the `name` of the
+    cluster in the `externalClusters` section as the name of the main folder
+    of the backup data within the object store. This name is normally reserved
+    for the name of the server. You can specify a different folder name
+    using the `barmanObjectStore.serverName` property.
 :::
 
-CloudNativePG allows you to create a new cluster from a `VolumeSnapshot` of a
-`PersistentVolumeClaim` (PVC) that belongs to an existing `Cluster`.
-These snapshots are created using the declarative API for
-[volume snapshot backups](appendixes/backup_volumesnapshot.md).
+:::note
+    This example takes advantage of the parallel WAL restore feature,
+    dedicating up to 8 jobs to concurrently fetch the required WAL files from the
+    archive. This feature can appreciably reduce the recovery time. Make sure that
+    you plan ahead for this scenario and correctly tune the value of this parameter
+    for your environment. It will make a difference when you need it, and you will.
+:::
 
-To complete the recovery process, the new cluster must also reference an
-external cluster that provides access to the WAL archive needed to reapply
-changes and finalize the recovery.
+## Recovery from `VolumeSnapshot` objects
 
-The following example shows a cluster being recovered using both a
-`VolumeSnapshot` for the base backup and a WAL archive accessed through the
-Barman Cloud Plugin:
+:::warning
+    When creating replicas after recovering the primary instance from
+    the volume snapshot, the operator might end up using `pg_basebackup`
+    to synchronize them. This behavior results in a slower process, depending
+    on the size of the database. This limitation will be lifted in the future when
+    support for online backups and PVC cloning are introduced.
+:::
+
+CloudNativePG can create a new cluster from a `VolumeSnapshot` of a PVC of an
+existing `Cluster` that's been taken using the declarative API for [volume
+snapshot backups](backup_volumesnapshot.md). You must specify the name of the
+snapshot, as in the following example:
 
 ```yaml
 apiVersion: postgresql.cnpg.io/v1
@@ -151,20 +148,11 @@ spec:
 
   bootstrap:
     recovery:
-      source: origin
       volumeSnapshots:
         storage:
           name: <snapshot name>
           kind: VolumeSnapshot
           apiGroup: snapshot.storage.k8s.io
-
-  externalClusters:
-    - name: origin
-      plugin:
-        name: barman-cloud.cloudnative-pg.io
-        parameters:
-          barmanObjectName: cluster-example-backup
-          serverName: cluster-example
 ```
 
 In case the backed-up cluster was using a separate PVC to store the WAL files,
@@ -258,7 +246,7 @@ By default, recovery continues up to the latest available WAL on the default
 target timeline (`latest`). You can optionally specify a `recoveryTarget` to
 perform a point-in-time recovery (see [Point in Time Recovery (PITR)](#point-in-time-recovery-pitr)).
 
-:::important
+:::info[Important]
     Consider using the `barmanObjectStore.wal.maxParallel` option to speed
     up WAL fetching from the archive by concurrently downloading the transaction
     logs from the recovery object store.
@@ -271,7 +259,7 @@ backup, you can ask PostgreSQL to stop replaying WALs at any given point in
 time. PostgreSQL uses this technique to achieve PITR. The presence of a WAL
 archive is mandatory.
 
-:::important
+:::info[Important]
     PITR requires you to specify a recovery target by using the options
     described in [Recovery targets](#recovery-targets).
 :::
@@ -281,9 +269,9 @@ feature to work if you specify a recovery target.
 
 ### PITR from an object store
 
-This example uses the same recovery object store in Azure defined earlier for
-the Barman Cloud plugin, containing both the base backups and the WAL archive.
-The recovery target is based on a requested timestamp.
+This example uses a recovery object store in Azure that contains both
+the base backups and the WAL archive. The recovery target is based on a
+requested timestamp.
 
 ```yaml
 apiVersion: postgresql.cnpg.io/v1
@@ -299,18 +287,24 @@ spec:
   bootstrap:
     recovery:
       # Recovery object store containing WAL archive and base backups
-      source: origin
+      source: clusterBackup
       recoveryTarget:
         # Time base target for the recovery
         targetTime: "2023-08-11 11:14:21.00000+02"
 
   externalClusters:
-    - name: origin
-      plugin:
-        name: barman-cloud.cloudnative-pg.io
-        parameters:
-          barmanObjectName: cluster-example-backup
-          serverName: cluster-example
+    - name: clusterBackup
+      barmanObjectStore:
+        destinationPath: https://STORAGEACCOUNTNAME.blob.core.windows.net/CONTAINERNAME/
+        azureCredentials:
+          storageAccount:
+            name: recovery-object-store-secret
+            key: storage_account_name
+          storageKey:
+            name: recovery-object-store-secret
+            key: storage_account_key
+        wal:
+          maxParallel: 8
 ```
 
 In this example, you had to specify only the `targetTime` in the form of a
@@ -324,7 +318,7 @@ empty.
 If you assign a value to it (in the form of a Barman backup ID), the operator
 uses that backup as the base for the recovery.
 
-:::important
+:::info[Important]
     You need to make sure that such a backup exists and is accessible.
 :::
 
@@ -336,20 +330,17 @@ the recovery as follows:
 - Otherwise, the operator selects the last available backup, in chronological
   order.
 
-### Point-in-Time Recovery (PITR) from `VolumeSnapshot` Objects
+### PITR from `VolumeSnapshot` objects
 
-The following example demonstrates how to perform a **Point-in-Time Recovery (PITR)** using:
+The example that follows uses:
 
-- A Kubernetes `VolumeSnapshot` of the `PGDATA` directory, which provides the
-  base backup. This snapshot is specified in the `recovery.volumeSnapshots`
-  section and is named `test-snapshot-1`.
-- A recovery object store (in this case, MinIO) containing the archived WAL
-  files. The object store is defined via a Barman Cloud Plugin `ObjectStore`
-  resource (not shown here), and referenced using the `recovery.source` field,
-  which points to an external cluster configuration.
+- A Kubernetes volume snapshot for the `PGDATA` containing the base backup from
+  which to start the recovery process. This snapshot is identified in the
+  `recovery.volumeSnapshots` section and called `test-snapshot-1`.
+- A recovery object store in MinIO containing the WAL archive. The object store is identified by
+  the `recovery.source` option in the form of an external cluster definition.
 
-The cluster will be restored to a specific point in time using the
-`recoveryTarget.targetTime` option.
+The recovery target is based on a requested timestamp.
 
 ```yaml
 apiVersion: postgresql.cnpg.io/v1
@@ -360,7 +351,7 @@ spec:
   # ...
   bootstrap:
     recovery:
-      source: origin
+      source: cluster-example-with-backup
       volumeSnapshots:
         storage:
           name: test-snapshot-1
@@ -369,17 +360,18 @@ spec:
       recoveryTarget:
         targetTime: "2023-07-06T08:00:39"
   externalClusters:
-    - name: origin
-      plugin:
-        name: barman-cloud.cloudnative-pg.io
-        parameters:
-          barmanObjectName: minio-backup
-          serverName: cluster-example
+    - name: cluster-example-with-backup
+      barmanObjectStore:
+        destinationPath: s3://backups/
+        endpointURL: http://minio:9000
+        s3Credentials:
+          accessKeyId:
+            name: minio
+            key: ACCESS_KEY_ID
+          secretAccessKey:
+            name: minio
+            key: ACCESS_SECRET_KEY
 ```
-
-This setup enables CloudNativePG to restore the base data from a volume
-snapshot and apply WAL segments from the object store to reach the desired
-recovery target.
 
 :::note
     If the backed-up cluster had `walStorage` enabled, you also must specify
@@ -408,12 +400,6 @@ targetTime
    [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) format.
    (The precise stopping point is also influenced by the `exclusive` option.)
 
-:::warning
-    PostgreSQL recovery will stop when it encounters the first transaction that
-    occurs after the specified time. If no such transaction exists after the
-    target time, the recovery process will fail.
-:::
-
 targetXID
 :  Transaction ID up to which recovery proceeds.
    (The precise stopping point is also influenced by the `exclusive` option.)
@@ -435,7 +421,7 @@ targetImmediate
    as possible. When restoring from an online backup, this means the point where
    taking the backup ended.
 
-:::important
+:::info[Important]
     The operator can retrieve the closest backup when you specify either
     `targetTime` or `targetLSN`. However, this isn't possible for the remaining
     targets: `targetName`, `targetXID`, and `targetImmediate`. In such cases, it's
@@ -450,7 +436,7 @@ kind: Cluster
 [...]
   bootstrap:
     recovery:
-      source: origin
+      source: clusterBackup
       recoveryTarget:
         backupID: 20220616T142236
         targetName: 'restore_point_1'
@@ -485,19 +471,25 @@ spec:
 
   bootstrap:
     recovery:
-      source: origin
+      source: clusterBackup
       recoveryTarget:
         backupID: 20220616T142236
         targetName: "maintenance-activity"
         exclusive: true
 
   externalClusters:
-    - name: origin
-      plugin:
-        name: barman-cloud.cloudnative-pg.io
-        parameters:
-          barmanObjectName: cluster-example-backup
-          serverName: cluster-example
+    - name: clusterBackup
+      barmanObjectStore:
+        destinationPath: https://STORAGEACCOUNTNAME.blob.core.windows.net/CONTAINERNAME/
+        azureCredentials:
+          storageAccount:
+            name: recovery-object-store-secret
+            key: storage_account_name
+          storageKey:
+            name: recovery-object-store-secret
+            key: storage_account_key
+        wal:
+          maxParallel: 8
 ```
 
 ## Configure the application database
@@ -510,7 +502,7 @@ generate a secret with a randomly secure password for use.
 See [Bootstrap an empty cluster](bootstrap.md#bootstrap-an-empty-cluster-initdb)
 for more information about secrets.
 
-:::important
+:::info[Important]
     While the `Cluster` is in recovery mode, no changes to the database,
     including the catalog, are permitted. This restriction includes any role
     overrides, which are deferred until the `Cluster` transitions to primary.
@@ -542,7 +534,7 @@ completed**:
 2. If the `app` user does not exist, it will be created.
 3. If the `app` user is not the owner of the `app` database, ownership will be
    granted to the `app` user.
-4. If the `username` value matches the `owner` value in the secret, the
+4. If the `owner` value matches the `username` value in the secret, the
    password for the application user (the `app` user in this case) will be
    updated to the `password` value in the secret.
 
@@ -560,7 +552,7 @@ requested).
 For details and instructions on the `recovery` bootstrap method, see
 [Bootstrap from a backup](bootstrap.md#bootstrap-from-a-backup-recovery).
 
-:::important
+:::info[Important]
     If you're not familiar with how
     [PostgreSQL PITR](https://www.postgresql.org/docs/current/continuous-archiving.html#BACKUP-PITR-RECOVERY)
     works, we suggest that you configure the recovery cluster as the original
@@ -572,7 +564,7 @@ The way it works is that the operator injects an init container in the first
 instance of the new cluster, and the init container starts recovering the
 backup from the object storage.
 
-:::important
+:::info[Important]
     The duration of the base backup copy in the new PVC depends on
     the size of the backup, as well as the speed of both the network and the
     storage.
@@ -582,10 +574,10 @@ When the base backup recovery process is complete, the operator starts the
 Postgres instance in recovery mode. In this phase, PostgreSQL is up, though not
 able to accept connections, and the pod is healthy according to the
 liveness probe. By way of the `restore_command`, PostgreSQL starts fetching WAL
-files from the archive. You can speed up this phase by setting the
-`maxParallel` option and enabling the parallel WAL restore capability.
+files from the archive. (You can speed up this phase by setting the
+`maxParallel` option and enabling the parallel WAL restore capability.)
 
-This phase terminates when PostgreSQL reaches the target, either the end of the
+This phase terminates when PostgreSQL reaches the target (either the end of the
 WAL or the required target in case of PITR. You can optionally specify a
 `recoveryTarget` to perform a PITR. If left unspecified, the recovery continues
 up to the latest available WAL on the default target timeline (`latest`).
@@ -597,30 +589,58 @@ remaining instances join the cluster as replicas.
 The process is transparent for the user and is managed by the instance manager
 running in the pods.
 
-## Restoring into a Cluster with a Backup Section
+## Restoring into a cluster with a backup section
 
-When restoring a cluster, the manifest may include a `plugins` section with
-Barman Cloud plugin pointing to a *backup* object store resource. This enables
-the newly created cluster to begin archiving WAL files and taking backups
-immediately after recovery—provided backup policies are configured.
+<!-- TODO: do we need this section? -->
 
-Avoid reusing the same `ObjectStore` configuration for both *backup* and
-*recovery* in the same cluster. If you must, ensure that each cluster uses a
-unique `serverName` to prevent accidental overwrites of backup or WAL archive
-data.
+A manifest for a cluster restore might include a `backup` section. This means
+that,after recovery, the new cluster starts archiving WALs and taking backups
+if configured to do so.
+
+For example, this section is part of a manifest for a cluster bootstrapping
+from the cluster `cluster-example-backup`. In the storage bucket, it creates a
+folder named `recoveredCluster`, where the base backups and WALs of the
+recovered cluster are stored.
+
+``` yaml
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://backups/
+      endpointURL: http://minio:9000
+      serverName: "recoveredCluster"
+      s3Credentials:
+        accessKeyId:
+          name: minio
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: minio
+          key: ACCESS_SECRET_KEY
+    retentionPolicy: "30d"
+
+  externalClusters:
+  - name: cluster-example-backup
+    barmanObjectStore:
+      destinationPath: s3://backups/
+      endpointURL: http://minio:9000
+      s3Credentials:
+```
+
+Don't reuse the same `barmanObjectStore` configuration for different clusters.
+There might be cases where the existing information in the storage buckets
+could be overwritten by the new cluster.
 
 :::warning
-    CloudNativePG includes a safety check to prevent a cluster from overwriting
-    existing data in a shared storage bucket. If a conflict is detected, the
-    cluster remains in the `Setting up primary` state, and the associated pods will
-    fail with an error. The pod logs will display:
-    `ERROR: WAL archive check failed for server recoveredCluster: Expected empty archive`.
+    The operator includes a safety check to ensure a cluster doesn't overwrite
+    a storage bucket that contained information. A cluster that would overwrite
+    existing storage remains in the state `Setting up primary` with pods in an
+    error state. The pod logs show: `ERROR: WAL archive check failed for server
+    recoveredCluster: Expected empty archive`.
 :::
 
-:::important
-    You can bypass this safety check by setting the
-    `cnpg.io/skipEmptyWalArchiveCheck` annotation to `enabled` on the recovered
-    cluster. However, this is strongly discouraged unless you are highly
-    familiar with PostgreSQL's recovery process. Skipping the check incorrectly can
-    lead to severe data loss. Use with caution and only in expert scenarios.
+:::info[Important]
+    If you set the `cnpg.io/skipEmptyWalArchiveCheck` annotation to `enabled`
+    in the recovered cluster, you can skip the safety check. We don't recommend
+    skipping the check because, for the general use case, the check works fine.
+    Skip this check only if you're familiar with the PostgreSQL recovery system, as
+    severe data loss can occur.
 :::

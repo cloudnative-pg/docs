@@ -1,6 +1,6 @@
 ---
 id: external-secrets
-title: external secrets
+title: External Secrets
 ---
 
 # External Secrets
@@ -48,7 +48,7 @@ Let’s walk through how to automatically rotate the password of the `app` user
 every 24 hours in the `cluster-example` Postgres cluster from the
 [quickstart guide](../quickstart.md#part-3-deploy-a-postgresql-cluster).
 
-:::important
+:::info[Important]
     Before proceeding, ensure that the `cluster-example` Postgres cluster is up
     and running in your environment.
 :::
@@ -97,7 +97,7 @@ uses a `Merge` policy to update only the specified fields (`password`, `pgpass`,
 `jdbc-uri` and `uri`) in the `cluster-example-app` secret.
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: cluster-example-app-secret
@@ -166,7 +166,7 @@ In this example, we'll demonstrate how to integrate CloudNativePG,
 External Secrets Operator, and HashiCorp Vault to automatically rotate
 a PostgreSQL password and securely store it in Vault.
 
-:::important
+:::info[Important]
     This example assumes that HashiCorp Vault is already installed and properly
     configured in your environment, and that your team has the necessary expertise
     to operate it. There are various ways to deploy Vault, and detailing them is
@@ -187,7 +187,7 @@ named `vault-token` exists in the same namespace, containing the token used to
 authenticate with Vault.
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: SecretStore
 metadata:
   name: vault-backend
@@ -216,7 +216,7 @@ data:
 
 This configuration creates a `SecretStore` resource named `vault-backend`.
 
-:::important
+:::info[Important]
     This example uses basic token-based authentication, which is suitable for
     testing API, and CLI use cases. While it is the default method enabled in
     Vault, it is not recommended for production environments. For production,

@@ -1,6 +1,6 @@
 ---
 id: certificates
-sidebar_position: 33
+sidebar_position: 320
 title: Certificates
 ---
 
@@ -54,7 +54,7 @@ expiration (within a 90-day validity period).
     For detailed guidance, refer to the [Operator Configuration](operator_conf.md).
 :::
 
-:::important
+:::info[Important]
     Certificate renewal does not cause any downtime for the PostgreSQL server,
     as a simple reload operation is sufficient. However, any user-managed
     certificates not controlled by CloudNativePG must be re-issued following the
@@ -121,16 +121,18 @@ the following parameters:
 - `serverCASecret` – The name of a secret containing the `ca.crt` key.
 
 :::note
-    * The operator still creates and manages the two secrets related to client
+    The operator still creates and manages the two secrets related to client
     certificates.
-    * The operator and instances verify server certificates against the CA only,
+:::
+
+:::note
+    The operator and instances verify server certificates against the CA only,
     disregarding the DNS name. This approach is due to the typical absence of DNS
     names in user-provided certificates for the `<cluster>-rw` service used for
     communication within the cluster.
 :::
 
-
-:::important
+:::note
     If you want ConfigMaps and secrets to be reloaded by instances, you can add
     a label with the key `cnpg.io/reload` to it. Otherwise you must reload the
     instances using the `kubectl cnpg reload` subcommand.
@@ -262,47 +264,20 @@ the following parameters:
   to use to verify client certificate.
 
 :::note
-    * The operator still creates and manages the two secrets related to server
+    The operator still creates and manages the two secrets related to server
     certificates.
-    * As the cluster isn't in control of the client CA secret key, you can no
+:::
+
+:::note
+    As the cluster isn't in control of the client CA secret key, you can no
     longer generate client certificates using `kubectl cnpg certificate`.
 :::
 
-:::important
+:::note
     If you want ConfigMaps and secrets to be automatically reloaded by
     instances, you can add a label with the key `cnpg.io/reload` to it. Otherwise,
     you must reload the instances using the `kubectl cnpg reload` subcommand.
 :::
-
-#### Customizing the `streaming_replica` client certificate
-
-In some environments, it may not be possible to generate a certificate with the
-common name `streaming_replica` due to company policies or other security
-concerns, such as a CA shared across multiple clusters. In such cases, the user
-mapping feature can be used to allow authentication as the `streaming_replica`
-user with certificates containing different common names.
-
-To configure this setup, add a `pg_ident.conf` entry for the predefined map
-named `cnpg_streaming_replica`.
-
-For example, to enable `streaming_replica` authentication using a certificate
-with the common name `streaming-replica.cnpg.svc.cluster.local`, add the
-following to your cluster definition:
-
-```yaml
-apiVersion: postgresql.cnpg.io/v1
-kind: Cluster
-metadata:
-  name: cluster-example
-spec:
-  postgresql:
-    pg_ident:
-    - cnpg_streaming_replica streaming-replica.cnpg.svc.cluster.local streaming_replica
-```
-
-For further details on how `pg_ident.conf` is managed by the operator, see the
-["PostgreSQL Configuration" page](postgresql_conf.md#the-pg_ident-section) in
-the documentation.
 
 #### Cert-manager example
 

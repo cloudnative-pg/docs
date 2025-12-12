@@ -1,6 +1,6 @@
 ---
 id: postgresql_conf
-sidebar_position: 23
+sidebar_position: 220
 title: PostgreSQL Configuration
 ---
 
@@ -55,7 +55,7 @@ The `custom.conf` file will contain the user-defined settings in the
   # ...
 ```
 
-:::info "PostgreSQL GUCs: Grand Unified Configuration"
+:::note[PostgreSQL GUCs: Grand Unified Configuration]
     Refer to the PostgreSQL documentation for
     [more information on the available parameters](https://www.postgresql.org/docs/current/runtime-config.html),
     also known as GUC (Grand Unified Configuration).
@@ -165,25 +165,14 @@ single-instance clusters with WAL archiving disabled.
 
 ### Replication Settings
 
-The `primary_conninfo`, `restore_command`, and `recovery_target_timeline`
-parameters are automatically managed by the operator based on the instance's
-role within the cluster. These parameters are effectively applied only when the
-instance is operating as a replica.
+The `primary_conninfo`, `restore_command`,  and `recovery_target_timeline`
+parameters are managed automatically by the operator according to the state of
+the instance in the cluster.
 
 ```text
-primary_conninfo = 'host=<PRIMARY> user=postgres dbname=postgres'
+primary_conninfo = 'host=cluster-example-rw user=postgres dbname=postgres'
 recovery_target_timeline = 'latest'
 ```
-
-The [`STANDBY_TCP_USER_TIMEOUT` operator configuration setting](operator_conf.md#available-options),
-if specified, sets the `tcp_user_timeout` parameter on all standby instances
-managed by the operator.
-
-The `tcp_user_timeout` parameter determines how long transmitted data can
-remain unacknowledged before the TCP connection is forcibly closed. Adjusting
-this value allows you to fine-tune the responsiveness of standby instances to
-network disruptions. For more details, refer to the
-[PostgreSQL documentation](https://www.postgresql.org/docs/current/runtime-config-connection.html#GUC-TCP-USER-TIMEOUT).
 
 ### Log control settings
 
@@ -206,7 +195,7 @@ In CloudNativePG the `shared_preload_libraries` option is empty by
 default. Although you can override the content of `shared_preload_libraries`,
 we recommend that only expert Postgres users take advantage of this option.
 
-:::important
+:::info[Important]
     In case a specified library is not found, the server fails to start,
     preventing CloudNativePG from any self-healing attempt and requiring
     manual intervention. Please make sure you always test both the extensions and
@@ -224,7 +213,7 @@ requires one of the managed libraries, it will automatically add the needed
 library. The operator will also remove the library as soon as no actual parameter
 requires it.
 
-:::important
+:::info[Important]
     Please always keep in mind that removing libraries from
     `shared_preload_libraries` requires a restart of all instances in the cluster
     in order to be effective.
@@ -260,13 +249,6 @@ SELECT datname FROM pg_database WHERE datallowconn
 
 :::note
     The above query also includes template databases like `template1`.
-:::
-
-:::important
-    With the introduction of [declarative extensions](declarative_database_management.md#managing-extensions-in-a-database)
-    in the `Database` CRD, you can now manage extensions directly. As a result,
-    the managed extensions feature may undergo significant changes in future
-    versions of CloudNativePG, and some functionalities might be deprecated.
 :::
 
 #### Enabling `auto_explain`
@@ -369,7 +351,7 @@ you need to add this entry in the `pg_hba` section:
 `pg_hba` is a list of PostgreSQL Host Based Authentication rules
 used to create the `pg_hba.conf` used by the pods.
 
-:::important
+:::info[Important]
     See the PostgreSQL documentation for
     [more information on `pg_hba.conf`](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html).
 :::
@@ -387,9 +369,9 @@ Fixed rules:
 ```text
 local all all peer
 
-hostssl postgres streaming_replica all cert map=cnpg_streaming_replica
-hostssl replication streaming_replica all cert map=cnpg_streaming_replica
-hostssl all cnpg_pooler_pgbouncer all cert map=cnpg_pooler_pgbouncer
+hostssl postgres streaming_replica all cert
+hostssl replication streaming_replica all cert
+hostssl all cnpg_pooler_pgbouncer all cert
 ```
 
 Default rules:
@@ -411,9 +393,8 @@ The resulting `pg_hba.conf` will look like this:
 ```text
 local all all peer
 
-hostssl postgres streaming_replica all cert map=cnpg_streaming_replica
-hostssl replication streaming_replica all cert map=cnpg_streaming_replica
-hostssl all cnpg_pooler_pgbouncer all cert map=cnpg_pooler_pgbouncer
+hostssl postgres streaming_replica all cert
+hostssl replication streaming_replica all cert
 
 <user defined rules>
 <user defined LDAP>
@@ -468,7 +449,7 @@ postgresql:
 generate and maintain the ident map file (known as `pg_ident.conf`) inside the
 data directory.
 
-:::important
+:::info[Important]
     See the PostgreSQL documentation for
     [more information on `pg_ident.conf`](https://www.postgresql.org/docs/current/auth-username-maps.html).
 :::
@@ -703,3 +684,4 @@ Users are not allowed to set the following configuration parameters in the
 - `unix_socket_directories`
 - `unix_socket_group`
 - `unix_socket_permissions`
+

@@ -1,10 +1,10 @@
 ---
 id: kubernetes_upgrade
-sidebar_position: 38
-title: Kubernetes Upgrade and Maintenance
+sidebar_position: 370
+title: Kubernetes upgrade and maintenance
 ---
 
-# Kubernetes Upgrade and Maintenance
+# Kubernetes upgrade and maintenance
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
 Maintaining an up-to-date Kubernetes cluster is crucial for ensuring optimal
@@ -72,7 +72,7 @@ resources - you can easily confirm it with the `kubectl get pdb` command.
 Our recommendation is to leave pod disruption budgets enabled for every
 production Postgres cluster. This can be effortlessly managed by toggling the
 `.spec.enablePDB` option, as detailed in the
-[API reference](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ClusterSpec).
+[API reference](cloudnative-pg.v1.md#clusterspec).
 
 ## PostgreSQL Clusters used for Development or Testing
 
@@ -101,7 +101,7 @@ on draining the node during development activities.
 
 ## Node Maintenance Window
 
-:::important
+:::info[Important]
     While CloudNativePG will continue supporting the node maintenance window,
     it is currently recommended to transition to direct control of pod disruption
     budgets, as explained in the previous section. This section is retained
@@ -153,7 +153,7 @@ reusePVC disabled: see section below.
     by the operator - not the PostgreSQL data directory.
 :::
 
-:::important
+:::info[Important]
     `PodDisruptionBudget` management can be disabled by setting the
     `.spec.enablePDB` field to `false`. In that case, the operator won't
     create `PodDisruptionBudgets` and will delete them if they were
@@ -162,7 +162,7 @@ reusePVC disabled: see section below.
 
 ### Single instance clusters with `reusePVC` set to `false`
 
-:::important
+:::info[Important]
     We recommend to always create clusters with more
     than one instance in order to guarantee high availability.
 :::

@@ -1,6 +1,6 @@
 ---
 id: security
-sidebar_position: 11
+sidebar_position: 100
 title: Security
 ---
 
@@ -17,7 +17,7 @@ that are analyzed at 3 different layers: Code, Container and Cluster.
     page from the Kubernetes documentation.
 :::
 
-:::info About the 4C's Security Model
+:::note[About the 4C's Security Model]
     Please refer to ["The 4C’s Security Model in Kubernetes"](https://www.enterprisedb.com/blog/4cs-security-model-kubernetes)
     blog article to get a better understanding and context of the approach EDB
     has taken with security in CloudNativePG.
@@ -59,7 +59,7 @@ This feature allows users to safely report security issues that require careful
 handling before being publicly disclosed. If you discover any security bug,
 please use this medium to report it.
 
-:::important
+:::info[Important]
     A failure in the static code analysis phase of the CI/CD pipeline will
     block the entire delivery process of CloudNativePG. Every commit must pass all
     the linters defined by GolangCI-Lint.
@@ -72,7 +72,7 @@ pipelines after every commit. These images include not only the operator's
 image but also the operands' images, specifically for every supported
 PostgreSQL version.
 
-:::important
+:::info[Important]
     All operand images are automatically and regularly rebuilt by our pipelines
     to incorporate the latest security updates at both the base image and package
     levels. This ensures that container images distributed to the community receive
@@ -153,7 +153,7 @@ container-level security:
 - **["CIS Benchmark for Docker"](https://www.cisecurity.org/benchmark/docker/):**
   Developed by the Center for Internet Security (CIS).
 
-:::info About Container-Level Security
+:::note[About Container-Level Security]
     For more information on the approach that EDB has taken regarding security
     at the container level in CloudNativePG, please refer to the blog article
     ["Security and Containers in CloudNativePG"](https://www.enterprisedb.com/blog/security-and-containers-cloud-native-postgresql).
@@ -179,7 +179,7 @@ necessary permissions required by the operator to function correctly. To learn
 more about these roles, you can use the `kubectl describe clusterrole` or
 `kubectl describe role` commands, depending on the deployment method.
 
-:::important
+:::info[Important]
     The above permissions are exclusively reserved for the operator's service
     account to interact with the Kubernetes API server.  They are not directly
     accessible by the users of the operator that interact only with `Cluster`,
@@ -303,7 +303,7 @@ that are associated with that Postgres cluster. Such calls are performed through
 a dedicated `ServiceAccount` created by the operator that shares the same
 PostgreSQL `Cluster` resource name.
 
-:::important
+:::info[Important]
     The operand can only access a specific and limited subset of resources
     through the API server. A service account is the
     [recommended way to access the API server from within a Pod](https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/).
@@ -324,7 +324,7 @@ Then verify that the role is bound to the service account:
 kubectl get rolebinding -n myns mypg -o yaml
 ```
 
-:::important
+:::info[Important]
     Remember that **roles are limited to a given namespace**.
 :::
 
@@ -367,49 +367,29 @@ CloudNativePG.
 : The instance manager requires to `update` and `patch` the status of any
   `Backup` resource in the namespace
 
-### Pod and Container Security Contexts
+### Pod Security Policies
 
-A [Security Context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
-defines privilege and access control settings for a pod or container.
+:::info[Important]
+    Starting from Kubernetes v1.21, the use of `PodSecurityPolicy` has been
+    deprecated, and as of Kubernetes v1.25, it has been completely removed. Despite
+    this deprecation, we acknowledge that the operator is currently undergoing
+    testing in older and unsupported versions of Kubernetes. Therefore, this
+    section is retained for those specific scenarios.
+:::
 
-CloudNativePG does not require *privileged* mode for container execution.
-The PostgreSQL containers run as the `postgres` system user. No component
-whatsoever requires running as `root`.
+A [Pod Security Policy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/)
+is the Kubernetes way to define security rules and specifications that a pod needs to meet
+to run in a cluster.
+For InfoSec reasons, every Kubernetes platform should implement them.
 
-Likewise, Volume access does not require *privileged* mode nor `root`
-privileges. Proper permissions must be assigned by the Kubernetes platform
-and/or administrators. The PostgreSQL containers run with a read-only root
-filesystem (i.e. no writable layer).
+CloudNativePG does not require *privileged* mode for containers execution.
+The PostgreSQL containers run as `postgres` system user. No component whatsoever requires running as `root`.
 
-The operator manages the setting of security contexts for all pods and 
-containers of a PostgreSQL cluster. The [Seccomp Profile](https://kubernetes.io/docs/tutorials/security/seccomp/) 
-to be used for the PostgreSQL containers can be configured with the 
-`spec.seccompProfile` section of the `Cluster` resource. If this section is left
-blank, the containers will use a seccompProfile `Type` of `RuntimeDefault`, that
-is, the container runtime default.
+Likewise, Volumes access does not require *privileges* mode or `root` privileges either.
+Proper permissions must be properly assigned by the Kubernetes platform and/or administrators.
+The PostgreSQL containers run with a read-only root filesystem (i.e. no writable layer).
 
-The security context of PostgreSQL containers using the default `seccompProfile`
-will look like this:
-```
-securityContext:
-  allowPrivilegeEscalation: false
-  capabilities:
-    drop:
-    - ALL
-  privileged: false
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  seccompProfile:
-    type: RuntimeDefault
-```
-
-#### Security Context Constraints
-
-When running in an environment that is utilizing
-[Security Context Constraints (SCC)](https://docs.openshift.com/container-platform/4.17/authentication/managing-security-context-constraints.html)
-the operator does not explicitly set the security context of the PostgreSQL
-cluster pods, but rather allows the pods to inherit the restricted Security
-Context Constraints that are already defined.
+The operator explicitly sets the required security contexts.
 
 ### Restricting Pod access using AppArmor
 
@@ -418,7 +398,9 @@ You can assign an
 the `postgres`, `initdb`, `join`, `full-recovery` and `bootstrap-controller` containers inside every `Cluster` pod through the
 `container.apparmor.security.beta.kubernetes.io` annotation.
 
-:::info Example of cluster annotations
+:::note[Example of cluster annotations]
+:::
+
 ```
 	kind: Cluster
 	metadata:
@@ -428,7 +410,6 @@ the `postgres`, `initdb`, `join`, `full-recovery` and `bootstrap-controller` con
 			container.apparmor.security.beta.kubernetes.io/initdb: runtime/default
 			container.apparmor.security.beta.kubernetes.io/join: runtime/default
 ```
-:::
 
 :::warning
     Using this kind of annotations can result in your cluster to stop working.
@@ -458,7 +439,7 @@ The pods created by the `Cluster` resource can be controlled by Kubernetes
 to enable/disable inbound and outbound network access at IP and TCP level.
 You can find more information in the [networking document](networking.md).
 
-:::important
+:::info[Important]
     The operator needs to communicate to each instance on TCP port 8000
     to get information about the status of the PostgreSQL server. Please
     make sure you keep this in mind in case you add any network policy,
@@ -503,7 +484,7 @@ the default behavior of PostgreSQL: starting from PostgreSQL 14,
 `password_encryption` is by default set to `scram-sha-256`, while on earlier
 versions it is set to `md5`.
 
-:::important
+:::info[Important]
     Please refer to the ["Password authentication"](https://www.postgresql.org/docs/current/auth-password.html)
     section in the PostgreSQL documentation for details.
 :::
@@ -539,7 +520,7 @@ only maps the local postgres user to the postgres user in the database.
 For further detail on how `pg_ident.conf` is managed by the operator, see the
 ["PostgreSQL Configuration" page](postgresql_conf.md#the-pg_ident-section) of the documentation.
 
-:::important
+:::info[Important]
     Examples assume that the Kubernetes cluster runs in a private and secure network.
 :::
 

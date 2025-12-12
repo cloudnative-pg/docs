@@ -1,13 +1,13 @@
 ---
 id: ssl_connections
-sidebar_position: 34
+sidebar_position: 330
 title: Client TLS/SSL connections
 ---
 
 # Client TLS/SSL connections
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-:::info Certificates
+:::note[Certificates]
     See [Certificates](certificates.md)
     for more details on how CloudNativePG supports TLS certificates.
 :::
@@ -28,7 +28,7 @@ convention by way of the `initdb` configuration in the `bootstrap` section.)
 
 ## Issuing a new certificate
 
-:::info About CNPG plugin for kubectl
+:::note[About CNPG plugin for kubectl]
     See the [Certificates in the CloudNativePG plugin](kubectl-plugin.md#certificates)
     content for details on how to use the plugin for kubectl.
 :::
@@ -99,7 +99,7 @@ spec:
         app: webtest
     spec:
       containers:
-        - image: ghcr.io/cloudnative-pg/webtest:1.7.0
+        - image: ghcr.io/cloudnative-pg/webtest:1.6.0
           name: cert-test
           volumeMounts:
             - name: secret-volume-root-ca
@@ -182,7 +182,7 @@ Output:
                                         version
 --------------------------------------------------------------------------------------
 ------------------
-PostgreSQL 18.0 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.3.1 20191121 (Red Hat
+PostgreSQL 18.1 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.3.1 20191121 (Red Hat
 8.3.1-5), 64-bit
 (1 row)
 ```
@@ -197,3 +197,4 @@ This assumes that the PostgreSQL operand images include an OpenSSL library that
 supports the `TLSv1.3` version. If not, or if your client applications need a
 lower version number, you need to manually configure it in the PostgreSQL
 configuration as any other Postgres GUC.
+

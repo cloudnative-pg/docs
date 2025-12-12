@@ -1,6 +1,6 @@
 ---
 id: postgis
-sidebar_position: 45
+sidebar_position: 440
 title: PostGIS
 ---
 
@@ -11,7 +11,7 @@ title: PostGIS
 for PostgreSQL that introduces support for storing GIS (Geographic Information
 Systems) objects in the database and be queried via SQL.
 
-:::important
+:::info[Important]
     This section assumes you are familiar with PostGIS and provides some basic
     information about how to create a new PostgreSQL cluster with a PostGIS database
     in Kubernetes via CloudNativePG.
@@ -73,7 +73,6 @@ provides some guidance on how the creation of a PostGIS cluster can be done.
     Alternatively, use the provided [image catalogs](https://github.com/cloudnative-pg/postgis-containers?tab=readme-ov-file#image-catalogs).
 :::
 
-
 ```yaml
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -82,34 +81,28 @@ metadata:
 spec:
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgis:18-3.6-system-trixie
+  bootstrap:
+    initdb:
+      postInitTemplateSQL:
+        - CREATE EXTENSION postgis;
+        - CREATE EXTENSION postgis_topology;
+        - CREATE EXTENSION fuzzystrmatch;
+        - CREATE EXTENSION postgis_tiger_geocoder;
+
   storage:
     size: 1Gi
-  postgresql:
-    parameters:
-      log_statement: ddl
----
-apiVersion: postgresql.cnpg.io/v1
-kind: Database
-metadata:
-  name: postgis-example-app
-spec:
-  name: app
-  owner: app
-  cluster:
-    name: postgis-example
-  extensions:
-  - name: postgis
-  - name: postgis_topology
-  - name: fuzzystrmatch
-  - name: postgis_tiger_geocoder
 ```
 
-The example leverages the `Database` resource's declarative extension
-management to add the specified extensions to the `app` database.
+The example relies on the `postInitTemplateSQL` option which executes a list of
+queries against the `template1` database, before the actual creation of the
+application database (called `app`). This means that, once you have applied the
+manifest and the cluster is up, you will have the above extensions installed in
+both the template database and the application database, ready for use.
 
 :::info
-    For more details, see the
-    ["Managing Extensions in a Database" section](declarative_database_management.md#managing-extensions-in-a-database).
+    Take some time and look at the available options in `.spec.bootstrap.initdb`
+    from the [API reference](cloudnative-pg.v1.md#bootstrapinitdb), such as
+    `postInitApplicationSQL`.
 :::
 
 You can easily verify the available version of PostGIS that is in the
@@ -118,7 +111,7 @@ values from the ones in this document):
 
 ```console
 $ kubectl cnpg psql postgis-example -- app
-psql (18.0 (Debian 18.0-1.pgdg13+3))
+psql (18.1 (Debian 18.1-1.pgdg13+3))
 Type "help" for help.
 
 app=# SELECT * FROM pg_available_extensions WHERE name ~ '^postgis' ORDER BY 1;
@@ -137,8 +130,9 @@ app=# SELECT * FROM pg_available_extensions WHERE name ~ '^postgis' ORDER BY 1;
 (10 rows)
 ```
 
-The next step is to verify that the extensions listed in the `Database`
-resource have been correctly installed in the `app` database.
+The next step is to verify that the extensions listed in the
+`postInitTemplateSQL` section have been correctly installed in the `app`
+database.
 
 ```console
 app=# \dx

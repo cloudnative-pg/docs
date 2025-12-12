@@ -1,6 +1,6 @@
 ---
 id: scheduling
-sidebar_position: 13
+sidebar_position: 120
 title: Scheduling
 ---
 
@@ -10,7 +10,7 @@ title: Scheduling
 Scheduling, in Kubernetes, is the process responsible for placing a new pod on
 the best node possible, based on several criteria.
 
-:::info Kubernetes documentation
+:::note[Kubernetes documentation]
     Please refer to the
     [Kubernetes documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/)
     for more information on scheduling, including all the available policies. On
@@ -19,7 +19,7 @@ the best node possible, based on several criteria.
 :::
 
 You can control how the CloudNativePG cluster's instances should be
-scheduled through the [`affinity`](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-AffinityConfiguration)
+scheduled through the [`affinity`](cloudnative-pg.v1.md#affinityconfiguration)
 section in the definition of the cluster, which supports:
 
 - pod affinity/anti-affinity
@@ -48,7 +48,7 @@ metadata:
   name: cluster-example
 spec:
   instances: 3
-  imageName: ghcr.io/cloudnative-pg/postgresql:18.0-system-trixie
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.1-system-trixie
 
   affinity:
     enablePodAntiAffinity: true # Default value
@@ -96,7 +96,7 @@ However, be aware that this strict requirement may cause pods to remain pending
 if resources are insufficient—this is particularly relevant when using [Cluster Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) <!-- wokeignore:rule=master -->
 for automated horizontal scaling in a Kubernetes cluster.
 
-:::info Inter-pod Affinity and Anti-Affinity
+:::note[Inter-pod Affinity and Anti-Affinity]
     For more details, refer to the [Kubernetes documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity).
 :::
 
@@ -162,14 +162,14 @@ Tolerations can be configured for all the pods of a Cluster through the
 `.spec.affinity.tolerations` section, which accepts the usual Kubernetes syntax
 for tolerations.
 
-:::info Taints and Tolerations
+:::note[Taints and Tolerations]
     More information on taints and tolerations can be found in the
     [Kubernetes documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/).
 :::
 
 ## Isolating PostgreSQL workloads
 
-:::important
+:::info[Important]
     Before proceeding, please ensure you have read the
     ["Architecture"](architecture.md) section of the documentation.
 :::

@@ -1,6 +1,6 @@
 ---
 id: database_import
-sidebar_position: 10
+sidebar_position: 90
 title: Importing Postgres databases
 ---
 
@@ -37,7 +37,7 @@ As a result, the instructions in this section are suitable for both:
 In both cases, the operation is performed on a consistent **snapshot** of the
 origin database.
 
-:::important
+:::info[Important]
     For this reason we suggest to stop write operations on the source before
     the final import in the `Cluster` resource, as changes done to the source
     database after the start of the backup will not be in the destination cluster -
@@ -95,7 +95,7 @@ In the figure below, a single PostgreSQL cluster containing *N* databases is
 imported into separate CloudNativePG clusters, with each cluster using a
 microservice import for one of the *N* source databases.
 
-![Example of microservice import type](/img/microservice-import.png)
+![Example of microservice import type](./images/microservice-import.png)
 
 For example, the YAML below creates a new 3 instance PostgreSQL cluster (latest
 available major version at the time the operator was released) called
@@ -168,7 +168,7 @@ There are a few things you need to be aware of when using the `microservice` typ
 - Only one database can be specified inside the `initdb.import.databases` array
 - Roles are not imported - and as such they cannot be specified inside `initdb.import.roles`
 
-:::tip
+:::tip[Hint]
     The microservice approach adheres to CloudNativePG conventions and defaults
     for the destination cluster. If you do not set `initdb.database` or
     `initdb.owner` for the destination cluster, both parameters will default to
@@ -189,7 +189,7 @@ The operation is performed in the following steps:
 - run `ANALYZE` on each imported database
 - cleanup of the database dump files
 
-![Example of monolith import type](/img/monolith-import.png)
+![Example of monolith import type](./images/monolith-import.png)
 
 For example, the YAML below creates a new 3 instance PostgreSQL cluster (latest
 available major version at the time the operator was released) called
@@ -258,13 +258,13 @@ There are a few things you need to be aware of when using the `monolith` type:
     - The `SUPERUSER` option is removed from any imported role
 - Wildcard `"*"` can be used as the only element in the `databases` and/or
   `roles` arrays to import every object of the kind; When matching databases
-  the wildcard will ignore the `postgres` database, template databases
+  the wildcard will ignore the `postgres` database, template databases,
   and those databases not allowing connections
 - After the clone procedure is done, `ANALYZE VERBOSE` is executed for every
   database.
 - The `postImportApplicationSQL` field is not supported
 
-:::tip
+:::tip[Hint]
     The databases and their owners are preserved exactly as they exist in the
     source cluster—no `app` database or user will be created during import. If your
     `bootstrap.initdb` stanza specifies custom `database` and `owner` values that
@@ -391,7 +391,7 @@ Before completing the import job, CloudNativePG restores the expected
 configuration, then runs `initdb --sync-only` to ensure that data is
 permanently written on disk.
 
-:::important
+:::info[Important]
     WAL archiving, if requested, and WAL level will be honored after the
     database import process has completed. Similarly, replicas will be cloned
     after the bootstrap phase, when the actual cluster resource starts.
@@ -403,85 +403,36 @@ unnecessary writes in the checkpoint area by tuning Postgres GUCs like
 `shared_buffers`, `max_wal_size`, `checkpoint_timeout` directly in the
 `Cluster` configuration.
 
-## Customizing `pg_dump` and `pg_restore` behavior
+## Customizing `pg_dump` and `pg_restore` Behavior
 
-You can customize the behavior of `pg_dump` and `pg_restore` by specifying additional
-options using the `pgDumpExtraOptions` and `pgRestoreExtraOptions` parameters.
-This is especially useful for improving performance or managing import/export complexity.
-
-For example, enabling parallel jobs can significantly speed up data transfer:
-
-```yaml
-bootstrap:
-  initdb:
-    import:
-      type: microservice
-      databases:
-      - app
-      source:
-        externalCluster: cluster-example
-      pgDumpExtraOptions:
-      - '--jobs=2'
-      pgRestoreExtraOptions:
-      - '--jobs=2'
-```
-
-### Stage-Specific `pg_restore` options
-
-For more granular control over the import process, CloudNativePG supports
-stage-specific `pg_restore` options for the following phases:
-
-- `pre-data` – e.g., schema definitions
-- `data` – e.g., table contents
-- `post-data` – e.g., indexes, constraints and triggers
-
-By specifying options for each phase, you can optimize parallelism and apply
-flags tailored to the nature of the objects being restored.
+You can customize the behavior of `pg_dump` and `pg_restore` by specifying
+additional options using the `pgDumpExtraOptions` and `pgRestoreExtraOptions`
+parameters. For instance, you can enable parallel jobs to speed up data
+import/export processes, as shown in the following example:
 
 ```yaml
-bootstrap:
-  initdb:
-    import:
-      type: microservice
-      schemaOnly: false
-      databases:
-        - mynewdb
-      source:
-        externalCluster: sourcedb-external
-      pgRestorePredataOptions:
-        - '--jobs=1'
-      pgRestoreDataOptions:
-        - '--jobs=4'
-      pgRestorePostdataOptions:
+  # <snip>
+  bootstrap:
+    initdb:
+      import:
+        type: microservice
+        databases:
+        - app
+        source:
+          externalCluster: cluster-example
+        pgDumpExtraOptions:
         - '--jobs=2'
+        pgRestoreExtraOptions:
+        - '--jobs=2'
+  # <snip>
 ```
-
-In the example above:
-
-- `--jobs=1` is applied to the `pre-data` stage to preserve the ordering of
-  schema creation.
-- `--jobs=4` increases parallelism during the `data` stage, speeding up large
-  data imports.
-- `--jobs=2` balances performance and dependency handling in the `post-data`
-  stage.
-
-These stage-specific settings are particularly valuable for large databases or
-resource-sensitive environments where tuning concurrency can significantly
-improve performance.
-
-:::note
-    When provided, stage-specific options take precedence over the general
-    `pgRestoreExtraOptions`.
-:::
 
 :::warning
-    The `pgDumpExtraOptions`, `pgRestoreExtraOptions`, and all stage-specific
-    restore options (`pgRestorePredataOptions`, `pgRestoreDataOptions`,
-    `pgRestorePostdataOptions`) are passed directly to the underlying PostgreSQL
-    tools without validation by the operator. Certain flags may conflict with the
-    operator’s intended functionality or design. Use these options with caution
-    and always test them thoroughly in a safe, controlled environment before
-    applying them in production.
+    Use the `pgDumpExtraOptions` and `pgRestoreExtraOptions` fields with
+    caution and at your own risk. These options are not validated or verified by
+    the operator, and some configurations may conflict with its intended
+    functionality or behavior. Always test thoroughly in a safe and controlled
+    environment before applying them in production.
 :::
 
 ## Online Import and Upgrades

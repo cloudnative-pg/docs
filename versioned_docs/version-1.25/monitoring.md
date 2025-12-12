@@ -1,13 +1,13 @@
 ---
 id: monitoring
-sidebar_position: 31
+sidebar_position: 300
 title: Monitoring
 ---
 
 # Monitoring
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-:::important
+:::info[Important]
     Installing Prometheus and Grafana is beyond the scope of this project.
     We assume they are correctly installed in your system. However, for
     experimentation we provide instructions in
@@ -23,9 +23,9 @@ configurable and customizable system to define additional queries via one or
 more `ConfigMap` or `Secret` resources (see the
 ["User defined metrics" section](#user-defined-metrics) below for details).
 
-:::important
+:::info[Important]
     CloudNativePG, by default, installs a set of [predefined metrics](#default-set-of-metrics)
-    in a `ConfigMap` named `default-monitoring`.
+    in a `ConfigMap` named `cnpg-default-monitoring`.
 :::
 
 :::info
@@ -59,7 +59,7 @@ to the following logic:
 The default database can always be overridden for a given user-defined metric,
 by specifying a list of one or more databases in the `target_databases` option.
 
-:::info Prometheus/Grafana
+:::note[Prometheus/Grafana]
     If you are interested in evaluating the integration of CloudNativePG
     with Prometheus and Grafana, you can find a quick setup guide
     in [Part 4 of the quickstart](quickstart.md#part-4-monitor-clusters-with-prometheus-and-grafana)
@@ -94,7 +94,7 @@ spec:
   - port: metrics
 ```
 
-:::important Important Configuration Details
+:::info[Important Configuration Details]
     - `metadata.name`: Give your `PodMonitor` a unique name.
     - `spec.namespaceSelector`: Use this to specify the namespace where
       your PostgreSQL cluster is running.
@@ -104,10 +104,9 @@ spec:
 
 #### Deprecation of Automatic `PodMonitor` Creation
 
-:::warning Feature Deprecation Notice
+!!!warning "Feature Deprecation Notice"
     The `.spec.monitoring.enablePodMonitor` field in the `Cluster` resource is
     now deprecated and will be removed in a future version of the operator.
-:::
 
 If you are currently using this feature, we strongly recommend you either
 remove or set `.spec.monitoring.enablePodMonitor` to `false` and manually
@@ -121,7 +120,7 @@ To enable TLS communication on the metrics port, configure the `.spec.monitoring
 setting to `true`. This setup ensures that the metrics exporter uses the same
 server certificate used by PostgreSQL to secure communication on port 5432.
 
-:::important
+:::info[Important]
     Changing the `.spec.monitoring.tls.enabled` setting will trigger a rolling restart of the Cluster.
 :::
 
@@ -151,12 +150,12 @@ spec:
       serverName: cluster-example-rw
 ```
 
-:::important
+:::info[Important]
     Ensure you modify the example above with a unique name, as well as the
     correct Cluster's namespace and labels (e.g., `cluster-example`).
 :::
 
-:::important
+:::info[Important]
     The `serverName` field in the metrics endpoint must match one of the names
     defined in the server certificate. If the default certificate is in use,
     the `serverName` value should be in the format `<cluster-name>-rw`.
@@ -244,17 +243,17 @@ cnpg_collector_up{cluster="cluster-example"} 1
 
 # HELP cnpg_collector_postgres_version Postgres version
 # TYPE cnpg_collector_postgres_version gauge
-cnpg_collector_postgres_version{cluster="cluster-example",full="18.0"} 18.0
+cnpg_collector_postgres_version{cluster="cluster-example",full="18.1"} 18.1
 
-# HELP cnpg_collector_last_failed_backup_timestamp The last failed backup as a unix timestamp (Deprecated)
+# HELP cnpg_collector_last_failed_backup_timestamp The last failed backup as a unix timestamp
 # TYPE cnpg_collector_last_failed_backup_timestamp gauge
 cnpg_collector_last_failed_backup_timestamp 0
 
-# HELP cnpg_collector_last_available_backup_timestamp The last available backup as a unix timestamp (Deprecated)
+# HELP cnpg_collector_last_available_backup_timestamp The last available backup as a unix timestamp
 # TYPE cnpg_collector_last_available_backup_timestamp gauge
 cnpg_collector_last_available_backup_timestamp 1.63238406e+09
 
-# HELP cnpg_collector_first_recoverability_point The first point of recoverability for the cluster as a unix timestamp (Deprecated)
+# HELP cnpg_collector_first_recoverability_point The first point of recoverability for the cluster as a unix timestamp
 # TYPE cnpg_collector_first_recoverability_point gauge
 cnpg_collector_first_recoverability_point 1.63238406e+09
 
@@ -425,16 +424,9 @@ go_threads 18
     named `full`.
 :::
 
-:::warning
-    The metrics `cnpg_collector_last_failed_backup_timestamp`,
-    `cnpg_collector_last_available_backup_timestamp`, and
-    `cnpg_collector_first_recoverability_point` have been deprecated starting
-    from version 1.26. These metrics will continue to function with native backup
-    solutions such as in-core Barman Cloud (deprecated) and volume snapshots. Note
-    that for these cases, `cnpg_collector_first_recoverability_point` and
-    `cnpg_collector_last_available_backup_timestamp` will remain zero until the
-    first backup is completed to the object store. This is separate from WAL
-    archiving.
+:::note
+    `cnpg_collector_first_recoverability_point` and `cnpg_collector_last_available_backup_timestamp`
+    will be zero until your first backup to the object store. This is separate from the WAL archival.
 :::
 
 ### User defined metrics
@@ -474,7 +466,7 @@ Take care that the referred resources have to be created **in the same namespace
     the instances using the `kubectl cnpg reload` subcommand.
 :::
 
-:::important
+:::info[Important]
     When a user defined metric overwrites an already existing metric the instance manager prints a json warning log,
     containing the message:`Query with the same name already found. Overwriting the existing one.`
     and a key `queryName` containing the overwritten query name.
@@ -731,7 +723,7 @@ If you want to disable the default set of metrics, you can:
   (empty string), in the operator ConfigMap. Changes to operator ConfigMap require an operator restart.
 - disable it for a specific Cluster: set `.spec.monitoring.disableDefaultQueries` to `true` in the Cluster.
 
-:::important
+:::info[Important]
     The ConfigMap or Secret specified via `MONITORING_QUERIES_CONFIGMAP`/`MONITORING_QUERIES_SECRET`
     will always be copied to the Cluster's namespace with a fixed name: `cnpg-default-monitoring`.
     So that, if you intend to have default metrics, you should not create a ConfigMap with this name in the cluster's namespace.
@@ -880,7 +872,7 @@ kubectl delete -f curl.yaml
 
 ## Auxiliary resources
 
-:::important
+:::info[Important]
     These resources are provided for illustration and experimentation, and do
     not represent any kind of recommendation for your production system
 :::

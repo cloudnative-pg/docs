@@ -1,6 +1,6 @@
 ---
 id: e2e
-sidebar_position: 46
+sidebar_position: 450
 title: End-to-End Tests
 ---
 
@@ -12,7 +12,7 @@ commit via a suite of **End-to-end (E2E) tests** (or integration tests)
 which ensure that the operator correctly deploys and manages PostgreSQL
 clusters.
 
-Kubernetes versions 1.27 through 1.32, and PostgreSQL versions 13 through 17,
+Kubernetes versions 1.25 through 1.29, and PostgreSQL versions 12 through 16,
 are tested for each commit, helping detect bugs at an early stage of the
 development process.
 
@@ -139,6 +139,3 @@ and the following suite of E2E tests are performed on that cluster:
 * **Declarative databases**
   * Declarative creation of databases with default (retain) reclaim policy
   * Declarative creation of databases with delete reclaim policy
-
-* **Major version upgrade**
-  * Upgrade to the latest major version

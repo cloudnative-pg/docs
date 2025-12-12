@@ -1,6 +1,6 @@
 ---
 id: storage
-sidebar_position: 29
+sidebar_position: 280
 title: Storage
 ---
 
@@ -13,7 +13,7 @@ and guarantee consistency and durability. The same expectations and
 requirements that apply to traditional environments, such as virtual machines
 and bare metal, are also valid in container contexts managed by Kubernetes.
 
-:::important
+:::info[Important]
     When it comes to dynamically provisioned storage,
     Kubernetes has its own specifics. These include *storage classes*, *persistent
     volumes*, and *Persistent Volume Claims (PVCs)*. You need to own these
@@ -60,7 +60,7 @@ Since CloudNativePG supports volume snapshots for both backup and recovery,
 we recommend that you also consider this aspect when you choose your storage
 solution, especially if you manage very large databases.
 
-:::important
+:::info[Important]
     See the Kubernetes documentation for a list of all
     the supported [container storage interface (CSI) drivers](https://kubernetes-csi.github.io/docs/drivers.html)
     that provide snapshot capabilities.
@@ -80,7 +80,7 @@ Briefly, we recommend operating at two levels:
 - Measuring the performance of the database using pgbench, the default benchmarking tool
   distributed with PostgreSQL
 
-:::important
+:::info[Important]
     You must measure both the storage and database performance before putting
     the database into production. These results are extremely valuable not just in
     the planning phase (for example, capacity planning). They are also valuable in
@@ -117,7 +117,7 @@ defined as a *PVC group*.
 
 ## Configuration via a storage class
 
-:::important
+:::info[Important]
     CloudNativePG was designed to work interchangeably with all storage classes.
     As usual, we recommend properly benchmarking the storage class in a
     controlled environment before deploying to production.
@@ -216,7 +216,7 @@ volume has a few benefits:
   on both `PGDATA` and `pg_wal`. You can also set alerts that notify you in case,
   for example, `PGDATA` requires resizing.
 
-:::info Write-Ahead Log (WAL)
+:::note[Write-Ahead Log (WAL)]
     See [Reliability and the Write-Ahead Log](https://www.postgresql.org/docs/current/wal.html)
     in the PostgreSQL documentation for more information.
 :::
@@ -238,7 +238,7 @@ spec:
     size: 1Gi
 ```
 
-:::important
+:::info[Important]
     Removing `walStorage` isn't supported. Once added, a separate volume for
     WALs can't be removed from an existing Postgres cluster.
 :::
@@ -273,6 +273,111 @@ doesn't support that, you must delete the pod to trigger the resize.
 
 The best way to proceed is to delete one pod at a time, starting from replicas
 and waiting for each pod to be back up.
+
+### Expanding PVC volumes on AKS
+
+Currently, [Azure can resize the PVC's volume without restarting the pod only on specific regions](https://learn.microsoft.com/en-us/azure/aks/azure-disk-csi#resize-a-persistent-volume-without-downtime).
+CloudNativePG has overcome this limitation through the
+`ENABLE_AZURE_PVC_UPDATES` environment variable in the
+[operator configuration](operator_conf.md#available-options).
+When set to `true`, CloudNativePG triggers a rolling update of the
+Postgres cluster.
+
+Alternatively, you can use the following workaround to manually resize the
+volume in AKS.
+
+#### Workaround for volume expansion on AKS
+
+You can manually resize a PVC on AKS. As an example, suppose you have a cluster
+with three replicas:
+
+```
+$ kubectl get pods
+NAME                READY   STATUS    RESTARTS   AGE
+cluster-example-1   1/1     Running   0          2m37s
+cluster-example-2   1/1     Running   0          2m22s
+cluster-example-3   1/1     Running   0          2m10s
+```
+
+An Azure disk can be expanded only while in "unattached" state, as described in the
+[Kubernetes documentation](https://github.com/kubernetes-sigs/azuredisk-csi-driver/blob/master/docs/known-issues/sizegrow.md).  <!-- wokeignore:rule=master -->
+This means that, to resize a disk used by a PostgreSQL cluster, you need to
+perform a manual rollout, first cordoning the node that hosts the pod using the
+PVC bound to the disk. This prevents the operator from re-creating the pod and
+immediately reattaching it to its PVC before the background disk resizing is
+complete.
+
+First, edit the cluster definition, applying the new size. In this example, the
+new size is `2Gi`.
+
+```
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cluster-example
+spec:
+  instances: 3
+
+  storage:
+    storageClass: default
+    size: 2Gi
+```
+
+Assuming the `cluster-example-1` pod is the cluster's primary, you can proceed
+with the replicas first. For example, start with cordoning the Kubernetes node
+that hosts the `cluster-example-3` pod:
+
+```
+kubectl cordon <node of cluster-example-3>
+```
+
+Then delete the `cluster-example-3` pod:
+
+```
+$ kubectl delete pod/cluster-example-3
+```
+
+Run the following command:
+
+```
+kubectl get pvc -w -o=jsonpath='{.status.conditions[].message}' cluster-example-3
+```
+
+Wait until you see the following output:
+
+```
+Waiting for user to (re-)start a Pod to finish file system resize of volume on node.
+```
+
+Then, you can uncordon the node:
+
+```
+kubectl uncordon <node of cluster-example-3>
+```
+
+Wait for the pod to be re-created correctly and get in a "Running and Ready" state:
+
+```
+kubectl get pods -w cluster-example-3
+cluster-example-3   0/1     Init:0/1   0          12m
+cluster-example-3   1/1     Running   0          12m
+```
+
+Verify the PVC expansion by running the following command, which returns `2Gi`
+as configured:
+
+```
+kubectl get pvc cluster-example-3 -o=jsonpath='{.status.capacity.storage}'
+```
+
+You can repeat these steps for the remaining pods.
+
+:::info[Important]
+    Leave the resizing of the disk associated with the primary instance as the
+    last disk, after promoting through a switchover a new resized pod, using
+    `kubectl cnpg promote`. For example, use `kubectl cnpg promote cluster-example 3`
+    to promote `cluster-example-3` to primary.
+:::
 
 ### Re-creating storage
 
@@ -320,7 +425,7 @@ For example, re-create the storage for `cluster-example-3`:
 $ kubectl delete pvc/cluster-example-3 pod/cluster-example-3
 ```
 
-:::important
+:::info[Important]
     If you created a dedicated WAL volume, both PVCs must be deleted during
     this process. The same procedure applies if you want to regenerate the WAL
     volume PVC. You can do this by also disabling `resizeInUseVolumes` for the
@@ -357,7 +462,7 @@ storage volumes and then create the related `PersistentVolume` objects for
 their representation inside the Kubernetes cluster. This is also known as
 *pre-provisioning* of volumes.
 
-:::important
+:::info[Important]
     We recommend that you avoid pre-provisioning volumes, as it has an effect
     on the high availability and self-healing capabilities of the operator. It
     breaks the fully declarative model on which CloudNativePG was built.
