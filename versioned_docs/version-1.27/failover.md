@@ -1,6 +1,6 @@
 ---
 id: failover
-sidebar_position: 41
+sidebar_position: 400
 title: Automated failover
 ---
 
@@ -30,7 +30,7 @@ controller will initiate the failover process, in two steps:
    Meanwhile, the former primary pod will restart, detect that it is no longer
    the primary, and become a replica node.
 
-:::important
+:::info[Important]
     The two-phase procedure helps ensure the WAL receivers can stop in an orderly
     fashion, and that the failing primary will not start streaming WALs again upon
     restart. These safeguards prevent timeline discrepancies between the new primary
@@ -144,42 +144,13 @@ the instance to promote, and it does not occur otherwise.
 This feature allows users to choose their preferred trade-off between data
 durability and data availability.
 
-Failover quorum can be enabled by setting the
-`.spec.postgresql.synchronous.failoverQuorum` field to `true`:
+Failover quorum can be enabled by setting the annotation
+`alpha.cnpg.io/failoverQuorum="true"` in the `Cluster` resource.
 
-```yaml
-apiVersion: postgresql.cnpg.io/v1
-kind: Cluster
-metadata:
-  name: cluster-example
-spec:
-  instances: 3
-
-  postgresql:
-    synchronous:
-      method: any
-      number: 1
-      failoverQuorum: true
-
-  storage:
-    size: 1G
-```
-
-For backward compatibility, the legacy annotation
-`alpha.cnpg.io/failoverQuorum` is still supported by the admission webhook and
-takes precedence over the `Cluster` spec option:
-
-- If the annotation evaluates to `"true"` and a synchronous replication stanza
-  is present, the webhook automatically sets
-  `.spec.postgresql.synchronous.failoverQuorum` to `true`.
-- If the annotation evaluates to `"false"`, the feature is always disabled
-
-:::important
-    Because the annotation overrides the spec, we recommend that users of this
-    experimental feature migrate to the native
-    `.spec.postgresql.synchronous.failoverQuorum` option and remove the annotation
-    from their manifests. The annotation is **deprecated** and will be removed in a
-    future release.
+:::info
+    When this feature is out of the experimental phase, the annotation
+    `alpha.cnpg.io/failoverQuorum` will be replaced by a configuration option in
+    the `Cluster` resource.
 :::
 
 ### How it works
@@ -223,7 +194,7 @@ instance during its reconciliation loop, and read by the operator during quorum
 checks. It is used to track the latest known configuration of the synchronous
 replication.
 
-:::important
+:::info[Important]
     Users should not modify the `FailoverQuorum` resource directly. During
     PostgreSQL configuration changes, when it is not possible to determine the
     configuration, the `FailoverQuorum` resource will be reset, preventing any

@@ -1,6 +1,6 @@
 ---
 id: failure_modes
-sidebar_position: 15
+sidebar_position: 140
 title: Failure Modes
 ---
 
@@ -21,7 +21,7 @@ refer to the ["Postgres Instance Manager" section](instance_manager.md), which
 covers startup, liveness, and readiness probes, as well as the
 [self-healing](#self-healing) section below.
 
-:::important
+:::info[Important]
     If you are running CloudNativePG in production, we strongly recommend
     seeking [professional support](https://cloudnative-pg.io/support/).
 :::
@@ -54,7 +54,7 @@ If a standby Pod fails:
 For failure scenarios not covered by automated recovery, manual intervention
 may be required.
 
-:::important
+:::info[Important]
     Do not perform manual operations without [professional support](https://cloudnative-pg.io/support/).
 :::
 

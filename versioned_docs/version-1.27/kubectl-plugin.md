@@ -1,6 +1,6 @@
 ---
 id: kubectl-plugin
-sidebar_position: 40
+sidebar_position: 390
 title: Kubectl Plugin
 ---
 
@@ -38,11 +38,11 @@ them in your systems.
 
 #### Debian packages
 
-For example, let's install the 1.27.0 release of the plugin, for an Intel based
+For example, let's install the 1.27.2 release of the plugin, for an Intel based
 64 bit server. First, we download the right `.deb` file.
 
 ```sh
-wget https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.27.0/kubectl-cnpg_1.27.0_linux_x86_64.deb \
+wget https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.27.2/kubectl-cnpg_1.27.2_linux_x86_64.deb \
   --output-document kube-plugin.deb
 ```
 
@@ -53,17 +53,17 @@ $ sudo dpkg -i kube-plugin.deb
 Selecting previously unselected package cnpg.
 (Reading database ... 6688 files and directories currently installed.)
 Preparing to unpack kube-plugin.deb ...
-Unpacking cnpg (1.27.0) ...
-Setting up cnpg (1.27.0) ...
+Unpacking cnpg (1.27.2) ...
+Setting up cnpg (1.27.2) ...
 ```
 
 #### RPM packages
 
-As in the example for `.rpm` packages, let's install the 1.27.0 release for an
+As in the example for `.rpm` packages, let's install the 1.27.2 release for an
 Intel 64 bit machine. Note the `--output` flag to provide a file name.
 
 ```sh
-curl -L https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.27.0/kubectl-cnpg_1.27.0_linux_x86_64.rpm \
+curl -L https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.27.2/kubectl-cnpg_1.27.2_linux_x86_64.rpm \
   --output kube-plugin.rpm
 ```
 
@@ -77,7 +77,7 @@ Dependencies resolved.
  Package            Architecture         Version                   Repository                  Size
 ====================================================================================================
 Installing:
- cnpg               x86_64               1.27.0                  @commandline                20 M
+ cnpg               x86_64               1.27.2                  @commandline                20 M
 
 Transaction Summary
 ====================================================================================================
@@ -187,7 +187,7 @@ chmod +x kubectl_complete-cnpg
 sudo mv kubectl_complete-cnpg /usr/local/bin
 ```
 
-:::important
+:::info[Important]
     The name of the script needs to be exactly the one provided since it's used by the kubectl auto-complete process
 :::
 
@@ -268,7 +268,7 @@ cluster, including:
   to the latest write-ahead log location that has been replayed during recovery
   (replay LSN).
 
-:::important
+:::info[Important]
     The status information above is taken at different times and at different
     locations, resulting in slightly inconsistent returned values. For example,
     the `Current Write LSN` location in the main header, might be different
@@ -306,9 +306,9 @@ sandbox-3  0/604DE38  0/604DE38  0/604DE38  0/604DE38   00:00:00   00:00:00   00
 Instances status
 Name       Current LSN  Replication role  Status  QoS         Manager Version  Node
 ----       -----------  ----------------  ------  ---         ---------------  ----
-sandbox-1  0/604DE38    Primary           OK      BestEffort  1.27.0           k8s-eu-worker
-sandbox-2  0/604DE38    Standby (async)   OK      BestEffort  1.27.0           k8s-eu-worker2
-sandbox-3  0/604DE38    Standby (async)   OK      BestEffort  1.27.0           k8s-eu-worker
+sandbox-1  0/604DE38    Primary           OK      BestEffort  1.27.2           k8s-eu-worker
+sandbox-2  0/604DE38    Standby (async)   OK      BestEffort  1.27.2           k8s-eu-worker2
+sandbox-3  0/604DE38    Standby (async)   OK      BestEffort  1.27.2           k8s-eu-worker
 ```
 
 If you require more detailed status information, use the `--verbose` option (or
@@ -362,15 +362,23 @@ sandbox-primary  primary  1              1                1                     
 Instances status
 Name       Current LSN  Replication role  Status  QoS         Manager Version  Node
 ----       -----------  ----------------  ------  ---         ---------------  ----
-sandbox-1  0/6053720    Primary           OK      BestEffort  1.27.0           k8s-eu-worker
-sandbox-2  0/6053720    Standby (async)   OK      BestEffort  1.27.0           k8s-eu-worker2
-sandbox-3  0/6053720    Standby (async)   OK      BestEffort  1.27.0           k8s-eu-worker
+sandbox-1  0/6053720    Primary           OK      BestEffort  1.27.2           k8s-eu-worker
+sandbox-2  0/6053720    Standby (async)   OK      BestEffort  1.27.2           k8s-eu-worker2
+sandbox-3  0/6053720    Standby (async)   OK      BestEffort  1.27.2           k8s-eu-worker
 ```
 
 With an additional `-v` (e.g. `kubectl cnpg status sandbox -v -v`), you can
 also view PostgreSQL configuration, HBA settings, and certificates.
 
 The command also supports output in `yaml` and `json` format.
+
+:::note
+    The `status` command executes operations that access the pod filesystem,
+    such as `du` to calculate cluster size and `cat` to read configuration files.
+    For clusters with large data volumes (e.g., over 1TB), these operations may
+    take longer than the default timeout of 10 seconds. You can adjust the timeout
+    using the `--timeout` flag (e.g., `kubectl cnpg status sandbox --timeout 45s`).
+:::
 
 ### Promote
 
@@ -504,7 +512,7 @@ It has two sub-commands: `operator` and `cluster`.
 The `operator` sub-command requests the operator to provide information
 regarding the operator deployment, configuration and events.
 
-:::important
+:::info[Important]
     All confidential information in Secrets and ConfigMaps is REDACTED.
     The Data map will show the **keys** but the values will be empty.
     The flag `-S` / `--stopRedaction` will defeat the redaction and show the
@@ -592,12 +600,12 @@ Archive:  report_operator_<TIMESTAMP>.zip
 
 ```output
 ====== Beginning of Previous Log =====
-2023-03-28T12:56:41.251711811Z {"level":"info","ts":"2023-03-28T12:56:41Z","logger":"setup","msg":"Starting CloudNativePG Operator","version":"1.27.0","build":{"Version":"1.27.0+dev107","Commit":"cc9bab17","Date":"2023-03-28"}}
+2023-03-28T12:56:41.251711811Z {"level":"info","ts":"2023-03-28T12:56:41Z","logger":"setup","msg":"Starting CloudNativePG Operator","version":"1.27.2","build":{"Version":"1.27.2+dev107","Commit":"cc9bab17","Date":"2023-03-28"}}
 2023-03-28T12:56:41.251851909Z {"level":"info","ts":"2023-03-28T12:56:41Z","logger":"setup","msg":"Starting pprof HTTP server","addr":"0.0.0.0:6060"}
   <snipped …>
 
 ====== End of Previous Log =====
-2023-03-28T12:57:09.854306024Z {"level":"info","ts":"2023-03-28T12:57:09Z","logger":"setup","msg":"Starting CloudNativePG Operator","version":"1.27.0","build":{"Version":"1.27.0+dev107","Commit":"cc9bab17","Date":"2023-03-28"}}
+2023-03-28T12:57:09.854306024Z {"level":"info","ts":"2023-03-28T12:57:09Z","logger":"setup","msg":"Starting CloudNativePG Operator","version":"1.27.2","build":{"Version":"1.27.2+dev107","Commit":"cc9bab17","Date":"2023-03-28"}}
 2023-03-28T12:57:09.854363943Z {"level":"info","ts":"2023-03-28T12:57:09Z","logger":"setup","msg":"Starting pprof HTTP server","addr":"0.0.0.0:6060"}
 ```
 
@@ -1022,7 +1030,7 @@ The `kubectl cnpg psql CLUSTER` command starts a new PostgreSQL interactive fron
 process (psql) connected to an existing Postgres cluster, as if you were running
 it from the actual pod. This means that you will be using the `postgres` user.
 
-:::important
+:::info[Important]
     As you will be connecting as `postgres` user, in production environments this
     method should be used with extreme care, by authorized personnel only.
 :::
@@ -1030,7 +1038,7 @@ it from the actual pod. This means that you will be using the `postgres` user.
 ```console
 $ kubectl cnpg psql cluster-example
 
-psql (18.0 (Debian 18.0-1.pgdg110+1))
+psql (18.1 (Debian 18.1-1.pgdg110+1))
 Type "help" for help.
 
 postgres=#
@@ -1042,7 +1050,7 @@ select to work against a replica by using the `--replica` option:
 ```console
 $ kubectl cnpg psql --replica cluster-example
 
-psql (18.0 (Debian 18.0-1.pgdg110+1))
+psql (18.1 (Debian 18.1-1.pgdg110+1))
 
 Type "help" for help.
 
@@ -1077,7 +1085,7 @@ Given that the pgAdmin Development Team maintains official Docker container
 images, you can install pgAdmin in your environment as a standard
 Kubernetes deployment.
 
-:::important
+:::info[Important]
     Deployment of pgAdmin in Kubernetes production environments is beyond the
     scope of this document and, more broadly, of the CloudNativePG project.
 :::
@@ -1108,7 +1116,7 @@ Secret/cluster-example-pgadmin4 created
 After deploying pgAdmin, forward the port using kubectl and connect
 through your browser by following the on-screen instructions.
 
-![Screenshot of desktop installation of pgAdmin](/img/pgadmin4.png)
+![Screenshot of desktop installation of pgAdmin](images/pgadmin4.png)
 
 As usual, you can use the `--dry-run` option to generate the YAML file:
 
@@ -1520,7 +1528,7 @@ rules:
       - objectstores
 ```
 
-:::important
+:::info[Important]
     Keeping the verbs restricted per `resources` and per `apiGroups` helps to
     prevent inadvertently granting more than intended permissions.
 :::

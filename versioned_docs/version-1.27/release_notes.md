@@ -1,7 +1,7 @@
 ---
 id: release_notes
-sidebar_position: 59
-title: Release Notes
+sidebar_position: 580
+title: Release notes
 ---
 
 # Release notes
@@ -11,14 +11,14 @@ History of user-visible changes for CloudNativePG, classified for each minor rel
 
 <!-- - [CloudNativePG 1.28 - Release Candidate](release_notes/v1.28.md) -->
 - [CloudNativePG 1.27](release_notes/v1.27.md)
-- [CloudNativePG 1.26](release_notes/v1.26.md)
-- [CloudNativePG 1.25](release_notes/v1.25.md)
 
 For information on the community support policy for CloudNativePG, please
 refer to ["Supported releases"](supported_releases.md).
 
 Older releases:
 
+- [CloudNativePG 1.26](release_notes/v1.26.md)
+- [CloudNativePG 1.25](release_notes/old/v1.25.md)
 - [CloudNativePG 1.24](release_notes/old/v1.24.md)
 - [CloudNativePG 1.23](release_notes/old/v1.23.md)
 - [CloudNativePG 1.22](release_notes/old/v1.22.md)

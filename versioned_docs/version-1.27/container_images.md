@@ -1,6 +1,6 @@
 ---
 id: container_images
-sidebar_position: 47
+sidebar_position: 460
 title: Container Image Requirements
 ---
 
@@ -24,7 +24,7 @@ Optional Components:
   is needed)
 - `du` (used for `kubectl cnpg status`)
 
-:::important
+:::info[Important]
     Only [PostgreSQL versions officially supported by PGDG](https://postgresql.org/) are allowed.
 :::
 
@@ -71,7 +71,7 @@ Examples of accepted image tags:
 - `15.5-10`
 - `16.0`
 
-:::danger
+:::warning
     `latest` is not considered a valid tag for the image.
 :::
 

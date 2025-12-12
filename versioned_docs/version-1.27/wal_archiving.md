@@ -1,10 +1,10 @@
 ---
 id: wal_archiving
-sidebar_position: 20
-title: WAL Archiving
+sidebar_position: 190
+title: WAL archiving
 ---
 
-# WAL Archiving
+# WAL archiving
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
 Write-Ahead Log (WAL) archiving in CloudNativePG is the process of continuously
@@ -16,7 +16,7 @@ strategies.
 ## Plugin-Based Architecture
 
 CloudNativePG supports WAL archiving through a **plugin-based mechanism**,
-defined via the [`spec.pluginConfiguration`](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ClusterSpec)
+defined via the [`spec.pluginConfiguration`](cloudnative-pg.v1.md#clusterspec)
 section of the `Cluster` resource.
 
 Only **one plugin at a time** can be responsible for WAL archiving. This is
@@ -36,7 +36,7 @@ CloudNativePG still supports WAL archiving natively through the
 `.spec.backup.barmanObjectStore` field. While still functional, **this
 interface is deprecated** and will be removed in a future release.
 
-:::important
+:::info[Important]
     All new deployments are strongly encouraged to adopt the plugin-based
     architecture, which offers a more flexible and maintainable approach.
 :::

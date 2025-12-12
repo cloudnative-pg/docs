@@ -1,6 +1,6 @@
 ---
 id: backup
-sidebar_position: 19
+sidebar_position: 180
 title: Backup
 ---
 
@@ -16,7 +16,7 @@ title: Backup
     for guidance.
 :::
 
-:::important
+:::info[Important]
     Starting with version 1.26, native backup and recovery capabilities are
     being **progressively phased out** of the core operator and moved to official
     CNPG-I plugins. This transition aligns with CloudNativePG's shift towards a
@@ -93,7 +93,7 @@ When you [configure a WAL archive](wal_archiving.md), CloudNativePG provides
 out-of-the-box an [RPO](before_you_start.md#rpo) ≤ 5 minutes for disaster
 recovery, even across regions.
 
-:::important
+:::info[Important]
     Our recommendation is to always setup the WAL archive in production.
     There are known use cases — normally involving staging and development
     environments — where none of the above benefits are needed and the WAL
@@ -131,7 +131,7 @@ CloudNativePG currently supports two main approaches for physical backups:
 - [**Volume Snapshots**](appendixes/backup_volumesnapshot.md), using the
   Kubernetes CSI interface and supported storage classes
 
-:::important
+:::info[Important]
     CNPG-I is designed to enable third parties to build and integrate their own
     backup plugins. Over time, we expect the ecosystem of supported backup
     solutions to grow.
@@ -209,7 +209,7 @@ resource.
 
 :::info
     For a complete list of configuration options, refer to the
-    [`ScheduledBackupSpec`](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ScheduledBackupSpec)
+    [`ScheduledBackupSpec`](cloudnative-pg.v1.md#scheduledbackupspec)
     in the API reference.
 :::
 
@@ -245,7 +245,7 @@ since seconds are not supported.
 
 ### Backup Frequency and RTO
 
-:::tip
+:::tip[Hint]
     The frequency of your backups directly impacts your **Recovery Time Objective**
     ([RTO](before_you_start.md#rto)).
 :::
@@ -293,7 +293,7 @@ by creating a `Backup` resource.
 
 :::info
     For a full list of available options, see the
-    [`BackupSpec`](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-BackupSpec) in the
+    [`BackupSpec`](cloudnative-pg.v1.md#backupspec) in the
     API reference.
 :::
 
@@ -365,7 +365,7 @@ Status:
 
 ---
 
-:::important
+:::info[Important]
     On-demand backups do **not** include Kubernetes secrets for the PostgreSQL
     superuser or application user. You should ensure these secrets are included in
     your broader Kubernetes cluster backup strategy.
@@ -497,7 +497,7 @@ As part of this transition, the `spec.backup.retentionPolicy` field in the
 For more details on available retention features, refer to your chosen plugin’s documentation.
 For example: ["Retention Policies" with Barman Cloud Plugin](https://cloudnative-pg.io/plugin-barman-cloud/docs/retention/).
 
-:::important
+:::info[Important]
     Users are encouraged to rely on the retention mechanisms provided by the
     backup plugin they are using. This ensures better flexibility and consistency
     with the backup method in use.

@@ -1,6 +1,6 @@
 ---
 id: logging
-sidebar_position: 32
+sidebar_position: 310
 title: Logging
 ---
 
@@ -13,7 +13,7 @@ design facilitates seamless integration with most Kubernetes-compatible log
 management tools, including command line ones like
 [stern](https://github.com/stern/stern).
 
-:::important
+:::info[Important]
     Long-term storage and management of logs are outside the scope of the
     operator and should be handled at the Kubernetes infrastructure level.
     For more information, see the
@@ -45,7 +45,7 @@ You can configure the log level for the instance pods in the cluster
 specification using the `logLevel` option. Available log levels are: `error`,
 `warning`, `info` (default), `debug`, and `trace`.
 
-:::important
+:::info[Important]
     Currently, the log level can only be set at the time the instance starts.
     Changes to the log level in the cluster specification after the cluster has
     started will only apply to new pods, not existing ones.
@@ -115,7 +115,7 @@ CloudNativePG offers seamless and native support for
 To enable PGAudit, add the necessary `pgaudit` parameters in the `postgresql`
 section of the cluster configuration.
 
-:::important
+:::info[Important]
     The PGAudit library must be added to `shared_preload_libraries`.
     CloudNativePG automatically manages this based on the presence of `pgaudit.*`
     parameters in the PostgreSQL configuration. The operator handles both the
@@ -125,7 +125,7 @@ section of the cluster configuration.
 Additionally, the operator manages the creation and removal of the PGAudit
 extension across all databases within the cluster.
 
-:::important
+:::info[Important]
     CloudNativePG executes the `CREATE EXTENSION` and `DROP EXTENSION` commands
     in all databases within the cluster that accept connections.
 :::

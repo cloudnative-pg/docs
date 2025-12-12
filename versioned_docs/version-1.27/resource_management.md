@@ -1,7 +1,7 @@
 ---
-sidebar_position: 14
 id: resource_management
-title: Resource Management
+sidebar_position: 130
+title: Resource management
 ---
 
 # Resource management
@@ -71,7 +71,7 @@ while creating a cluster:
    in a VM or physical machine scenario - see below).
 -  Set up database server pods on a dedicated node using nodeSelector.
    See the "nodeSelector" and "tolerations" fields of the
-   [“affinityconfiguration"](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-AffinityConfiguration) resource on the API reference page.
+   [“affinityconfiguration"](cloudnative-pg.v1.md#affinityconfiguration) resource on the API reference page.
 
 You can refer to the following example manifest:
 
@@ -111,7 +111,7 @@ enabling our containers to work as expected.
 For more details, please refer to the ["Resource Consumption"](https://www.postgresql.org/docs/current/runtime-config-resource.html)
 section in the PostgreSQL documentation.
 
-:::info Managing Compute Resources for Containers
+:::note[Managing Compute Resources for Containers]
     For more details on resource management, please refer to the
     ["Managing Compute Resources for Containers"](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/)
     page from the Kubernetes documentation.

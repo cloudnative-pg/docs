@@ -1,7 +1,7 @@
 ---
 id: index
-sidebar_position: 2
-title: Index
+sidebar_position: 10
+title: CloudNativePG
 ---
 
 # CloudNativePG
@@ -92,14 +92,14 @@ Three image flavors are available, each extending the previous one:
 - [`standard`](https://github.com/cloudnative-pg/postgres-containers#standard-images)
 - [`system`](https://github.com/cloudnative-pg/postgres-containers#system-images) *(deprecated)*
 
-:::important
+:::info[Important]
     The `system` images are deprecated and will be removed once in-core
     Barman Cloud support is phased out. They remain usable for now, but you may
     want to plan a future migration to `minimal` or `standard` images with the
     Barman Cloud plugin, or another supported backup solution.
 :::
 
-By default, this version of CloudNativePG deploys `ghcr.io/cloudnative-pg/postgresql:18.0-system-trixie`.
+By default, this version of CloudNativePG deploys `ghcr.io/cloudnative-pg/postgresql:18.1-system-trixie`.
 
 All images are signed and shipped with SBOM and provenance attestations.
 Weekly automated builds ensure that critical vulnerabilities (CVEs) are promptly fixed.
@@ -117,8 +117,7 @@ For details and support, see the [`postgres-containers` project](https://github.
 - Declarative management of key PostgreSQL configurations, including:
     - PostgreSQL settings.
     - Roles, users, and groups.
-    - Databases, extensions, schemas, foreign data wrappers (FDW), and foreign
-      servers.
+    - Databases, extensions, and schemas.
     - Tablespaces (including temporary tablespaces).
 - Flexible instance definition, supporting any number of instances (minimum 1
   primary server).

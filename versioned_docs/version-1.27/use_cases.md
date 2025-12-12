@@ -1,7 +1,7 @@
 ---
 id: use_cases
-sidebar_position: 4
-title: Use Cases
+sidebar_position: 30
+title: Use cases
 ---
 
 # Use cases
@@ -21,7 +21,7 @@ as a VM.
 In a typical situation, the application and the database run in the same
 namespace inside a Kubernetes cluster.
 
-![Application and Database inside Kubernetes](/img/apps-in-k8s.png)
+![Application and Database inside Kubernetes](./images/apps-in-k8s.png)
 
 The application, normally stateless, is managed as a standard `Deployment`,
 with multiple replicas spread over different Kubernetes node, and internally
@@ -38,7 +38,7 @@ which points to the current primary instance, through a TLS connection.  The
 architecture, hiding the complexity of managing a high availability cluster in
 Postgres.
 
-![Close-up view of application and database inside Kubernetes](/img/architecture-in-k8s.png)
+![Close-up view of application and database inside Kubernetes](./images/architecture-in-k8s.png)
 
 ## Case 2: Applications outside Kubernetes
 
@@ -51,4 +51,4 @@ in the ["Service Management"](service_management.md) page).
 
 The application can still benefit from a TLS connection to PostgreSQL.
 
-![Application outside Kubernetes](/img/apps-outside-k8s.png)
+![Application outside Kubernetes](./images/apps-outside-k8s.png)

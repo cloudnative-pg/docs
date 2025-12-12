@@ -1,10 +1,10 @@
 ---
 id: operator_conf
-sidebar_position: 27
-title: Operator Configuration
+sidebar_position: 260
+title: Operator configuration
 ---
 
-# Operator Configuration
+# Operator configuration
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
 The operator for CloudNativePG is installed from a standard
@@ -27,14 +27,14 @@ The behavior of the operator can be customized through a `ConfigMap`/`Secret` th
 is located in the same namespace of the operator deployment and with
 `cnpg-controller-manager-config` as the name.
 
-:::important
+:::info[Important]
     Any change to the config's `ConfigMap`/`Secret` will not be automatically
     detected by the operator, - and as such, it needs to be reloaded (see below).
     Moreover, changes only apply to the resources created after the configuration
     is reloaded.
 :::
 
-:::important
+:::info[Important]
     The operator first processes the ConfigMap values and then the Secret’s, in this order.
     As a result, if a parameter is defined in both places, the one in the Secret will be used.
 :::
@@ -58,6 +58,7 @@ Name | Description
 `MONITORING_QUERIES_CONFIGMAP` | The name of a ConfigMap in the operator's namespace with a set of default queries (to be specified under the key `queries`) to be applied to all created Clusters
 `MONITORING_QUERIES_SECRET` | The name of a Secret in the operator's namespace with a set of default queries (to be specified under the key `queries`) to be applied to all created Clusters
 `OPERATOR_IMAGE_NAME` | The name of the operator image used to bootstrap Pods. Defaults to the image specified during installation.
+`PGBOUNCER_IMAGE_NAME` | The name of the PgBouncer image used by default for new poolers. Defaults to the version specified in the operator.
 `POSTGRES_IMAGE_NAME` | The name of the PostgreSQL image used by default for new clusters. Defaults to the version specified in the operator.
 `PULL_SECRET_NAME` | Name of an additional pull secret to be defined in the operator's namespace and to be used to download images
 `STANDBY_TCP_USER_TIMEOUT` | Defines the [`TCP_USER_TIMEOUT` socket option](https://www.postgresql.org/docs/current/runtime-config-connection.html#GUC-TCP-USER-TIMEOUT) for replication connections from standby instances to the primary. Default is 0 (system's default).
@@ -178,7 +179,7 @@ Add `--pprof-server=true` to the args list, for example:
 After saving, the deployment will roll out and the new pod will
 have the pprof server enabled.
 
-:::important
+:::info[Important]
     The pprof server only serves plain HTTP on port `6060`.
 :::
 

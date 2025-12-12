@@ -1,6 +1,6 @@
 ---
 id: object_stores
-title: object_stores
+title: Appendix C - Common object stores for backups
 ---
 
 # Appendix C - Common object stores for backups
@@ -353,7 +353,7 @@ spec:
 
 Now the operator will use the credentials to authenticate against Google Cloud Storage.
 
-:::important
+:::info[Important]
     This way of authentication will create a JSON file inside the container with all the needed
     information to access your Google Cloud Storage bucket, meaning that if someone gets access to the pod
     will also have write permissions to the bucket.

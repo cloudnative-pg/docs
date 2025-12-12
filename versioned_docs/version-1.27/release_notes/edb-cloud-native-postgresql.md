@@ -1,6 +1,6 @@
 ---
 id: edb-cloud-native-postgresql
-title: edb cloud native postgresql
+title: EDB Cloud-Native PostgreSQL
 ---
 
 # Release notes for 1.14.0 and earlier

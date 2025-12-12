@@ -1,6 +1,6 @@
 ---
 id: security
-sidebar_position: 11
+sidebar_position: 100
 title: Security
 ---
 
@@ -17,7 +17,7 @@ that are analyzed at 3 different layers: Code, Container and Cluster.
     page from the Kubernetes documentation.
 :::
 
-:::info About the 4C's Security Model
+:::note[About the 4C's Security Model]
     Please refer to ["The 4C’s Security Model in Kubernetes"](https://www.enterprisedb.com/blog/4cs-security-model-kubernetes)
     blog article to get a better understanding and context of the approach EDB
     has taken with security in CloudNativePG.
@@ -59,7 +59,7 @@ This feature allows users to safely report security issues that require careful
 handling before being publicly disclosed. If you discover any security bug,
 please use this medium to report it.
 
-:::important
+:::info[Important]
     A failure in the static code analysis phase of the CI/CD pipeline will
     block the entire delivery process of CloudNativePG. Every commit must pass all
     the linters defined by GolangCI-Lint.
@@ -72,7 +72,7 @@ pipelines after every commit. These images include not only the operator's
 image but also the operands' images, specifically for every supported
 PostgreSQL version.
 
-:::important
+:::info[Important]
     All operand images are automatically and regularly rebuilt by our pipelines
     to incorporate the latest security updates at both the base image and package
     levels. This ensures that container images distributed to the community receive
@@ -153,7 +153,7 @@ container-level security:
 - **["CIS Benchmark for Docker"](https://www.cisecurity.org/benchmark/docker/):**
   Developed by the Center for Internet Security (CIS).
 
-:::info About Container-Level Security
+:::note[About Container-Level Security]
     For more information on the approach that EDB has taken regarding security
     at the container level in CloudNativePG, please refer to the blog article
     ["Security and Containers in CloudNativePG"](https://www.enterprisedb.com/blog/security-and-containers-cloud-native-postgresql).
@@ -179,7 +179,7 @@ necessary permissions required by the operator to function correctly. To learn
 more about these roles, you can use the `kubectl describe clusterrole` or
 `kubectl describe role` commands, depending on the deployment method.
 
-:::important
+:::info[Important]
     The above permissions are exclusively reserved for the operator's service
     account to interact with the Kubernetes API server.  They are not directly
     accessible by the users of the operator that interact only with `Cluster`,
@@ -303,7 +303,7 @@ that are associated with that Postgres cluster. Such calls are performed through
 a dedicated `ServiceAccount` created by the operator that shares the same
 PostgreSQL `Cluster` resource name.
 
-:::important
+:::info[Important]
     The operand can only access a specific and limited subset of resources
     through the API server. A service account is the
     [recommended way to access the API server from within a Pod](https://kubernetes.io/docs/tasks/run-application/access-api-from-pod/).
@@ -324,7 +324,7 @@ Then verify that the role is bound to the service account:
 kubectl get rolebinding -n myns mypg -o yaml
 ```
 
-:::important
+:::info[Important]
     Remember that **roles are limited to a given namespace**.
 :::
 
@@ -418,7 +418,9 @@ You can assign an
 the `postgres`, `initdb`, `join`, `full-recovery` and `bootstrap-controller` containers inside every `Cluster` pod through the
 `container.apparmor.security.beta.kubernetes.io` annotation.
 
-:::info Example of cluster annotations
+:::note[Example of cluster annotations]
+:::
+
 ```
 	kind: Cluster
 	metadata:
@@ -428,7 +430,6 @@ the `postgres`, `initdb`, `join`, `full-recovery` and `bootstrap-controller` con
 			container.apparmor.security.beta.kubernetes.io/initdb: runtime/default
 			container.apparmor.security.beta.kubernetes.io/join: runtime/default
 ```
-:::
 
 :::warning
     Using this kind of annotations can result in your cluster to stop working.
@@ -458,7 +459,7 @@ The pods created by the `Cluster` resource can be controlled by Kubernetes
 to enable/disable inbound and outbound network access at IP and TCP level.
 You can find more information in the [networking document](networking.md).
 
-:::important
+:::info[Important]
     The operator needs to communicate to each instance on TCP port 8000
     to get information about the status of the PostgreSQL server. Please
     make sure you keep this in mind in case you add any network policy,
@@ -503,7 +504,7 @@ the default behavior of PostgreSQL: starting from PostgreSQL 14,
 `password_encryption` is by default set to `scram-sha-256`, while on earlier
 versions it is set to `md5`.
 
-:::important
+:::info[Important]
     Please refer to the ["Password authentication"](https://www.postgresql.org/docs/current/auth-password.html)
     section in the PostgreSQL documentation for details.
 :::
@@ -539,7 +540,7 @@ only maps the local postgres user to the postgres user in the database.
 For further detail on how `pg_ident.conf` is managed by the operator, see the
 ["PostgreSQL Configuration" page](postgresql_conf.md#the-pg_ident-section) of the documentation.
 
-:::important
+:::info[Important]
     Examples assume that the Kubernetes cluster runs in a private and secure network.
 :::
 

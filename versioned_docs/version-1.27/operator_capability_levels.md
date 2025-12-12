@@ -1,7 +1,7 @@
 ---
 id: operator_capability_levels
-sidebar_position: 50
-title: Operator Capability Levels
+sidebar_position: 490
+title: Operator capability levels
 ---
 
 # Operator capability levels
@@ -12,9 +12,9 @@ classified using the
 [Operator SDK definition of Capability Levels](https://operatorframework.io/operator-capabilities/)
 framework.
 
-![Operator Capability Levels](/img/operator-capability-level.png)
+![Operator Capability Levels](./images/operator-capability-level.png)
 
-:::important
+:::info[Important]
     Based on the [Operator Capability Levels model](operator_capability_levels.md),
     you can expect a "Level V - Auto Pilot" set of capabilities from the
     CloudNativePG operator.
@@ -39,7 +39,7 @@ operator. This category includes usability and user experience
 enhancements, such as improvements in how you interact with the
 operator and a PostgreSQL cluster configuration.
 
-:::important
+:::info[Important]
     We consider information security part of this level.
 :::
 
@@ -157,8 +157,7 @@ required, as part of the bootstrap.
 
 Additional databases can be created or managed via
 [declarative database management](declarative_database_management.md) using
-the `Database` CRD, also supporting extensions, schemas, foreign data wrappers
-(FDW), and foreign servers.
+the `Database` CRD, also supporting extensions and schemas.
 
 Although no configuration is required to run the cluster, you can customize
 both PostgreSQL runtime configuration and PostgreSQL host-based
@@ -248,7 +247,7 @@ The operator enables you to apply changes to the `Cluster` resource YAML
 section of the PostgreSQL configuration. Depending on the configuration option,
 it also makes sure that all instances are properly reloaded or restarted.
 
-:::note Current limitation
+:::note
     Changes with `ALTER SYSTEM` aren't detected, meaning
     that the cluster state isn't enforced.
 :::

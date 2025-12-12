@@ -1,10 +1,10 @@
 ---
 id: service_management
-sidebar_position: 22
-title: Service Management
+sidebar_position: 210
+title: Service management
 ---
 
-# Service Management
+# Service management
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
 A PostgreSQL cluster should only be accessed via standard Kubernetes network
@@ -23,7 +23,7 @@ resource, with the following conventions:
 - The name of the service follows this format: `<CLUSTER_NAME>-<SERVICE_NAME>`.
 - All services are of type `ClusterIP`.
 
-:::important
+:::info[Important]
     Default service names are reserved for CloudNativePG usage.
 :::
 
@@ -44,9 +44,9 @@ cluster is required. In such cases, you can create your own service of type
 ## Disabling Default Services
 
 You can disable any or all of the `ro` and `r` default services through the
-[`managed.services.disabledDefaultServices` option](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ManagedServices).
+[`managed.services.disabledDefaultServices` option](cloudnative-pg.v1.md#managedservices).
 
-:::important
+:::info[Important]
     The `rw` service is essential and cannot be disabled because CloudNativePG
     relies on it to ensure PostgreSQL replication.
 :::
@@ -63,7 +63,7 @@ managed:
 
 ## Adding Your Own Services
 
-:::important
+:::info[Important]
     When defining your own services, you cannot use any of the default reserved
     service names that follow the convention `<CLUSTER_NAME>-<SERVICE_NAME>`. It is
     your responsibility to pick a unique name for the service in the Kubernetes
@@ -71,7 +71,7 @@ managed:
 :::
 
 You can define a list of additional services through the
-[`managed.services.additional` stanza](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ManagedService)
+[`managed.services.additional` stanza](cloudnative-pg.v1.md#managedservice)
 by specifying the service type (e.g., `rw`) in the `selectorType` field
 and optionally the `updateStrategy`.
 

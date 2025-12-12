@@ -1,12 +1,12 @@
 ---
 id: backup_volumesnapshot
-title: backup_volumesnapshot
+title: Appendix A - Backup on volume snapshots
 ---
 
 # Appendix A - Backup on volume snapshots
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-:::important
+:::info[Important]
     Please refer to the official Kubernetes documentation for a list of all
     the supported [Container Storage Interface (CSI) drivers](https://kubernetes-csi.github.io/docs/drivers.html)
     that provide snapshotting capabilities.
@@ -54,7 +54,7 @@ that is responsible to ensure that snapshots can be taken from persistent
 volumes of a given storage class, and managed as `VolumeSnapshot` and
 `VolumeSnapshotContent` resources.
 
-:::important
+:::info[Important]
     It is your responsibility to verify with the third party vendor
     that volume snapshots are supported. CloudNativePG only interacts
     with the Kubernetes API on this matter, and we cannot support issues
@@ -67,7 +67,7 @@ CloudNativePG allows you to configure a given Postgres cluster for Volume
 Snapshot backups through the `backup.volumeSnapshot` stanza.
 
 :::info
-    Please refer to [`VolumeSnapshotConfiguration`](../cloudnative-pg.v1.md#postgresql-cnpg-io-v1-VolumeSnapshotConfiguration)
+    Please refer to [`VolumeSnapshotConfiguration`](../cloudnative-pg.v1.md#volumesnapshotconfiguration)
     in the API reference for a full list of options.
 :::
 
@@ -142,7 +142,7 @@ By default, CloudNativePG requests an online/hot backup on volume snapshots, usi
 - it waits for the WAL archiver to archive the last segment of the backup when
   terminating the backup procedure
 
-:::important
+:::info[Important]
     The default values are suitable for most production environments. Hot
     backups are consistent and can be used to perform snapshot recovery, as we
     ensure WAL retention from the start of the backup through a temporary
@@ -358,7 +358,7 @@ The following example shows how to configure volume snapshot base backups on an
 EKS cluster on AWS using the `ebs-sc` storage class and the `csi-aws-vsc`
 volume snapshot class.
 
-:::important
+:::info[Important]
     If you are interested in testing the example, please read
     ["Volume Snapshots" for the Amazon Elastic Block Store (EBS) CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver/tree/master/examples/kubernetes/snapshot) <!-- wokeignore:rule=master -->
     for detailed instructions on the installation process for the storage class and the snapshot class.

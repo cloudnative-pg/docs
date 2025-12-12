@@ -1,6 +1,6 @@
 ---
 id: logical_replication
-sidebar_position: 18
+sidebar_position: 170
 title: Logical Replication
 ---
 
@@ -18,7 +18,7 @@ connect to publications on a publisher node. Subscribers pull data changes from
 these publications and can re-publish them, enabling cascading replication and
 complex topologies.
 
-:::important
+:::info[Important]
     To protect your logical replication subscribers after a failover of the
     publisher cluster in CloudNativePG, ensure that replication slot
     synchronization for logical decoding is enabled. Without this, your logical
@@ -64,7 +64,7 @@ When managing `Cluster` objects with **CloudNativePG**, PostgreSQL publications
 can be defined declaratively through the `Publication` resource.
 
 :::info
-    Please refer to the [API reference](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-Publication)
+    Please refer to the [API reference](cloudnative-pg.v1.md#publication)
     for the full list of attributes you can define for each `Publication` object.
 :::
 
@@ -93,13 +93,47 @@ In the above example:
 - It includes all tables (`spec.target.allTables: true`) from the `app`
   database (`spec.dbname`).
 
-:::important
-    While `allTables` simplifies configuration, PostgreSQL offers fine-grained
-    control for replicating specific tables or targeted data changes. For advanced
-    configurations, consult the [PostgreSQL documentation](https://www.postgresql.org/docs/current/logical-replication.html).
-    Additionally, refer to the [CloudNativePG API reference](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-PublicationTarget)
-    for details on declaratively customizing replication targets.
+### Fine-grained control over publication tables
+
+While the `allTables` option provides a convenient way to replicate all tables
+in a database, PostgreSQL version 15 and later introduce enhanced flexibility
+through the [`CREATE PUBLICATION`](https://www.postgresql.org/docs/current/sql-createpublication.html)
+command. This allows you to precisely define which tables, or even which types
+of data changes, should be included in a publication.
+
+:::info[Important]
+    If you are using PostgreSQL versions earlier than 15, review the syntax and
+    options available for `CREATE PUBLICATION` in your specific release. Some
+    parameters and features may not be supported.
 :::
+
+For complex or tailored replication setups, refer to the
+[PostgreSQL logical replication documentation](https://www.postgresql.org/docs/current/logical-replication.html).
+
+Additionally, refer to the [CloudNativePG API reference](cloudnative-pg.v1.md#publicationtarget)
+for details on declaratively customizing replication targets.
+
+The following example defines a publication that replicates all tables in the
+`portal` schema of the `app` database, along with the `users` table from the
+`access` schema:
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Publication
+metadata:
+  name: publisher
+spec:
+  cluster:
+    name: freddie
+  dbname: app
+  name: publisher
+  target:
+    objects:
+      - tablesInSchema: portal
+      - table:
+          name: users
+          schema: access
+```
 
 ### Required Fields in the `Publication` Manifest
 
@@ -166,7 +200,7 @@ A subscription establishes the connection to a publisher's database and
 specifies the set of publications (one or more) it subscribes to. Subscriptions
 can be created on any supported PostgreSQL instance acting as the *subscriber*.
 
-:::important
+:::info[Important]
     Since schema definitions are not replicated, the subscriber must have the
     corresponding tables already defined before data replication begins.
 :::
@@ -175,7 +209,7 @@ CloudNativePG simplifies subscription management by enabling you to define them
 declaratively using the `Subscription` resource.
 
 :::info
-    Please refer to the [API reference](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-Subscription)
+    Please refer to the [API reference](cloudnative-pg.v1.md#subscription)
     for the full list of attributes you can define for each `Subscription` object.
 :::
 
@@ -360,7 +394,7 @@ metadata:
 spec:
   instances: 1
 
-  imageName: ghcr.io/cloudnative-pg/postgresql:16
+  imageName: ghcr.io/cloudnative-pg/postgresql:16-standard-trixie
 
   storage:
     size: 1Gi
@@ -408,6 +442,8 @@ metadata:
   name: king
 spec:
   instances: 1
+
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
 
   storage:
     size: 1Gi

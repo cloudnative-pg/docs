@@ -1,6 +1,6 @@
 ---
 id: benchmarking
-sidebar_position: 54
+sidebar_position: 530
 title: Benchmarking
 ---
 
@@ -14,7 +14,7 @@ Benchmarking is focused on two aspects:
 - the **database**, by relying on [pgbench](https://www.postgresql.org/docs/current/pgbench.html)
 - the **storage**, by relying on [fio](https://fio.readthedocs.io/en/latest/fio_doc.html)
 
-:::important
+:::info[IMPORTANT]
     `pgbench` and `fio` must be run in a staging or pre-production environment.
     Do not use these plugins in a production environment, as it might have
     catastrophic consequences on your databases and the other
@@ -39,7 +39,7 @@ kubectl cnpg pgbench \
   -- <pgbench options>
 ```
 
-:::important
+:::info[IMPORTANT]
     Please refer to the [`pgbench` documentation](https://www.postgresql.org/docs/current/pgbench.html)
     for information about the specific options to be used in your jobs.
 :::
@@ -200,7 +200,7 @@ Below is an example diagram of sequential writes on a local disk
 mounted on a dedicated Kubernetes node
 (1 hour benchmark):
 
-![Sequential writes bandwidth](/img/write_bw.1-2Draw.png)
+![Sequential writes bandwidth](images/write_bw.1-2Draw.png)
 
 After all testing is done, fio deployment and resources can be deleted by:
 ```shell

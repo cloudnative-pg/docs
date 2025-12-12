@@ -1,6 +1,6 @@
 ---
 id: recovery
-sidebar_position: 21
+sidebar_position: 200
 title: Recovery
 ---
 
@@ -13,7 +13,7 @@ feature-rich, supporting **Point-In-Time Recovery (PITR)**—the ability to
 restore a cluster to any specific moment, from the earliest available backup to
 the latest archived WAL file.
 
-:::important
+:::info[Important]
     A valid WAL archive is required to perform PITR.
 :::
 
@@ -44,7 +44,7 @@ section now focuses on two supported recovery methods: using the **Barman Cloud
 Plugin** for recovery from object stores, and the **native interface** for
 recovery from volume snapshots.
 
-:::important
+:::info[Important]
     For legacy documentation, see
     [Appendix B – Recovery from an Object Store](appendixes/backup_barmanobjectstore.md#recovery-from-an-object-store).
 :::
@@ -54,7 +54,7 @@ recovery from volume snapshots.
 This section outlines how to recover a PostgreSQL cluster from an object store
 using the recommended Barman Cloud Plugin.
 
-:::important
+:::info[Important]
     The object store must contain backup data produced by a CloudNativePG
     `Cluster`—either using the **deprecated native Barman Cloud integration** or
     the **Barman Cloud Plugin**.
@@ -258,7 +258,7 @@ By default, recovery continues up to the latest available WAL on the default
 target timeline (`latest`). You can optionally specify a `recoveryTarget` to
 perform a point-in-time recovery (see [Point in Time Recovery (PITR)](#point-in-time-recovery-pitr)).
 
-:::important
+:::info[Important]
     Consider using the `barmanObjectStore.wal.maxParallel` option to speed
     up WAL fetching from the archive by concurrently downloading the transaction
     logs from the recovery object store.
@@ -271,7 +271,7 @@ backup, you can ask PostgreSQL to stop replaying WALs at any given point in
 time. PostgreSQL uses this technique to achieve PITR. The presence of a WAL
 archive is mandatory.
 
-:::important
+:::info[Important]
     PITR requires you to specify a recovery target by using the options
     described in [Recovery targets](#recovery-targets).
 :::
@@ -324,7 +324,7 @@ empty.
 If you assign a value to it (in the form of a Barman backup ID), the operator
 uses that backup as the base for the recovery.
 
-:::important
+:::info[Important]
     You need to make sure that such a backup exists and is accessible.
 :::
 
@@ -435,7 +435,7 @@ targetImmediate
    as possible. When restoring from an online backup, this means the point where
    taking the backup ended.
 
-:::important
+:::info[Important]
     The operator can retrieve the closest backup when you specify either
     `targetTime` or `targetLSN`. However, this isn't possible for the remaining
     targets: `targetName`, `targetXID`, and `targetImmediate`. In such cases, it's
@@ -510,7 +510,7 @@ generate a secret with a randomly secure password for use.
 See [Bootstrap an empty cluster](bootstrap.md#bootstrap-an-empty-cluster-initdb)
 for more information about secrets.
 
-:::important
+:::info[Important]
     While the `Cluster` is in recovery mode, no changes to the database,
     including the catalog, are permitted. This restriction includes any role
     overrides, which are deferred until the `Cluster` transitions to primary.
@@ -542,7 +542,7 @@ completed**:
 2. If the `app` user does not exist, it will be created.
 3. If the `app` user is not the owner of the `app` database, ownership will be
    granted to the `app` user.
-4. If the `username` value matches the `owner` value in the secret, the
+4. If the `owner` value matches the `username` value in the secret, the
    password for the application user (the `app` user in this case) will be
    updated to the `password` value in the secret.
 
@@ -560,7 +560,7 @@ requested).
 For details and instructions on the `recovery` bootstrap method, see
 [Bootstrap from a backup](bootstrap.md#bootstrap-from-a-backup-recovery).
 
-:::important
+:::info[Important]
     If you're not familiar with how
     [PostgreSQL PITR](https://www.postgresql.org/docs/current/continuous-archiving.html#BACKUP-PITR-RECOVERY)
     works, we suggest that you configure the recovery cluster as the original
@@ -572,7 +572,7 @@ The way it works is that the operator injects an init container in the first
 instance of the new cluster, and the init container starts recovering the
 backup from the object storage.
 
-:::important
+:::info[Important]
     The duration of the base backup copy in the new PVC depends on
     the size of the backup, as well as the speed of both the network and the
     storage.
@@ -617,7 +617,7 @@ data.
     `ERROR: WAL archive check failed for server recoveredCluster: Expected empty archive`.
 :::
 
-:::important
+:::info[Important]
     You can bypass this safety check by setting the
     `cnpg.io/skipEmptyWalArchiveCheck` annotation to `enabled` on the recovered
     cluster. However, this is strongly discouraged unless you are highly

@@ -1,6 +1,6 @@
 ---
 id: replication
-sidebar_position: 17
+sidebar_position: 160
 title: Replication
 ---
 
@@ -13,7 +13,7 @@ the management of their data in business continuity contexts. Primarily used to
 achieve high availability, physical replication also allows scale-out of
 read-only workloads and offloading of some work from the primary.
 
-:::important
+:::info[Important]
     This section is about replication within the same `Cluster` resource
     managed in the same Kubernetes cluster. For information about how to
     replicate with another Postgres `Cluster` resource, even across different
@@ -92,7 +92,7 @@ hostssl postgres streaming_replica all cert map=cnpg_streaming_replica
 hostssl replication streaming_replica all cert map=cnpg_streaming_replica
 ```
 
-:::info Certificates
+:::note[Certificates]
     For details on how CloudNativePG manages certificates, please refer
     to the ["Certificates" section](certificates.md#client-streaming_replica-certificate)
     in the documentation.
@@ -102,7 +102,7 @@ If configured, the operator manages replication slots for all the replicas in th
 HA cluster, ensuring that WAL files required by each standby are retained on
 the primary's storage, even after a failover or switchover.
 
-:::info Replication slots for High Availability
+:::note[Replication slots for High Availability]
     For details on how CloudNativePG automatically manages replication slots for the
     High Availability replicas, please refer to the
     ["Replication slots for High Availability" section](#replication-slots-for-high-availability)
@@ -131,7 +131,7 @@ CloudNativePG supports both
     section.
 :::
 
-:::important
+:::info[Important]
     The [*failover quorum* feature](failover.md#failover-quorum-quorum-based-failover) (experimental)
     can be used alongside synchronous replication to improve data durability
     and safety during failover events.
@@ -142,7 +142,7 @@ permitted. However, CloudNativePG automatically populates this option with the
 names of local pods, while also allowing customization to extend synchronous
 replication beyond the `Cluster` resource.
 This can be achieved through the
-[`.spec.postgresql.synchronous` stanza](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-SynchronousReplicaConfiguration).
+[`.spec.postgresql.synchronous` stanza](cloudnative-pg.v1.md#synchronousreplicaconfiguration).
 
 Synchronous replication is disabled by default (the `synchronous` stanza is not
 defined). When defined, two options are mandatory:
@@ -198,7 +198,7 @@ spec:
   maxSyncReplicas: 1
 
   storage:
-    size: 1G
+    size: 1Gi
 ```
 
 You can update it to the new format as follows:
@@ -212,7 +212,7 @@ spec:
   instances: 3
 
   storage:
-    size: 1G
+    size: 1Gi
 
   postgresql:
     synchronous:
@@ -234,7 +234,7 @@ considered synchronous. If a current synchronous standby disconnects, it is
 immediately replaced by the next-highest-priority standby. To use this method,
 set `method` to `first`.
 
-::important
+:::info[Important]
     Currently, this method is most useful when extending
     synchronous replication beyond the current cluster using the
     `maxStandbyNamesFromCluster`, `standbyNamesPre`, and `standbyNamesPost`
@@ -335,7 +335,7 @@ controls the trade-off between data safety and availability for synchronous
 replication. It can be set to `required` or `preferred`, with the default being
 `required` if not specified.
 
-:::important
+:::info[Important]
     `preferred` can only be used when `standbyNamesPre` and `standbyNamesPost`
     are unset.
 :::
@@ -410,7 +410,7 @@ attempt to replicate WAL records to the designated number of synchronous
 standbys, but write operations will continue even if fewer than the requested
 number of standbys are available.
 
-:::important
+:::info[Important]
     Make sure you have a clear understanding of what *ready/available* means
     for a replica and set your expectations accordingly. By default, a replica is
     considered ready when it has successfully connected to the source at least
@@ -488,7 +488,7 @@ spec:
     synchronous replication, as explained in the previous paragraph.
 :::
 
-:::important
+:::info[Important]
     The deprecated method and the new method are mutually exclusive.
 :::
 
@@ -499,7 +499,7 @@ synchronous standby replicas available at any time.
 For self-healing purposes, the operator always compares these two values with
 the number of available replicas to determine the quorum.
 
-:::important
+:::info[Important]
     By default, synchronous replication selects among all the available
     replicas indistinctively. You can limit on which nodes your synchronous
     replicas can be scheduled, by working on node labels through the
@@ -519,7 +519,7 @@ ANY q (pod1, pod2, ...)
 Where:
 
 - `q` is an integer automatically calculated by the operator to be:
-  `1 <= minSyncReplicas <= q <= maxSyncReplicas <= readyReplicas`
+  `1 ≤ minSyncReplicas ≤ q ≤ maxSyncReplicas ≤ readyReplicas`
 - `pod1, pod2, ...` is the list of all PostgreSQL pods in the cluster
 
 :::warning
@@ -535,7 +535,7 @@ the *method `ANY` specifies a quorum-based synchronous replication and makes
 transaction commits wait until their WAL records are replicated to at least the
 requested number of synchronous standbys in the list*.
 
-:::important
+:::info[Important]
     Even though the operator chooses self-healing over enforcement of
     synchronous replication settings, our recommendation is to plan for
     synchronous replication only in clusters with 3+ instances or,
@@ -549,7 +549,7 @@ participate in a quorum-based synchronous replication set through anti-affinity
 rules based on the node labels where the PVC holding the PGDATA and the
 Postgres pod are.
 
-:::info Scheduling
+:::note[Scheduling]
     For more information on the general pod affinity and anti-affinity rules,
     please check the ["Scheduling" section](scheduling.md).
 :::
@@ -575,7 +575,7 @@ the selected labels (in this case, the availability zone label) then the node
 where the primary is currently in execution. If no node matches such criteria,
 the replicas are eligible for synchronous replication.
 
-:::important
+:::info[Important]
     The self-healing enforcement still applies while defining additional
     constraints for synchronous replica election
     (see ["Synchronous replication"](replication.md#synchronous-replication)).
@@ -650,7 +650,7 @@ In CloudNativePG, we use the terms:
 
 This feature is enabled by default and can be disabled via configuration. For
 details, please refer to the
-["replicationSlots" section in the API reference](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ReplicationSlotsConfiguration).
+["replicationSlots" section in the API reference](cloudnative-pg.v1.md#replicationslotsconfiguration).
 Here follows a brief description of the main options:
 
 `.spec.replicationSlots.highAvailability.enabled`
@@ -692,7 +692,7 @@ spec:
 Although CloudNativePG doesn't support a way to declaratively define physical
 replication slots, you can still [create your own slots via SQL](https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-REPLICATION).
 
-:::info
+:::note[Information]
     At the moment, we don't have any plans to manage replication slots
     in a declarative way, but it might change depending on the feedback
     we receive from users. The reason is that replication slots exist
@@ -725,7 +725,7 @@ spec:
 ```
 
 For details, please refer to the
-["replicationSlots" section in the API reference](cloudnative-pg.v1.md#postgresql-cnpg-io-v1-ReplicationSlotsConfiguration).
+["replicationSlots" section in the API reference](cloudnative-pg.v1.md#replicationslotsconfiguration).
 Here follows a brief description of the main options:
 
 `.spec.replicationSlots.synchronizeReplicas.enabled`
@@ -868,8 +868,7 @@ we provide the `pg_replication_slots` metric in our Prometheus exporter with
 key information such as the name of the slot, the type, whether it is active,
 the lag from the primary.
 
-:::info Monitoring
+:::note[Monitoring]
     Please refer to the ["Monitoring" section](monitoring.md) for details on
     how to monitor a CloudNativePG deployment.
 :::
-

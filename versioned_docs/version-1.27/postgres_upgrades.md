@@ -1,10 +1,10 @@
 ---
 id: postgres_upgrades
-sidebar_position: 39
-title: PostgreSQL Upgrades
+sidebar_position: 380
+title: PostgreSQL upgrades
 ---
 
-# PostgreSQL Upgrades
+# PostgreSQL upgrades
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
 PostgreSQL upgrades fall into two categories:
@@ -49,7 +49,7 @@ Each method has trade-offs in terms of downtime, complexity, and data volume
 handling. The best approach depends on your upgrade strategy and operational
 constraints.
 
-:::important
+:::info[Important]
     We strongly recommend testing all methods in a controlled environment
     before proceeding with a production upgrade.
 :::
@@ -60,7 +60,7 @@ CloudNativePG performs an **offline in-place major upgrade** when a new operand
 container image with a higher PostgreSQL major version is declaratively
 requested for a cluster.
 
-:::important
+:::info[Important]
     Major upgrades are only supported between images based on the same
     operating system distribution. For example, if your previous version uses a
     `bullseye` image, you cannot upgrade to a `bookworm` image.
@@ -149,7 +149,7 @@ If the upgrade fails, you must manually revert the major version change in the
 cluster's configuration and delete the upgrade job, as CloudNativePG cannot
 automatically decide the rollback.
 
-:::important
+:::info[Important]
     This process **protects your existing database from data loss**, as no data
     is modified during the upgrade. If the upgrade fails, a rollback is
     usually possible, without having to perform a full recovery from a backup.

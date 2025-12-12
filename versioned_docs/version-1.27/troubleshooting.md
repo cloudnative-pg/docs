@@ -1,6 +1,6 @@
 ---
 id: troubleshooting
-sidebar_position: 42
+sidebar_position: 410
 title: Troubleshooting
 ---
 
@@ -10,7 +10,7 @@ title: Troubleshooting
 In this page, you can find some basic information on how to troubleshoot
 CloudNativePG in your Kubernetes cluster deployment.
 
-:::tip
+:::tip[Hint]
     As a Kubernetes administrator, you should have the
     [`kubectl` Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/) page
     bookmarked!
@@ -79,7 +79,7 @@ regular backups.
 In some emergency situations, you might need to take an emergency logical
 backup of the main `app` database.
 
-:::important
+:::info[Important]
     The instructions you find below must be executed only in emergency situations
     and the temporary backup files kept under the data protection policies
     that are effective in your organization. The dump file is indeed stored
@@ -117,7 +117,7 @@ kubectl exec -i new-cluster-example-1 -c postgres \
   -- pg_restore --no-owner --role=app -d app --verbose < app.dump
 ```
 
-:::important
+:::info[Important]
     The example in this section assumes that you have no other global objects
     (databases and roles) to dump and restore, as per our recommendation. In case
     you have multiple roles, make sure you have taken a backup using `pg_dumpall -g`
@@ -223,7 +223,7 @@ Cluster in healthy state
 Name:               cluster-example
 Namespace:          default
 System ID:          7044925089871458324
-PostgreSQL Image:   ghcr.io/cloudnative-pg/postgresql:18.0-system-trixie
+PostgreSQL Image:   ghcr.io/cloudnative-pg/postgresql:18.1-system-trixie
 Primary instance:   cluster-example-1
 Instances:          3
 Ready instances:    3
@@ -292,7 +292,7 @@ kubectl describe cluster <CLUSTER_NAME> -n <NAMESPACE> | grep "Image Name"
 Output:
 
 ```shell
-  Image Name:    ghcr.io/cloudnative-pg/postgresql:18.0-system-trixie
+  Image Name:    ghcr.io/cloudnative-pg/postgresql:18.1-system-trixie
 ```
 
 :::note
@@ -600,7 +600,7 @@ approach in most cases.
     for more details on how to set the bitmask that controls the core dump filter.
 :::
 
-:::important
+:::info[Important]
     Beware that this setting only takes effect during Pod startup and that changing
     the annotation doesn't trigger an automated rollout of the instances.
 :::
@@ -656,7 +656,7 @@ You can disable pprof at any time by either removing the annotation or setting
 it to `"false"`. The operator will roll out changes automatically to remove the
 pprof port and flag.
 
-:::important
+:::info[Important]
     The pprof server only serves plain HTTP on port `6060`.
 :::
 
