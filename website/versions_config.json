@@ -1,0 +1,15 @@
+{
+  "current": {
+    "label": "Dev",
+    "badge": true,
+    "banner": "unreleased"
+  },
+  "1.27": {
+    "badge": true,
+    "banner": "none"
+  },
+  "1.28": {
+    "badge": true,
+    "banner": "none"
+  }
+}
