@@ -39,6 +39,8 @@ This website is built using [Docusaurus](https://docusaurus.io/), a modern stati
 
 ## Installation
 
+Enter the `website` folder, then run:
+
 ```bash
 yarn
 ```
