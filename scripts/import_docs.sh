@@ -98,50 +98,62 @@ if [[ ! -d "$SOURCE_PATH" ]]; then
   exit 1
 fi
 
-# Install node modules if missing
-if ! command -v yarn >/dev/null 2>&1; then
-  echo "ERROR: yarn not found. Install Yarn."
+if ! command -v jq >/dev/null 2>&1; then
+  echo "ERROR: jq not found. Install jq for JSON processing."
   exit 1
-fi
-
-if [[ ! -d "node_modules" ]]; then
-  echo "node_modules missing: running yarn install"
-  yarn install --silent
 fi
 
 # ===== MAIN BRANCH =====
 if [[ "$IS_MAIN" == true ]]; then
-  echo "Copying imported docs -> ./docs"
-  mkdir -p ./docs
-  rsync -av --delete "$SOURCE_PATH/" --exclude "css" ./docs/
-
+  echo "Copying imported docs -> ./website/docs"
+  mkdir -p ./website/docs
+  rsync -av --delete "$SOURCE_PATH/" --exclude "css" ./website/docs/
   echo "Updated ./docs from main — import completed."
   exit 0
 fi
-
 # ===== VERSION TAG =====
-if grep -q "\"${VERSION_DIR}\"" versions.json 2>/dev/null; then
-  # Import the new version in the correct folder
-  TARGET_DIRECTORY="./versioned_docs/version-${VERSION_DIR}"
-  echo "Copying imported docs -> ${TARGET_DIRECTORY}"
-  rsync -av --delete "$SOURCE_PATH/" --exclude "css" "${TARGET_DIRECTORY}"
-else
-  # Create Docusaurus version
-  echo "Running: yarn docusaurus docs:version ${VERSION_DIR}"
-  yarn docusaurus docs:version "${VERSION_DIR}"
+VERSIONS_JSON="./website/versions.json"
+VERSIONS_CONFIG="./website/versions_config.json"
+DOCUSAURUS_CONFIG="./website/docusaurus.config.ts"
+TARGET_DIRECTORY="./website/versioned_docs/version-${VERSION_DIR}"
 
-  # Import the new version in the correct folder
-  TARGET_DIRECTORY="./versioned_docs/version-${VERSION_DIR}"
-  echo "Copying imported docs -> ${TARGET_DIRECTORY}"
-  rsync -av --delete "$SOURCE_PATH/" --exclude "css" "${TARGET_DIRECTORY}"
+echo "Copying imported docs -> ${TARGET_DIRECTORY}"
+rsync -av --delete "$SOURCE_PATH/" --exclude "css" "${TARGET_DIRECTORY}"
 
-  echo "=== Done: Docusaurus version ${VERSION_DIR} created ==="
+# Add the new version to versions.json if not already present
+if ! grep -q "\"${VERSION_DIR}\"" versions.json 2>/dev/null; then
+  # Import the new version in the correct folder
+  cp "./website/sidebar_config.json" "./website/versioned_sidebars/version-${VERSION_DIR}-sidebars.json"
+  jq --arg version "$VERSION_DIR" \
+        '. = [$version] + . | unique' \
+        "$VERSIONS_JSON" > "${VERSIONS_JSON}.tmp" && \
+        mv "${VERSIONS_JSON}.tmp" "$VERSIONS_JSON"
 fi
 
-# Mark RC as preview
-VDIR="versioned_docs/version-${VERSION_DIR}"
+# Determine the banner value
 if [[ "$IS_RC" == true ]]; then
-  echo "Marking ${VDIR} as preview (rc)"
-  echo "preview: true" > "${VDIR}/.preview"
+  BANNER="unreleased"
+else
+  BANNER="none"
 fi
 
+echo "Updating versions_config.json: version ${VERSION_DIR} banner=${BANNER}"
+jq --arg version "$VERSION_DIR" --arg banner "$BANNER" \
+  '.[$version] = {"badge": true, "banner": $banner}' \
+  "$VERSIONS_CONFIG" > "${VERSIONS_CONFIG}.tmp" && \
+  mv "${VERSIONS_CONFIG}.tmp" "$VERSIONS_CONFIG"
+
+# Determine if this is the highest version and update docusaurus.config.ts
+HIGHEST_VERSION=$(jq -r '.[]' "$VERSIONS_JSON" | sort -V | tail -n1)
+
+if [[ "$VERSION_DIR" == "$HIGHEST_VERSION" ]] && [[ "$IS_RC" == false ]]; then
+  echo "Version ${VERSION_DIR} is the highest release - updating lastVersion in docusaurus.config.ts"
+
+  # Update lastVersion in docusaurus.config.ts
+  sed -i.bak "s/lastVersion: '[^']*'/lastVersion: '${VERSION_DIR}'/" "$DOCUSAURUS_CONFIG" && \
+    rm "${DOCUSAURUS_CONFIG}.bak"
+
+  echo "Updated lastVersion to ${VERSION_DIR}"
+else
+  echo "Version ${VERSION_DIR} is not the highest release - lastVersion unchanged"
+fi
