@@ -84,6 +84,7 @@ const config: Config = {
         alt: 'CloudNativePG Logo',
         src: 'img/hero_image.svg',
         href: 'https://cloudnative-pg.io',
+        target: '_self',
       },
       items: [
         {
