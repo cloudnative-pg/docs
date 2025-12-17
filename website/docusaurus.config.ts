@@ -45,7 +45,7 @@ const config: Config = {
         docs: {
           path: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
-          routeBasePath: 'docs',
+          routeBasePath: '/',
           includeCurrentVersion: true, // Include the current version in the sidebar
           lastVersion: '1.28',
           versions: versionsConfig,
