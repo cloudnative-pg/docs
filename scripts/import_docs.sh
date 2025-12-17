@@ -139,7 +139,7 @@ fi
 
 echo "Updating versions_config.json: version ${VERSION_DIR} banner=${BANNER}"
 jq --arg version "$VERSION_DIR" --arg banner "$BANNER" \
-  '.[$version] = {"badge": true, "banner": $banner}' \
+  '.[$version] = {"badge": true, "banner": $banner, "path": $version}' \
   "$VERSIONS_CONFIG" > "${VERSIONS_CONFIG}.tmp" && \
   mv "${VERSIONS_CONFIG}.tmp" "$VERSIONS_CONFIG"
 
@@ -150,7 +150,7 @@ if [[ "$VERSION_DIR" == "$HIGHEST_VERSION" ]] && [[ "$IS_RC" == false ]]; then
   echo "Version ${VERSION_DIR} is the highest release - updating lastVersion in docusaurus.config.ts"
 
   # Update lastVersion in docusaurus.config.ts
-  sed -i.bak "s/lastVersion: '[^']*'/lastVersion: '${VERSION_DIR}'/" "$DOCUSAURUS_CONFIG" && \
+  sed -i.bak "s/lastVersion = '[^']*'/lastVersion = '${VERSION_DIR}'/" "$DOCUSAURUS_CONFIG" && \
     rm "${DOCUSAURUS_CONFIG}.bak"
 
   echo "Updated lastVersion to ${VERSION_DIR}"

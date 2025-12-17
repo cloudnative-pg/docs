@@ -6,10 +6,12 @@
   },
   "1.27": {
     "badge": true,
-    "banner": "none"
+    "banner": "none",
+    "path": "1.27"
   },
   "1.28": {
     "badge": true,
-    "banner": "none"
+    "banner": "none",
+    "path": "1.28"
   }
 }

@@ -6,6 +6,8 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const versionsConfig = require('./versions_config.json') as Record<string, import('@docusaurus/plugin-content-docs').VersionOptions>;
 
+const lastVersion = '1.28';
+
 const config: Config = {
   title: 'CloudNativePG',
   tagline: 'Run PostgreSQL.The Kubernetes way.',
@@ -45,9 +47,9 @@ const config: Config = {
         docs: {
           path: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
-          routeBasePath: 'docs',
+          routeBasePath: '/',
           includeCurrentVersion: true, // Include the current version in the sidebar
-          lastVersion: '1.28',
+          lastVersion: lastVersion,
           versions: versionsConfig,
         },
         blog: false,
@@ -81,6 +83,7 @@ const config: Config = {
       logo: {
         alt: 'CloudNativePG Logo',
         src: 'img/hero_image.svg',
+        href: 'https://cloudnative-pg.io',
       },
       items: [
         {
@@ -92,7 +95,11 @@ const config: Config = {
         {
             type: 'docsVersionDropdown',
             position: 'right',
-            versions: ['current', '1.28', '1.27'],
+            versions: Object.keys(versionsConfig).sort((a, b) => {
+                if (a === 'current') return -1;
+                if (b === 'current') return 1;
+                return b.localeCompare(a, undefined, { numeric: true });
+            }),
         },
           {
               href: "https://github.com/cloudnative-pg/",
@@ -159,6 +166,19 @@ const config: Config = {
       darkTheme: prismThemes.dracula,
     },
   } satisfies Preset.ThemeConfig,
+  plugins: [
+      [
+          '@docusaurus/plugin-client-redirects',
+          {
+              redirects: [
+                  {
+                      to: `/${lastVersion}/`,
+                      from: '/',
+                  },
+              ],
+          },
+      ],
+  ],
 };
 
 export default config;
