@@ -84,6 +84,7 @@ const config: Config = {
         alt: 'CloudNativePG Logo',
         src: 'img/hero_image.svg',
         href: 'https://cloudnative-pg.io',
+        target: '_self',
       },
       items: [
         {
@@ -115,6 +116,7 @@ const config: Config = {
             alt: 'CloudNativePG Logo',
             src: "img/cloudnativepg-landscape-white.png",
             href: "https://cloudnative-pg.io",
+            target: "_self",
         },
       style: 'dark',
       links: [
@@ -127,7 +129,23 @@ const config: Config = {
             },
             {
               label: 'X',
-              href: 'https://x.com/CloudNativePG',
+              href: 'https://x.com/CloudNativePg',
+            },
+            {
+              label: 'YouTube',
+              href: 'https://www.youtube.com/channel/UCTGH88W1BiuRRPTzJUDPJyA',
+            },
+            {
+              label: 'LinkedIn',
+              href: 'https://www.linkedin.com/company/cloudnative-pg',
+            },
+            {
+              label: 'Mastodon',
+              href: 'https://mastodon.social/@CloudNativePG',
+            },
+            {
+              label: 'Bluesky',
+              href: 'https://bsky.app/profile/cloudnativepg.bsky.social',
             },
           ],
         },
