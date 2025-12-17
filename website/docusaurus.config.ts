@@ -22,11 +22,11 @@ const config: Config = {
   url: 'https://cloudnative-pg.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/docs-new/',
+  baseUrl: '/docs/',
 
   // GitHub pages deployment config.
   organizationName: 'cloudnative-pg',
-  projectName: 'docs-new',
+  projectName: 'docs',
   deploymentBranch: 'gh-pages',
 
   onBrokenLinks: 'throw',
