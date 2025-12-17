@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          token: '${{ secrets.REPO_PAT }}'
       - name: Import docs
         run: |
           echo "Importing CloudNativePG docs for version: ${{ env.VERSION }}"
@@ -31,5 +32,3 @@ jobs:
         uses: EndBug/add-and-commit@v9
         with:
           message: "docs: import CloudNativePG ${{ env.VERSION }}"
-          # The token is required to trigger build_containers on pushes
-          github_token: '${{ secrets.REPO_PAT }}'
