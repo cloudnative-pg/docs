@@ -1,4 +1,4 @@
-[![CloudNativePG](./logo/cloudnativepg.png)](https://cloudnative-pg.io/)
+[![CloudNativePG](./website/logo/cloudnativepg.png)](https://cloudnative-pg.io/)
 
 # CloudNativePG Documentation
 
