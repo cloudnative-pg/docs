@@ -1,8 +1,9 @@
 {
   "current": {
-    "label": "Dev",
+    "label": "Devel",
     "badge": true,
-    "banner": "unreleased"
+    "banner": "unreleased",
+    "path": "devel"
   },
   "1.27": {
     "badge": true,
