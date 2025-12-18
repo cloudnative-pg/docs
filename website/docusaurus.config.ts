@@ -66,6 +66,7 @@ const config: Config = {
       ({
         hashed: true,
         docsDir: ['docs'],
+        docsRouteBasePath: ['/'],
         searchResultLimits: 8,
         searchResultContextMaxLength: 50,
         language: ["en"],
