@@ -14,5 +14,10 @@
     "badge": true,
     "banner": "none",
     "path": "1.28"
+  },
+  "1.26": {
+    "badge": true,
+    "banner": "none",
+    "path": "1.26"
   }
 }
