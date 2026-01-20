@@ -30,7 +30,6 @@ const config: Config = {
   deploymentBranch: 'gh-pages',
 
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'throw',
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -178,6 +177,9 @@ const config: Config = {
           mdx1Compat: {
             allowComments: true,
             allowHtml: true,
+      },
+      hooks: {
+        onBrokenMarkdownLinks: 'throw',
       },
     },
     prism: {
