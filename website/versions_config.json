@@ -17,7 +17,12 @@
   },
   "1.26": {
     "badge": true,
-    "banner": "none",
+    "banner": "unmaintained",
     "path": "1.26"
+  },
+  "1.25": {
+    "badge": true,
+    "banner": "unmaintained",
+    "path": "1.25"
   }
 }
