@@ -1,9 +1,10 @@
-# This workflow builds and deploys the Docusaurus documentation to GitHub Pages
-# when changes are pushed to the main branch.
-name: Deploy Docusaurus to GitHub Pages
+# This workflow builds the Docusaurus documentation on pull requests
+# and deploys it to GitHub Pages when changes are pushed to main.
+name: Continuous Delivery
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
     branches:
       - main
@@ -19,7 +20,7 @@ concurrency:
 permissions: read-all
 
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -38,6 +39,7 @@ jobs:
           cache-dependency-path: website/yarn.lock
 
       - name: Setup Pages
+        if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
       - name: Install dependencies
@@ -49,18 +51,20 @@ jobs:
         run: yarn build
 
       - name: Upload artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
           path: website/build
 
-  deploy:
+  Deploy:
+    if: github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
+    needs: Build
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
