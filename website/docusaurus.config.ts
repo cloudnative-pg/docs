@@ -197,6 +197,13 @@ const config: Config = {
                       from: '/',
                   },
               ],
+              createRedirects(existingPath) {
+                  // Redirect /current/* to the latest version
+                  if (existingPath.startsWith(`/${lastVersion}/`)) {
+                      return existingPath.replace(`/${lastVersion}/`, '/current/');
+                  }
+                  return undefined;
+              },
           },
       ],
   ],
