@@ -971,7 +971,7 @@ _Appears in:_
 
 | Field | Description | Required | Default | Validation |
 | --- | --- | --- | --- | --- |
-| `name` _string_ | The name of the extension, required | True |  | MinLength: 1 <br />Pattern: `^[a-z0-9]([-a-z0-9]*[a-z0-9])?$` <br /> |
+| `name` _string_ | The name of the extension, required | True |  | MinLength: 1 <br />Pattern: `^[a-z0-9]([-a-z0-9_]*[a-z0-9])?$` <br /> |
 | `image` _[ImageVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#imagevolumesource-v1-core)_ | The image containing the extension, required | True |  |  |
 | `extension_control_path` _string array_ | The list of directories inside the image which should be added to extension_control_path.<br />If not defined, defaults to "/share". |  |  |  |
 | `dynamic_library_path` _string array_ | The list of directories inside the image which should be added to dynamic_library_path.<br />If not defined, defaults to "/lib". |  |  |  |
@@ -1200,6 +1200,7 @@ _Appears in:_
 | --- | --- | --- | --- | --- |
 | `podName` _string_ | The pod name |  |  |  |
 | `ContainerID` _string_ | The container ID |  |  |  |
+| `sessionID` _string_ | The instance manager session ID. This is a unique identifier generated at instance manager<br />startup and changes on every restart (including container reboots). Used to detect if<br />the instance manager was restarted during long-running operations like backups, which<br />would terminate any running backup process. |  |  |  |
 
 
 #### InstanceReportedState
@@ -2167,7 +2168,7 @@ _Appears in:_
 | `targetXID` _string_ | The target transaction ID |  |  |  |
 | `targetName` _string_ | The target name (to be previously created<br />with `pg_create_restore_point`) |  |  |  |
 | `targetLSN` _string_ | The target LSN (Log Sequence Number) |  |  |  |
-| `targetTime` _string_ | The target time as a timestamp in the RFC3339 standard |  |  |  |
+| `targetTime` _string_ | The target time as a timestamp in RFC3339 format or PostgreSQL timestamp format.<br />Timestamps without an explicit timezone are interpreted as UTC. |  |  |  |
 | `targetImmediate` _boolean_ | End recovery as soon as a consistent state is reached |  |  |  |
 | `exclusive` _boolean_ | Set the target to be exclusive. If omitted, defaults to false, so that<br />in Postgres, `recovery_target_inclusive` will be true |  |  |  |
 
