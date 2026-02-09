@@ -49,6 +49,16 @@ store backups in S3 buckets in two ways:
   [IRSA authentication method](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html)
 - Alternatively, you can use the `ACCESS_KEY_ID` and `ACCESS_SECRET_KEY` credentials
 
+:::info S3 provider compatibility
+
+Per the [Barman Cloud documentation](https://docs.pgbarman.org/release/3.17.0/user_guide/barman_cloud.html),
+
+> Barman Cloud utilizes the Boto3 SDK to integrate with S3-compatible object stores. While this ensures Barman Cloud functions correctly with the AWS S3 reference implementation and supports Barman Cloud integration with S3-compatible object stores, Barman Cloud does not directly support the underlying storage infrastructure of third-party vendors. Support is limited to the Barman Cloud software; issues that are reproducible on AWS S3 are treated as Barman Cloud defects and will be addressed by support channels. However, operational inconsistencies that occur exclusively on third-party object stores, and which cannot be reproduced on AWS S3, are considered API incompatibilities. Such issues must be resolved by the user in conjunction with their specific storage vendor.
+
+There have been compatibility issues with various S3-compatible storage providers. If you rely on such a provider, refer to the [Barman Cloud documentation](https://docs.pgbarman.org/release/3.17.0/user_guide/barman_cloud.html) for potential workarounds, and check for updates from your provider.
+
+:::
+
 ### AWS Access key
 
 You will need the following information about your environment:
