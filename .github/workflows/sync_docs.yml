@@ -26,8 +26,8 @@ jobs:
           token: '${{ secrets.REPO_PAT }}'
       - name: Import docs
         run: |
-          echo "Importing CloudNativePG docs for version: ${{ env.VERSION }}"
-          ./scripts/import_docs.sh "${{ env.VERSION }}"
+          echo "Importing CloudNativePG docs for version: ${VERSION}"
+          ./scripts/import_docs.sh "${VERSION}"
       - name: Commit and push changes
         uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9
         with:
