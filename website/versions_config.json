@@ -24,5 +24,10 @@
     "badge": true,
     "banner": "unmaintained",
     "path": "1.25"
+  },
+  "1.29": {
+    "badge": true,
+    "banner": "unreleased",
+    "path": "1.29"
   }
 }
