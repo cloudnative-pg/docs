@@ -50,6 +50,16 @@ const config: Config = {
           includeCurrentVersion: true, // Include the current version in the sidebar
           lastVersion: lastVersion,
           versions: versionsConfig,
+          async sidebarItemsGenerator({defaultSidebarItemsGenerator, ...args}) {
+            const items = await defaultSidebarItemsGenerator(args);
+            return items.filter((item) => {
+              // Remove the release_notes directory category from the sidebar
+              if (item.type === 'category' && item.label === 'release_notes') return false;
+              // Remove the legacy backup_recovery stub page from the sidebar
+              if (item.type === 'doc' && item.id === 'backup_recovery') return false;
+              return true;
+            });
+          },
         },
         blog: false,
         theme: {
