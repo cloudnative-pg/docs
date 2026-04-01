@@ -443,6 +443,7 @@ _Appears in:_
 | --- | --- | --- | --- | --- |
 | `image` _string_ | The image reference | True |  |  |
 | `major` _integer_ | The PostgreSQL major version of the image. Must be unique within the catalog. | True |  | Minimum: 10 <br /> |
+| `extensions` _[ExtensionConfiguration](#extensionconfiguration) array_ | The configuration of the extensions to be added |  |  |  |
 
 
 #### CertificatesConfiguration
@@ -967,15 +968,37 @@ PostgreSQL extensions to the Cluster.
 
 _Appears in:_
 
+- [CatalogImage](#catalogimage)
 - [PostgresConfiguration](#postgresconfiguration)
 
 | Field | Description | Required | Default | Validation |
 | --- | --- | --- | --- | --- |
 | `name` _string_ | The name of the extension, required | True |  | MinLength: 1 <br />Pattern: `^[a-z0-9]([-a-z0-9_]*[a-z0-9])?$` <br /> |
-| `image` _[ImageVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#imagevolumesource-v1-core)_ | The image containing the extension, required | True |  |  |
+| `image` _[ImageVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#imagevolumesource-v1-core)_ | The image containing the extension. |  |  |  |
 | `extension_control_path` _string array_ | The list of directories inside the image which should be added to extension_control_path.<br />If not defined, defaults to "/share". |  |  |  |
 | `dynamic_library_path` _string array_ | The list of directories inside the image which should be added to dynamic_library_path.<br />If not defined, defaults to "/lib". |  |  |  |
 | `ld_library_path` _string array_ | The list of directories inside the image which should be added to ld_library_path. |  |  |  |
+| `bin_path` _string array_ | A list of directories within the image to be appended to the<br />PostgreSQL process's `PATH` environment variable. |  |  |  |
+| `env` _[ExtensionEnvVar](#extensionenvvar) array_ | Env is a list of custom environment variables to be set in the<br />PostgreSQL process for this extension. It is the responsibility of the<br />cluster administrator to ensure the variables are correct for the<br />specific extension. Note that changes to these variables require<br />a manual cluster restart to take effect. |  |  |  |
+
+
+#### ExtensionEnvVar
+
+
+
+ExtensionEnvVar defines an environment variable for a specific extension
+image volume.
+
+
+
+_Appears in:_
+
+- [ExtensionConfiguration](#extensionconfiguration)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `name` _string_ | Name of the environment variable to be injected into the<br />PostgreSQL process. | True |  | MinLength: 1 <br />Pattern: `^[a-zA-Z_][a-zA-Z0-9_]*$` <br /> |
+| `value` _string_ | Value of the environment variable. CloudNativePG performs a direct<br />replacement of this value, with support for placeholder expansion.<br />The $\{`image_root`\} placeholder resolves to the absolute mount path<br />of the extension's volume (e.g., `/extensions/my-extension`). This<br />is particularly useful for allowing applications or libraries to<br />locate specific directories within the mounted image.<br />Unrecognized placeholders are rejected. To include a literal $\{...\}<br />in the value, escape it as $$\{...\}. | True |  | MinLength: 1 <br /> |
 
 
 #### ExtensionSpec
@@ -1892,8 +1915,9 @@ _Appears in:_
 
 _Underlying type:_ _string_
 
-PrimaryUpdateMethod contains the method to use when upgrading
-the primary server of the cluster as part of rolling updates
+PrimaryUpdateMethod defines the method to use when upgrading
+the primary instance of the cluster as part of rolling updates.
+The default method is "restart"
 
 
 
