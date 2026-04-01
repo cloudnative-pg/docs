@@ -27,7 +27,7 @@
   },
   "1.29": {
     "badge": true,
-    "banner": "unreleased",
+    "banner": "none",
     "path": "1.29"
   }
 }
