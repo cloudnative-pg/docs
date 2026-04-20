@@ -11,10 +11,12 @@ on:
     paths:
       - 'website/**'
 
-# Prevent parallel deployments when multiple commits are pushed to main
-# in a short time.
+# Concurrency only matters on main, to avoid parallel Pages
+# deployments when several commits land in a short time. The ref is
+# included in the group name so PR runs each get their own queue
+# and don't cancel each other.
 concurrency:
-  group: "pages"
+  group: "pages-${{ github.ref }}"
   cancel-in-progress: false
 
 permissions: read-all
