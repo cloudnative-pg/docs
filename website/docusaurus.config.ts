@@ -183,20 +183,21 @@ const config: Config = {
         trademarks or registered trademarks of the PostgreSQL Community Association of Canada, and
         used with their permission</a>.`
     },
-      markdown: {
-          mdx1Compat: {
-            allowComments: true,
-            allowHtml: true,
-      },
-      hooks: {
-        onBrokenMarkdownLinks: 'throw',
-      },
-    },
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
     },
   } satisfies Preset.ThemeConfig,
+  markdown: {
+    mdx1Compat: {
+      comments: true,
+      admonitions: true,
+      headingIds: true,
+    },
+    hooks: {
+      onBrokenMarkdownLinks: 'throw',
+    },
+  },
   plugins: [
       [
           '@docusaurus/plugin-client-redirects',
