@@ -29,5 +29,10 @@
     "badge": true,
     "banner": "none",
     "path": "1.29"
+  },
+  "1.30": {
+    "badge": true,
+    "banner": "unreleased",
+    "path": "1.30"
   }
 }
