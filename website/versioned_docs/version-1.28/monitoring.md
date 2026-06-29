@@ -265,7 +265,7 @@ cnpg_collector_up{cluster="cluster-example"} 1
 
 # HELP cnpg_collector_postgres_version Postgres version
 # TYPE cnpg_collector_postgres_version gauge
-cnpg_collector_postgres_version{cluster="cluster-example",full="18.3"} 18.3
+cnpg_collector_postgres_version{cluster="cluster-example",full="18.4"} 18.4
 
 # HELP cnpg_collector_last_failed_backup_timestamp The last failed backup as a unix timestamp (Deprecated)
 # TYPE cnpg_collector_last_failed_backup_timestamp gauge
@@ -535,6 +535,14 @@ Take care that the referred resources have to be created **in the same namespace
     Schema-qualify catalog references (`pg_catalog.now()`,
     `pg_catalog.current_database()`) to prevent `search_path` shadowing
     by user-owned objects.
+
+    Custom monitoring queries run inside a transaction whose
+    `search_path` is pinned to `pg_catalog, public, pg_temp`,
+    regardless of any `search_path` configured on the database or the
+    role. Unqualified references to objects in other user-defined
+    schemas will therefore fail to resolve: schema-qualify them (e.g.
+    `myschema.mytable`) so the query does not depend on the
+    `search_path`.
 :::
 
 #### Example of a user defined metric
@@ -996,7 +1004,7 @@ metadata:
 spec:
   containers:
   - name: curl
-    image: curlimages/curl:8.17.0
+    image: curlimages/curl:8.21.0
     command: ['sleep', '3600']
 EOF
 ```
