@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const versionsConfig = require('./versions_config.json') as Record<string, import('@docusaurus/plugin-content-docs').VersionOptions>;
 
-const lastVersion = '1.29';
+const lastVersion = '1.30';
 
 const config: Config = {
   title: 'CloudNativePG',
