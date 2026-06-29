@@ -67,7 +67,7 @@ spec:
     - major: 17
       image: ghcr.io/cloudnative-pg/postgresql:17.6-system-trixie
     - major: 18
-      image: ghcr.io/cloudnative-pg/postgresql:18.3-system-trixie
+      image: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
 ```
 
 The following example defines a cluster-wide `ClusterImageCatalog`:
@@ -86,7 +86,7 @@ spec:
     - major: 17
       image: ghcr.io/cloudnative-pg/postgresql:17.6-system-trixie
     - major: 18
-      image: ghcr.io/cloudnative-pg/postgresql:18.3-system-trixie
+      image: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie
 ```
 
 ### Referencing a Catalog in a Cluster
@@ -122,7 +122,7 @@ metadata:
 spec:
   images:
     - major: 18
-      image: ghcr.io/cloudnative-pg/postgresql:18.3-minimal-trixie
+      image: ghcr.io/cloudnative-pg/postgresql:18.4-minimal-trixie
       extensions:
         - name: foo
           image:
@@ -192,7 +192,7 @@ You can install all the available catalogs by using the `kustomization` file
 present in the `image-catalogs` directory:
 
 ```shell
-kubectl apply -k https://github.com/cloudnative-pg/artifacts//image-catalogs?ref=main
+kubectl apply -k 'https://github.com/cloudnative-pg/artifacts//image-catalogs?ref=main'
 ```
 
 You can then view all the catalogs deployed with:

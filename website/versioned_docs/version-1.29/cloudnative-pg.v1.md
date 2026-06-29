@@ -429,6 +429,24 @@ _Appears in:_
 | `secret` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | Name of the secret containing the initial credentials for the<br />owner of the user database. If empty a new secret will be<br />created from scratch |  |  |  |
 
 
+#### CatalogComponentImage
+
+
+
+CatalogComponentImage is a named image entry for a non-PostgreSQL component.
+
+
+
+_Appears in:_
+
+- [ImageCatalogSpec](#imagecatalogspec)
+
+| Field | Description | Required | Default | Validation |
+| --- | --- | --- | --- | --- |
+| `key` _string_ | Key is the unique identifier for this image within the catalog. | True |  | MaxLength: 63 <br />Pattern: `^[a-z0-9]([-a-z0-9]*[a-z0-9])?$` <br /> |
+| `image` _string_ | Image is the container image reference. | True |  |  |
+
+
 #### CatalogImage
 
 
@@ -638,6 +656,7 @@ _Appears in:_
 | --- | --- | --- | --- | --- |
 | `instances` _integer_ | The total number of PVC Groups detected in the cluster. It may differ from the number of existing instance pods. |  |  |  |
 | `readyInstances` _integer_ | The total number of ready instances in the cluster. It is equal to the number of ready instance pods. |  |  |  |
+| `selector` _string_ | Selector is the serialized form of the label selector that identifies<br />the pods managed by this cluster. Populated by the operator and exposed<br />through the scale sub-resource so an autoscaler (such as HPA or VPA)<br />can discover the managed instance pods. |  |  |  |
 | `instancesStatus` _object (keys:[PodStatus](#podstatus), values:string array)_ | InstancesStatus indicates in which status the instances are |  |  |  |
 | `instancesReportedState` _object (keys:[PodName](#podname), values:[InstanceReportedState](#instancereportedstate))_ | The reported state of the instances during the last reconciliation loop |  |  |  |
 | `managedRolesStatus` _[ManagedRoles](#managedroles)_ | ManagedRolesStatus reports the state of the managed roles in the cluster |  |  |  |
@@ -680,6 +699,7 @@ _Appears in:_
 | `onlineUpdateEnabled` _boolean_ | OnlineUpdateEnabled shows if the online upgrade is enabled inside the cluster |  |  |  |
 | `image` _string_ | Image contains the image name used by the pods |  |  |  |
 | `pgDataImageInfo` _[ImageInfo](#imageinfo)_ | PGDataImageInfo contains the details of the latest image that has run on the current data directory. |  |  |  |
+| `targetPgDataImageInfo` _[ImageInfo](#imageinfo)_ | TargetPGDataImageInfo contains the details of the target image for an<br />in-progress major upgrade. It is set before the upgrade Job is created,<br />and cleared on successful completion or when the upgrade is rolled back. |  |  |  |
 | `pluginStatus` _[PluginStatus](#pluginstatus) array_ | PluginStatus is the status of the loaded plugins |  |  |  |
 | `switchReplicaClusterStatus` _[SwitchReplicaClusterStatus](#switchreplicaclusterstatus)_ | SwitchReplicaClusterStatus is the status of the switch to replica cluster |  |  |  |
 | `demotionToken` _string_ | DemotionToken is a JSON token containing the information<br />from pg_controldata such as Database system identifier, Latest checkpoint's<br />TimeLineID, Latest checkpoint's REDO location, Latest checkpoint's REDO<br />WAL file, and Time of latest checkpoint |  |  |  |
@@ -990,7 +1010,7 @@ _Appears in:_
 
 | Field | Description | Required | Default | Validation |
 | --- | --- | --- | --- | --- |
-| `name` _string_ | The name of the extension, required | True |  | MinLength: 1 <br />Pattern: `^[a-z0-9]([-a-z0-9_]*[a-z0-9])?$` <br /> |
+| `name` _string_ | The name of the extension, required. The limit of 59 characters<br />leaves room for the prefix the operator adds when deriving the<br />extension's Kubernetes Volume name (capped at 63 characters). | True |  | MaxLength: 59 <br />MinLength: 1 <br />Pattern: `^[a-z0-9]([-a-z0-9_]*[a-z0-9])?$` <br /> |
 | `image` _[ImageVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#imagevolumesource-v1-core)_ | The image containing the extension. |  |  |  |
 | `extension_control_path` _string array_ | The list of directories inside the image which should be added to extension_control_path.<br />If not defined, defaults to "/share". |  |  |  |
 | `dynamic_library_path` _string array_ | The list of directories inside the image which should be added to dynamic_library_path.<br />If not defined, defaults to "/lib". |  |  |  |
@@ -1186,6 +1206,7 @@ _Appears in:_
 | Field | Description | Required | Default | Validation |
 | --- | --- | --- | --- | --- |
 | `images` _[CatalogImage](#catalogimage) array_ | List of CatalogImages available in the catalog | True |  | MaxItems: 8 <br />MinItems: 1 <br /> |
+| `componentImages` _[CatalogComponentImage](#catalogcomponentimage) array_ | ComponentImages is a list of named images for components other than PostgreSQL<br />(e.g. pgbouncer). Keys must be unique within a catalog. |  |  | MaxItems: 32 <br /> |
 
 
 #### ImageInfo
@@ -1451,7 +1472,7 @@ _Appears in:_
 | Field | Description | Required | Default | Validation |
 | --- | --- | --- | --- | --- |
 | `byStatus` _object (keys:[RoleStatus](#rolestatus), values:string array)_ | ByStatus gives the list of roles in each state |  |  |  |
-| `cannotReconcile` _object (keys:string, values:string array)_ | CannotReconcile lists roles that cannot be reconciled in PostgreSQL,<br />with an explanation of the cause |  |  |  |
+| `cannotReconcile` _object (keys:string, values:string array)_ | CannotReconcile lists roles that cannot be reconciled, with an<br />explanation of the cause. Failures may originate in PostgreSQL<br />(e.g. dropping a role that owns objects) or in Kubernetes (e.g.<br />the referenced password Secret cannot be fetched). |  |  |  |
 | `passwordStatus` _object (keys:string, values:[PasswordState](#passwordstate))_ | PasswordStatus gives the last transaction id and password secret version for each managed role |  |  |  |
 
 
@@ -2398,7 +2419,7 @@ _Appears in:_
 | `name` _string_ | Name of the role | True |  |  |
 | `comment` _string_ | Description of the role |  |  |  |
 | `ensure` _[EnsureOption](#ensureoption)_ | Ensure the role is `present` or `absent` - defaults to "present" |  | present | Enum: [present absent] <br /> |
-| `passwordSecret` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | Secret containing the password of the role (if present)<br />If null, the password will be ignored unless DisablePassword is set |  |  |  |
+| `passwordSecret` _[LocalObjectReference](https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api#LocalObjectReference)_ | Secret containing the password of the role (if present).<br />If null, the password will be ignored unless DisablePassword is set.<br />When set, the secret must follow the `kubernetes.io/basic-auth` format<br />and contain both a `username` and a `password` field. |  |  |  |
 | `connectionLimit` _integer_ | If the role can log in, this specifies how many concurrent<br />connections the role can make. `-1` (the default) means no limit. |  | -1 |  |
 | `validUntil` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#time-v1-meta)_ | Date and time after which the role's password is no longer valid.<br />When omitted, the password will never expire (default). |  |  |  |
 | `inRoles` _string array_ | List of one or more existing roles to which this role will be<br />immediately added as a new member. Default empty. |  |  |  |
