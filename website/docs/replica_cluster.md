@@ -408,7 +408,7 @@ from the original source.
 
 :::warning
     Disabling replication is an **irreversible** operation. Once replication is
-    disabled and the designated replica cluster is promoted to primary, the replica cluster
+    disabled and the primary instance in the replica cluster is promoted to primary, the replica cluster
     and the source cluster become two independent clusters definitively.
 :::
 
