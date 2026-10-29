@@ -39,9 +39,11 @@ This website is built using [Docusaurus](https://docusaurus.io/), a modern stati
 
 ## Installation
 
-Enter the `website` folder, then run:
+All the commands below must be run from the `website` folder (that is where
+`package.json` lives, not the repository root):
 
 ```bash
+cd website
 npm install
 ```
 
