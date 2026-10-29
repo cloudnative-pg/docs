@@ -37,8 +37,8 @@ jobs:
           # Use the latest LTS version of Node.js already installed on the runner.
           node-version: latest
           check-latest: 'false'
-          cache: yarn
-          cache-dependency-path: website/yarn.lock
+          cache: npm
+          cache-dependency-path: website/package-lock.json
 
       - name: Setup Pages
         if: github.ref == 'refs/heads/main'
@@ -46,11 +46,11 @@ jobs:
 
       - name: Install dependencies
         working-directory: website
-        run: yarn install --frozen-lockfile --non-interactive
+        run: npm ci
 
       - name: Build website
         working-directory: website
-        run: yarn build
+        run: npm run build
 
       - name: Upload artifact
         if: github.ref == 'refs/heads/main'

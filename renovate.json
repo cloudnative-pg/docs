@@ -22,7 +22,7 @@
     {
       "matchFileNames": [
         "website/package.json",
-        "website/yarn.lock"
+        "website/package-lock.json"
       ],
       "groupName": "documentation dependencies"
     }
