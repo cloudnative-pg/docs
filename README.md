@@ -39,16 +39,18 @@ This website is built using [Docusaurus](https://docusaurus.io/), a modern stati
 
 ## Installation
 
-Enter the `website` folder, then run:
+All the commands below must be run from the `website` folder (that is where
+`package.json` lives, not the repository root):
 
 ```bash
-yarn
+cd website
+npm install
 ```
 
 ## Local Development
 
 ```bash
-yarn start
+npm run start
 ```
 
 This command starts a local development server and opens up a browser window.
@@ -57,7 +59,7 @@ Most changes are reflected live without having to restart the server.
 ## Build
 
 ```bash
-yarn build
+npm run build
 ```
 
 This command generates static content into the `build` directory and can be
@@ -66,12 +68,12 @@ served using any static contents hosting service.
 ## Testing Production Features
 
 Some features, like redirects, only work in production builds and are not
-available during local development (`yarn start`). To test these features
+available during local development (`npm run start`). To test these features
 locally:
 
 ```bash
-yarn build
-yarn serve
+npm run build
+npm run serve
 ```
 
 This builds the site and serves it locally, allowing you to test production-only
@@ -82,13 +84,13 @@ features.
 Using SSH:
 
 ```bash
-USE_SSH=true yarn deploy
+USE_SSH=true npm run deploy
 ```
 
 Not using SSH:
 
 ```bash
-GIT_USER=<Your GitHub username> yarn deploy
+GIT_USER=<Your GitHub username> npm run deploy
 ```
 
 If you are using GitHub pages for hosting, this command is a convenient way to

@@ -3,6 +3,6 @@ FROM node:lts-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2
 COPY website /website
 
 WORKDIR /website
-RUN yarn
+RUN npm ci
 
-CMD ["yarn", "start", "-h", "0.0.0.0"]
+CMD ["npm", "run", "start", "--", "-h", "0.0.0.0"]
