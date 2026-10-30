@@ -35,8 +35,7 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           # Use the latest LTS version of Node.js already installed on the runner.
-          node-version: latest
-          check-latest: 'false'
+          node-version: lts/*
           cache: npm
           cache-dependency-path: website/package-lock.json
 
