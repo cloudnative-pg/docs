@@ -89,9 +89,8 @@ Git tags for versions are prefixed with `v`.
 <!-- TODO: Complete dates and versions below -->
 | Version         | Currently supported  | Release date | End of life     | Supported Kubernetes versions | Tested, but not supported | Supported Postgres versions |
 |-----------------|----------------------|--------------|-----------------|-------------------------------|---------------------------|-----------------------------|
-| 1.30.x          | Yes                  | 29 Jun 2026  | ~  Dec 2026     | 1.34, 1.35, 1.36              | 1.37, 1.33, 1.32, 1.31    | 14 - 18                     |
-| 1.29.x          | Yes                  | 31 Mar 2026  | 29 Sep 2026     | 1.33, 1.34, 1.35              | 1.37, 1.36, 1.32, 1.31    | 14 - 18                     |
-| main            | No, development only |              |                 |                               |                           | 13 - 18                     |
+| 1.30.x          | Yes                  | 29 Jun 2026  | ~  Mar 2027     | 1.34, 1.35, 1.36              | 1.37, 1.33, 1.32, 1.31    | 15 - 18                     |
+| main            | No, development only |              |                 |                               |                           | 15 - 18                     |
 
 The list of supported Kubernetes versions in the table depends on what
 the CloudNativePG maintainers think is reasonable to support and to test.
@@ -115,7 +114,8 @@ See the PostgreSQL [Versioning Policy](https://www.postgresql.org/support/versio
 page for more information about supported versions.
 
 :::info
-    Starting from November 13, 2025, [Postgres 13 is no longer supported](https://www.postgresql.org/about/news/postgresql-181-177-1611-1515-1420-and-1323-released-3171/).
+    Starting from November 12, 2026, [Postgres 14 is no longer supported](https://www.postgresql.org/about/news/postgresql-187-1712-1616-1520-1425-and-19-rc-2-released-3442/).
+    Postgres 15 will stop receiving fixes on November 11, 2027.
 :::
 
 We also recommend that you regularly update your PostgreSQL operand images and
@@ -127,9 +127,18 @@ version of PostgreSQL, we might not be able to help you.
 
 | Version | Release date | End of life |
 |---------|--------------|-------------|
-| 1.31.0  | ~ Sep, 2026  | ~ Mar, 2027 |
-| 1.32.0  | ~ Dec, 2026  | ~ Jun, 2027 |
-| 1.33.0  | ~ Mar, 2027  | ~ Sep, 2027 |
+| 1.31.0  | ~ Dec, 2026  | ~ Jun, 2027 |
+| 1.32.0  | ~ Mar, 2027  | ~ Sep, 2027 |
+| 1.33.0  | ~ Jun, 2027  | ~ Dec, 2027 |
+
+:::warning
+    CloudNativePG 1.31 is the last minor release that ships with native Barman
+    Cloud support. It is removed starting from 1.32.0. Releases up to and
+    including 1.31, and their patch releases, keep native support for as long
+    as they are supported. Users must migrate to the
+    [Barman Cloud Plugin](https://cloudnative-pg.io/plugin-barman-cloud/docs/migration/)
+    before upgrading to 1.32 or later.
+:::
 
 :::note
     Feature freeze occurs 1-2 weeks before the release, at which point a
@@ -148,6 +157,7 @@ version of PostgreSQL, we might not be able to help you.
 
 | Version         | Release date      | End of life         | Supported Kubernetes versions  |
 |-----------------|-------------------|---------------------|--------------------------------|
+| 1.29.x          | March 31, 2026    | September 29, 2026  | 1.33, 1.34, 1.35               |
 | 1.28.x          | December, 9 2025  | June 30, 2026       | 1.32, 1.33, 1.34, 1.35         |
 | 1.27.x          | August, 12 2025   | March 9, 2026       | 1.31, 1.32, 1.33               |
 | 1.26.x          | May 23, 2025      | November 12, 2025   | 1.30, 1.31, 1.32, 1.33         |

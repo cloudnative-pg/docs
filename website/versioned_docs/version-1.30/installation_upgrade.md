@@ -14,12 +14,12 @@ title: Installation and upgrades
 The operator can be installed like any other resource in Kubernetes,
 through a YAML manifest applied via `kubectl`.
 
-You can install the [latest operator manifest](https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.30/releases/cnpg-1.30.1.yaml)
+You can install the [latest operator manifest](https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.30/releases/cnpg-1.30.2.yaml)
 for this minor release as follows:
 
 ```sh
 kubectl apply --server-side -f \
-  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.30/releases/cnpg-1.30.1.yaml
+  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.30/releases/cnpg-1.30.2.yaml
 ```
 
 You can verify that with:
@@ -387,9 +387,14 @@ requires no configuration; the lease timings can optionally be tuned via
 This feature requires the operator to manage `Lease` objects in the
 `coordination.k8s.io` API group. The bundled operator manifest and the Helm
 chart grant the required permissions automatically. If you manage the
-operator's RBAC yourself, you must add the `create`, `get`, `list`, `update`
-and `watch` verbs on `leases` in the `coordination.k8s.io` API group before
-upgrading, otherwise primaries will be unable to promote.
+operator's RBAC yourself, you must add the `create`, `delete`, `get`, `list`,
+`update` and `watch` verbs on `leases` in the `coordination.k8s.io` API group
+before upgrading, otherwise primaries will be unable to promote. The `delete`
+verb is needed when a `Cluster` is recreated over the resources left behind by
+a previous one, for example by a backup tool. The API server only lets the
+operator adopt the leftover `Lease` if it can delete it. When the `Cluster` is
+restored over orphan PVCs, the operator deletes the `Lease` along with the
+orphan Pods instead, and creates a new one.
 :::
 
 #### Operator-to-instance authentication (`GHSA-7qwx-x8ff-3px9`)
