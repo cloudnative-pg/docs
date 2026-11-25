@@ -1,0 +1,772 @@
+---
+id: installation_upgrade
+sidebar_position: 50
+title: Installation and upgrades
+---
+
+# Installation and upgrades
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+
+## Installation on Kubernetes
+
+### Directly using the operator manifest
+
+The operator can be installed like any other resource in Kubernetes,
+through a YAML manifest applied via `kubectl`.
+
+You can install the [latest operator manifest](https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/releases/cnpg-1.31.0-rc1.yaml)
+for this minor release as follows:
+
+```sh
+kubectl apply --server-side -f \
+  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/releases/cnpg-1.31.0-rc1.yaml
+```
+
+You can verify that with:
+
+```sh
+kubectl rollout status deployment \
+  -n cnpg-system cnpg-controller-manager
+```
+
+### Using the `cnpg` plugin for `kubectl`
+
+You can use the `cnpg` plugin to override the default configuration options
+that are in the static manifests.
+
+For example, to generate the default latest manifest but change the watch
+namespaces to only be a specific namespace, you could run:
+
+```shell
+kubectl cnpg install generate \
+  --watch-namespace "specific-namespace" \
+  > cnpg_for_specific_namespace.yaml
+```
+
+Please refer to ["`cnpg` plugin"](./kubectl-plugin.md#generation-of-installation-manifests) documentation
+for a more comprehensive example.
+
+:::warning
+    If you are deploying CloudNativePG on GKE and get an error (`... failed to
+    call webhook...`), be aware that by default traffic between worker nodes
+    and control plane is blocked by the firewall except for a few specific
+    ports, as explained in the official
+    [docs](https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules)
+    and by this
+    [issue](https://github.com/cloudnative-pg/cloudnative-pg/issues/1360).
+    You'll need to either change the `targetPort` in the webhook service, to be
+    one of the allowed ones, or open the webhooks' port (`9443`) on the
+    firewall.
+:::
+
+### Testing the latest development snapshot
+
+If you want to test or evaluate the latest development snapshot of
+CloudNativePG before the next official patch release, you can download the
+manifests from the
+[`cloudnative-pg/artifacts`](https://github.com/cloudnative-pg/artifacts)
+which provides easy access to the current trunk (main) as well as to each
+supported release.
+
+For example, you can install the latest snapshot of the operator with:
+
+```sh
+curl -sSfL \
+  https://raw.githubusercontent.com/cloudnative-pg/artifacts/main/manifests/operator-manifest.yaml | \
+  kubectl apply --server-side -f -
+```
+
+If you are instead looking for the latest snapshot of the operator for this
+specific minor release, you can just run:
+
+```sh
+curl -sSfL \
+  https://raw.githubusercontent.com/cloudnative-pg/artifacts/release-1.31/manifests/operator-manifest.yaml | \
+  kubectl apply --server-side -f -
+```
+
+:::info[Important]
+    Snapshots are not supported by the CloudNativePG Community, and are not
+    intended for use in production.
+:::
+
+### Using the Helm Chart
+
+The operator can be installed using the provided [Helm chart](https://github.com/cloudnative-pg/charts).
+
+### Using OLM
+
+CloudNativePG can also be installed via the [Operator Lifecycle Manager (OLM)](https://olm.operatorframework.io/docs/)
+directly from [OperatorHub.io](https://operatorhub.io/operator/cloudnative-pg).
+
+For deployments on Red Hat OpenShift, EDB offers and fully supports a certified
+version of CloudNativePG, available through the
+[Red Hat OpenShift Container Platform](https://catalog.redhat.com/software/container-stacks/detail/653fd4035eece8598f66d97b).
+
+## Details about the deployment
+
+In Kubernetes, the operator is by default installed in the `cnpg-system`
+namespace as a Kubernetes `Deployment`. The name of this deployment
+depends on the installation method.
+When installed through the manifest or the `cnpg` plugin, it is called
+`cnpg-controller-manager` by default. When installed via Helm, the default name
+is `cnpg-cloudnative-pg`.
+
+:::note
+    With Helm you can customize the name of the deployment via the
+    `fullnameOverride` field in the [*"values.yaml"* file](https://helm.sh/docs/chart_template_guide/values_files/).
+:::
+
+You can get more information using the `describe` command in `kubectl`:
+
+```sh
+$ kubectl get deployments -n cnpg-system
+NAME                READY   UP-TO-DATE   AVAILABLE   AGE
+<deployment-name>   1/1     1            1           18m
+```
+
+```sh
+kubectl describe deploy \
+  -n cnpg-system \
+  <deployment-name>
+```
+
+As with any Deployment, it sits on top of a ReplicaSet and supports rolling
+upgrades. The default configuration of the CloudNativePG operator
+comes with a Deployment of a single replica, which is suitable for most
+installations. In case the node where the pod is running is not reachable
+anymore, the pod will be rescheduled on another node.
+
+If you require high availability at the operator level, it is possible to
+specify multiple replicas in the Deployment configuration - given that the
+operator supports leader election. Also, you can take advantage of taints and
+tolerations to make sure that the operator does not run on the same nodes where
+the actual PostgreSQL clusters are running (this might even include the control
+plane for self-managed Kubernetes installations).
+
+:::note[Operator configuration]
+    You can change the default behavior of the operator by overriding
+    some default options. For more information, please refer to the
+    ["Operator configuration"](operator_conf.md) section.
+:::
+
+## Upgrades
+
+:::info[Important]
+    Please carefully read the [release notes](release_notes.md)
+    before performing an upgrade as some versions might require
+    extra steps.
+:::
+
+Upgrading CloudNativePG operator is a two-step process:
+
+1. upgrade the controller and the related Kubernetes resources
+2. upgrade the instance manager running in every PostgreSQL pod
+
+Unless differently stated in the release notes, the first step is normally done
+by applying the manifest of the newer version for plain Kubernetes
+installations, or using the native package manager of the used distribution
+(please follow the instructions in the above sections).
+
+
+The second step is automatically triggered after updating the controller. By
+default, this initiates a rolling update of every deployed PostgreSQL cluster,
+upgrading one instance at a time to use the new instance manager. The rolling
+update concludes with a switchover, which is governed by the
+`primaryUpdateStrategy` option. The default value, `unsupervised`, completes
+the switchover automatically. If set to `supervised`, the user must manually
+promote the new primary instance using the `cnpg` plugin for `kubectl`.
+
+:::note[Rolling updates]
+    This process is discussed in-depth on the [Rolling Updates](rolling_update.md) page.
+:::
+
+:::info[Important]
+    In case `primaryUpdateStrategy` is set to the default value of `unsupervised`,
+    an upgrade of the operator will trigger a switchover on your PostgreSQL cluster,
+    causing a (normally negligible) downtime. If your PostgreSQL Cluster has only one
+    instance, the instance will be automatically restarted as `supervised` value is
+    not supported for `primaryUpdateStrategy`. In either case, your applications will
+    have to reconnect to PostgreSQL.
+:::
+
+The default rolling update behavior can be replaced with in-place updates of
+the instance manager. This approach does not require a restart of the
+PostgreSQL instance, thereby avoiding a switchover within the cluster. This
+feature, which is disabled by default, is described in detail below.
+
+### Spread Upgrades
+
+By default, all PostgreSQL clusters are rolled out simultaneously, which may
+lead to a spike in resource usage, especially when managing multiple clusters.
+CloudNativePG provides two configuration options at the [operator level](operator_conf.md)
+that allow you to introduce delays between cluster roll-outs or even between
+instances within the same cluster, helping to distribute resource usage over
+time:
+
+- `CLUSTERS_ROLLOUT_DELAY`: Defines the number of seconds to wait between
+  roll-outs of different PostgreSQL clusters (default: `0`).
+- `INSTANCES_ROLLOUT_DELAY`: Defines the number of seconds to wait between
+  roll-outs of individual instances within the same PostgreSQL cluster (default:
+  `0`).
+
+### In-place updates of the instance manager
+
+By default, CloudNativePG issues a rolling update of the cluster
+every time the operator is updated. The new instance manager shipped with the
+operator is added to each PostgreSQL pod via an init container.
+
+However, this behavior can be changed via configuration to enable in-place
+updates of the instance manager, which is the PID 1 process that keeps the
+container alive.
+
+Internally, each instance manager in CloudNativePG supports the injection of a
+new executable that replaces the existing one after successfully completing an
+integrity verification phase and gracefully terminating all internal processes.
+Upon restarting with the new binary, the instance manager seamlessly adopts the
+already running *postmaster*.
+
+As a result, the PostgreSQL process is unaffected by the update, refraining
+from the need to perform a switchover. The other side of the coin, is that
+the Pod is changed after the start, breaking the pure concept of immutability.
+
+You can enable this feature by setting the `ENABLE_INSTANCE_MANAGER_INPLACE_UPDATES`
+environment variable to `'true'` in the
+[operator configuration](operator_conf.md#available-options).
+
+The in-place upgrade process will not change the init container image inside the
+Pods. Therefore, the Pod definition will not reflect the current version of the
+operator.
+
+### Compatibility among versions
+
+CloudNativePG follows semantic versioning. Every release of the
+operator within the same API version is compatible with the previous one.
+The current API version is v1, corresponding to versions 1.x.y of the operator.
+
+In addition to new features, new versions of the operator contain bug fixes and
+stability enhancements. Because of this, **we strongly encourage users to upgrade
+to the latest version of the operator**, as each version is released in order to
+maintain the most secure and stable Postgres environment.
+
+CloudNativePG currently releases new versions of the operator at
+least monthly. If you are unable to apply updates as each version becomes
+available, we recommend upgrading through each version in sequential order to
+come current periodically and not skipping versions.
+
+The [release notes](release_notes.md) page contains a detailed list of the
+changes introduced in every released version of CloudNativePG,
+and it must be read before upgrading to a newer version of the software.
+
+Most versions are directly upgradable and in that case, applying the newer
+manifest for plain Kubernetes installations or using the native package
+manager of the chosen distribution is enough.
+
+When versions are not directly upgradable, the old version needs to be
+removed before installing the new one. This won't affect user data but
+only the operator itself.
+
+
+### Upgrading to 1.31.0
+
+#### The `ServiceAccount` token is no longer mounted automatically
+
+Starting from version 1.31.0, CloudNativePG sets
+`automountServiceAccountToken: false` on the instance Pods, on the `Job` that
+runs a major version upgrade, and on the `ServiceAccount` it generates.
+Clusters therefore comply out of the box with admission policies that forbid
+the automatic mount of the token.
+
+The instance manager keeps accessing the Kubernetes API as before, through an
+explicit `kube-api-access` projected volume that the operator adds at the
+canonical path `/var/run/secrets/kubernetes.io/serviceaccount` of the
+containers that need it.
+A `ServiceAccount` that you provide through `serviceAccountName` is left
+untouched. Existing Pods don't have the new setting, so upgrading the operator
+triggers a one-time rolling update of every cluster, governed by the
+`primaryUpdateStrategy` option, as described in the
+["Upgrades"](#upgrades) section. You can plan it in a maintenance window.
+If you have policies, sidecars, or tooling that depend on the automatic mount
+in the instance Pods, review them before upgrading.
+
+#### Instances are bootstrapped by an init container
+
+Starting from version 1.31.0, a new primary or replica instance is bootstrapped
+(`initdb`, recovery, `pg_basebackup`, join, and restore from a volume snapshot)
+by an init container of the instance Pod, instead of by a separate Kubernetes
+`Job` that ran before the Pod. As a result, CloudNativePG no longer creates a
+`Job` and a Pod for each new instance, and the instance starts without waiting
+for the `Job` to complete.
+
+Existing instances are not affected. If you have monitoring, alerts, or
+automation that watches the `initdb`, `join`, `pgbasebackup`, `full-recovery`,
+or `snapshot-recovery` Jobs, update them to follow the init container of the
+instance Pod and the phase of the `Cluster` instead. A bootstrap that cannot
+complete is reported with the phase
+`Cluster is unrecoverable and needs manual intervention`, and a replica that
+resumes a stalled bootstrap reports the phase `Creating a new replica`, with
+an event.
+
+#### Online volume snapshot backups no longer include the WAL volume
+
+Starting from version 1.31.0, an online volume snapshot backup of a cluster with
+a dedicated WAL volume (`.spec.walStorage`) snapshots only `PGDATA` and the
+tablespaces. The WAL volume is left out, because recovering an online backup
+requires the WAL archive anyway. Cold backups still include the WAL volume, and
+the existing backups are not affected.
+
+The snapshot set of these clusters therefore changes after the upgrade: the
+`PG_WAL` element is missing from `.status.snapshotBackupStatus.elements` of a
+new online `Backup`. Restoring such a backup creates an empty WAL volume and
+fetches the WAL files from the archive, so make sure the recovery has a `source`
+that points to a working WAL archive. If you copy volume snapshots to another
+region or account, or script restores that expect a `PG_WAL` snapshot, review
+them. See
+["Online backups and the WAL volume"](appendixes/backup_volumesnapshot.md#online-backups-and-the-wal-volume)
+for details.
+
+#### The status port always uses TLS
+
+All instances have used TLS for the operator communication since version 1.24,
+so the HTTP fallback has been removed in 1.31.0. This only matters in the
+unlikely event that some Pods were created by an operator older than 1.24: if
+you notice a problem after upgrading, perform a manual rolling update of the
+affected Pods to recreate them with a TLS-enabled status port.
+
+#### Default of `.spec.smartShutdownTimeout` changed to 0
+
+Starting from version 1.31.0, the default value of `.spec.smartShutdownTimeout`
+is `0` seconds instead of `180`. In a cluster using the new default, when a
+PostgreSQL Pod is terminated or the primary is restarted in place, the instance
+manager no longer waits for clients to disconnect during a smart shutdown: it
+issues a `CHECKPOINT` and requests a fast shutdown right away.
+See ["Shutdown control"](instance_manager.md#shutdown-control) for details.
+
+Existing clusters are not affected, as the previous default is already stored
+in their `.spec`. The new default applies to new `Cluster` resources, and
+to resources created without the field. This includes clusters you recreate,
+for example from a GitOps repository or a backup tool, if their manifests don't
+set it explicitly. The new default also applies to an existing cluster when the
+whole resource is replaced, rather than patched, with a definition that doesn't
+set the field.
+
+If you want new clusters to keep the previous behavior, set the field
+explicitly in their manifests:
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cluster-example
+spec:
+  smartShutdownTimeout: 180
+  # <snip>
+```
+
+Make sure `.spec.stopDelay` is greater than `.spec.smartShutdownTimeout`,
+otherwise the smart shutdown is skipped.
+
+#### Deprecation of the legacy synchronous replication method
+
+The legacy synchronous replication method, configured through
+`.spec.minSyncReplicas` and `.spec.maxSyncReplicas`, is deprecated starting
+from version 1.31.0 and will be removed in version 1.33.0, together with the
+`.spec.postgresql.syncReplicaElectionConstraint` option.
+
+The operator returns an admission warning when you create or update a `Cluster`
+that uses any of these fields. Migrate those clusters to
+`.spec.postgresql.synchronous` before upgrading to 1.33.0, as explained in
+["Migrating from Deprecated Synchronous Replication Implementation"](replication.md#migrating-from-deprecated-synchronous-replication-implementation).
+
+#### New databases no longer allow `PUBLIC` to connect
+
+Starting from version 1.31.0, CloudNativePG revokes `CONNECT` from `PUBLIC` on
+the databases it creates, instead of letting every role connect to them, and
+grants it to the `cnpg_metrics_exporter` role so that monitoring keeps working.
+This is a change for the clusters and databases that you create after
+upgrading:
+
+- the `postgres`, `template1` and application databases of a new cluster
+  bootstrapped with `initdb`
+- every database created from a `Database` resource, including in a cluster
+  that already exists
+- the application database of a cluster bootstrapped with `recovery` or
+  `pg_basebackup`, when the source doesn't have it and CloudNativePG creates it
+
+Existing databases are not affected. This includes the databases of the clusters
+that you upgrade, and those of a cluster bootstrapped with `recovery` or
+`pg_basebackup`, which keep the privileges they had in the source.
+
+In a restricted database, only superusers, the owner (and the roles that inherit
+from it), and the roles that are granted `CONNECT` can connect. Any other role
+is refused with a `permission denied for database` error. This includes
+[managed roles](declarative_role_management.md) and the roles that your
+applications and tools use to reach the `postgres` database. For example, a
+[Pooler with a custom authentication method](connection_pooling.md#custom-authentication-method)
+needs `CONNECT` on `postgres` for the role that runs its `auth_query`.
+
+##### Granting access to the roles that need it
+
+Following the principle of least privilege, grant `CONNECT` only to the roles
+that need it, with the `permissions` field of a `Database` resource. See
+[Managing Database Permissions](declarative_database_management.md#managing-database-permissions)
+for details. For example, the following manifest grants `CONNECT` on the `app`
+database of a new cluster to the `reporting` role:
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: cluster-example-app
+spec:
+  name: app
+  owner: app
+  cluster:
+    name: cluster-example
+  permissions:
+    connect:
+      - name: reporting
+        type: grant
+```
+
+A `Database` resource without `permissions` leaves the privileges of an existing
+database as they are. To close a database that already exists, such as one
+created before the upgrade, also revoke `CONNECT` from `public`, and list the
+grants first. Include `cnpg_metrics_exporter`: existing databases are not
+granted `CONNECT` for it, so without that entry the `revoke` stops the metrics
+of the database. The privileges are applied when the `Database` resource is
+created or changed, not continuously:
+
+```yaml
+spec:
+  # <snip>
+  permissions:
+    connect:
+      - name: cnpg_metrics_exporter
+        type: grant
+      - name: reporting
+        type: grant
+      - name: public
+        type: revoke
+```
+
+The `postgres` and `template1` databases are reserved, so a `Database` resource
+can't manage them. Grant `CONNECT` to the roles that need it with a SQL command
+run as the superuser, once the roles exist.
+
+:::warning
+    If you revoke `CONNECT` from `PUBLIC` on the `postgres` database of an
+    existing cluster, grant it to the `streaming_replica` role first:
+
+    ```sql
+    GRANT CONNECT ON DATABASE postgres TO streaming_replica;
+    ```
+
+    `pg_rewind` connects to the `postgres` database as that role, and a demoted
+    primary can't rejoin the cluster without it. The replicas connect in the
+    same way to synchronize the replication slots from the primary.
+    CloudNativePG grants it when it creates the role, so new clusters already
+    have it, while existing ones don't.
+:::
+
+##### Restoring the previous behavior for new clusters
+
+Letting every role connect goes against the principle of least privilege, so we
+don't recommend it. If you need it, restore it for each database:
+
+- `postgres`: set `allowPublicConnectToPostgres` to `true` in the `initdb`
+  bootstrap of the cluster, so that the operator doesn't revoke `CONNECT` from
+  `PUBLIC`:
+
+  ```yaml
+  spec:
+    bootstrap:
+      initdb:
+        allowPublicConnectToPostgres: true
+    # <snip>
+  ```
+
+- the application database, and the databases created from a `Database`
+  resource: grant `CONNECT` to `public` in the `Database` resource, which you
+  create for the application database after the cluster:
+
+  ```yaml
+  spec:
+    # <snip>
+    permissions:
+      connect:
+        - name: public
+          type: grant
+  ```
+
+- `template1`: run `GRANT CONNECT ON DATABASE template1 TO PUBLIC;` as the
+  superuser.
+
+#### Meaning of `observed` in `cnpg_collector_sync_replicas` changed
+
+Starting from version 1.31.0, the `observed` value of the
+`cnpg_collector_sync_replicas` metric reports the number of standbys currently
+attached to the primary as synchronous, as shown by `sync_state` in the
+`pg_stat_replication` system view. Previously, it reported the number found in
+the `synchronous_standby_names` setting, which only tells what is requested.
+
+With quorum-based replication (`method: any`), every attached standby that is
+a candidate is reported as `quorum`, so `observed` can be higher than
+`expected`. If you alert or graph on this metric, compare `observed` with
+`expected` using `<`, not `!=`. For example, `observed` now drops to `0` when
+a cluster with `dataDurability: required` loses all its synchronous standbys,
+while commits are blocked, instead of staying at the configured number.
+
+The `min` and `max` values are deprecated and are removed in CloudNativePG
+1.33.0. Until then, they are derived from `.spec.postgresql.synchronous` when
+it is configured, instead of being `0`. Use `expected` and `observed` instead.
+See ["Synchronous replication metrics"](monitoring.md#synchronous-replication-metrics)
+for details and a recommended alert.
+
+### Upgrading to 1.30.0
+
+:::info[Important]
+    We strongly recommend that all CloudNativePG users upgrade to the latest
+    1.30 patch release.
+:::
+
+This release introduces changes worth reviewing before you upgrade: operator-side
+password encoding (`CVE-2026-55765`), `search_path` hardening
+(`CVE-2026-55769`), the `DatabaseRole` resource for declarative role management,
+safe primary election via a per-cluster Lease, and operator-to-instance
+authentication on the instance manager's status port (`GHSA-7qwx-x8ff-3px9`).
+Each is covered in its own subsection below.
+
+#### Operator-side password encoding (`CVE-2026-55765`)
+
+Starting from version 1.30.0, for security reasons
+(`CVE-2026-55765` / `GHSA-w3gf-xc94-wvmj`), CloudNativePG SCRAM-SHA-256 encodes
+role passwords **operator-side**
+(client-side from PostgreSQL's point of view) before issuing
+`CREATE`/`ALTER ROLE` statements. As a result, the literal that reaches
+the PostgreSQL parser (and that extensions such as `pg_stat_statements`
+or `pgaudit` may observe) is the same hash that ends up in
+`pg_authid.rolpassword`, never the cleartext secret. The encoding is
+applied to every basic-auth `Secret` the operator consumes: the
+`postgres` superuser secret, the application-user secret, and any
+managed-role password secret. Passwords already supplied in MD5 or
+SCRAM-SHA-256 shadow form are passed through unchanged.
+
+Since PostgreSQL [14](https://www.postgresql.org/docs/release/14.0/),
+`password_encryption` defaults to `scram-sha-256`, so we do not expect
+existing installations to be affected by this change.
+
+If your cluster has explicitly overridden `password_encryption` to a
+value other than `scram-sha-256` (for example, `md5`) and you want
+PostgreSQL (not the operator) to decide how the password is hashed,
+opt out by setting the annotation `cnpg.io/passwordPassthrough: "enabled"`
+on each basic-auth `Secret` the operator consumes. The operator will
+then forward the password value verbatim, and PostgreSQL will encode it
+according to its own `password_encryption` GUC.
+
+:::warning
+    The `cnpg.io/passwordPassthrough` annotation must be set on the
+    **basic-auth Secret** itself, not on the `Cluster` resource. Placing it
+    on the `Cluster` has no effect, and the operator will continue to apply
+    SCRAM-SHA-256 encoding to the password before sending it to PostgreSQL.
+:::
+
+:::warning
+    With `cnpg.io/passwordPassthrough: "enabled"` the operator forwards the
+    Secret's `password` value verbatim. If that value is cleartext, as is
+    common on `password_encryption = md5` clusters, extensions such as
+    `pg_stat_statements` or `pgaudit` will observe it.
+:::
+
+See ["Opting out of operator-side encoding"](declarative_role_management.md#opting-out-of-operator-side-encoding)
+for details.
+
+#### `search_path` hardening (`CVE-2026-55769`)
+
+Also starting from version 1.30.0, for security reasons
+(`CVE-2026-55769` / `GHSA-x8c2-3p4r-v9r6`), CloudNativePG pins the `search_path`
+to a fixed `pg_catalog, public,
+pg_temp` on every connection it opens to PostgreSQL, so that a
+tenant-controlled `ALTER DATABASE`/`ALTER ROLE` setting can no longer
+influence how operator-issued queries resolve unqualified object names.
+The `SECURITY DEFINER` lookup function used by the PgBouncer integration
+is recreated automatically with its own pinned `search_path` during the
+first reconciliation after the upgrade.
+See [Schema resolution and `search_path` hardening](security.md#schema-resolution-and-search_path-hardening)
+for the rationale.
+
+This change also affects custom monitoring queries, which now run inside
+a transaction whose `search_path` is pinned to `pg_catalog, public,
+pg_temp`. If any of your custom metrics reference objects that live in
+other user-defined schemas through an unqualified name, schema-qualify
+them (for example `myschema.mytable`) so they keep resolving after the
+upgrade. User-authored bootstrap (`postInit*`) and logical-import
+post-import SQL are unaffected: they continue to run with the standard
+`"$user", public` resolution.
+
+#### Declarative role management with the `DatabaseRole` resource
+
+Starting from version 1.30.0, you can also manage a PostgreSQL role as a
+standalone [`DatabaseRole`](declarative_role_management.md) resource instead
+of declaring it inline in the Cluster's `.spec.managed.roles` stanza. This is
+an opt-in enhancement and requires no action on upgrade: existing inline roles
+keep working unchanged, and the inline `managed.roles` method remains fully
+supported.
+
+To move an existing inline role under a `DatabaseRole` without disruption,
+create the `DatabaseRole` first and only then remove the matching entry from
+`.spec.managed.roles`. While both exist the Cluster spec always takes
+precedence, so management is handed over only once the inline entry is gone.
+See [Migrating from inline managed roles](declarative_role_management.md#migrating-from-inline-managed-roles-to-a-databaserole)
+for the full procedure.
+
+A `DatabaseRole` does not support `ensure: absent`: where the inline
+`managed.roles` stanza drops a role by setting `ensure: absent`, a
+`DatabaseRole` instead relies on the `databaseRoleReclaimPolicy` field. Delete
+the resource with `databaseRoleReclaimPolicy: delete` to drop the role from
+PostgreSQL, or keep the default `retain` to leave the role in place.
+
+#### Safe primary election
+
+Starting from version 1.30.0, CloudNativePG coordinates primary promotion
+through a per-cluster Kubernetes `Lease`, ensuring that at most one instance
+promotes itself at any given time. The behavior is enabled automatically and
+requires no configuration; the lease timings can optionally be tuned via
+`.spec.primaryLease` (see ["Safe primary election"](failover.md#safe-primary-election)).
+
+:::warning
+This feature requires the operator to manage `Lease` objects in the
+`coordination.k8s.io` API group. The bundled operator manifest and the Helm
+chart grant the required permissions automatically. If you manage the
+operator's RBAC yourself, you must add the `create`, `delete`, `get`, `list`,
+`update` and `watch` verbs on `leases` in the `coordination.k8s.io` API group
+before upgrading, otherwise primaries will be unable to promote. The `delete`
+verb is needed when a `Cluster` is recreated over the resources left behind by
+a previous one, for example by a backup tool. The API server only lets the
+operator adopt the leftover `Lease` if it can delete it. When the `Cluster` is
+restored over orphan PVCs, the operator deletes the `Lease` along with the
+orphan Pods instead, and creates a new one.
+:::
+
+#### Operator-to-instance authentication (`GHSA-7qwx-x8ff-3px9`)
+
+Starting from version 1.30.0, the operator authenticates its calls to the
+sensitive endpoints of the instance manager's status port (backup,
+`pg_controldata`, partial WAL archive, and instance-manager upgrade) by pinning
+an in-memory client certificate. This is enabled automatically and requires no
+configuration. Status, health, and probe endpoints remain unauthenticated.
+This protection has a hard requirement: the status port **must** be served
+over TLS, which has been the default since v1.24. This hardening is not
+backported; on releases earlier than 1.30.0, continue to restrict the status
+port (TCP 8000) with a `NetworkPolicy`, which remains its security boundary
+there. See
+[Operator-to-instance authentication](security.md#operator-to-instance-authentication)
+for details.
+
+## Verifying release assets
+
+CloudNativePG cryptographically signs all official release assets. Verifying these
+signatures ensures the assets originate from the official repository and were
+published through our automated release workflow.
+
+:::info
+Refer to the ["Release integrity and supply chain" section](security.md#release-integrity-and-supply-chain)
+for more information.
+:::
+
+### Prerequisites
+
+- **Signature verification:** [cosign](https://github.com/sigstore/cosign) CLI
+- **SBOM and Provenance:** [Docker Buildx](https://docs.docker.com/build/install-buildx/)
+  (included in Docker Desktop and modern Docker versions)
+
+### Verifying the Operator YAML Deployment
+
+When installing via a direct YAML manifest, you should verify the manifest file
+using the corresponding bundle (the `.sigstore.json` file) provided on the
+[GitHub Release page](https://github.com/cloudnative-pg/cloudnative-pg/releases).
+
+Run the following command:
+
+```bash
+cosign verify-blob \
+  cnpg-{version}.yaml \
+  --bundle cnpg-{version}.sigstore.json \
+  --certificate-identity-regexp "^https://github.com/cloudnative-pg/cloudnative-pg/.github/workflows/release-publish.yml@refs/tags/v" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+```
+
+#### Verifying SLSA provenance
+
+To verify a release binary, download both the artifact and the provenance file
+(`multiple.intoto.jsonl`) from the
+[GitHub release](https://github.com/cloudnative-pg/cloudnative-pg/releases),
+then run:
+
+```shell
+slsa-verifier verify-artifact <ARTIFACT> \
+  --provenance-path multiple.intoto.jsonl \
+  --source-uri github.com/cloudnative-pg/cloudnative-pg
+```
+
+### Verifying the operator container images
+
+Run the following command to verify the signature of the CloudNativePG operator
+images:
+
+```bash
+cosign verify ghcr.io/cloudnative-pg/cloudnative-pg:{tag} \
+  --certificate-identity-regexp="^https://github.com/cloudnative-pg/cloudnative-pg/.github/workflows/release-publish.yml@refs/tags/v" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com"
+```
+
+We provide OCI attestations for full transparency. To inspect the Software Bill
+of Materials (SBOM) or build provenance, use the `docker buildx imagetools`
+command:
+
+To view the Software Bill of Materials (SBOM) in SPDX format:
+
+```bash
+docker buildx imagetools inspect ghcr.io/cloudnative-pg/cloudnative-pg:{tag} \
+  --format '{{ json (index .SBOM "linux/amd64").SPDX }}'
+```
+
+To inspect the SLSA Provenance (build details):
+
+```bash
+docker buildx imagetools inspect ghcr.io/cloudnative-pg/cloudnative-pg:{tag} \
+  --format '{{ json (index .Provenance "linux/amd64").SLSA }}'
+```
+
+:::info
+Refer to ["Verifying SLSA provenance"](security.md#verifying-slsa-provenance)
+for SLSA Build Level 3 compliance verification.
+:::
+
+### Verifying PostgreSQL operand images
+
+CloudNativePG maintains container images for all supported PostgreSQL versions
+as part of the [`postgres-containers` project](https://github.com/cloudnative-pg/postgres-containers)
+(also called operand images).
+
+To verify the signature of a specific operand image:
+
+```bash
+cosign verify ghcr.io/cloudnative-pg/postgresql:{tag} \
+  --certificate-identity-regexp="^https://github.com/cloudnative-pg/postgres-containers/" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com"
+```
+
+To view the Software Bill of Materials (SBOM) in SPDX format:
+
+```bash
+docker buildx imagetools inspect ghcr.io/cloudnative-pg/postgresql:{tag} \
+  --format '{{ json (index .SBOM "linux/amd64").SPDX }}'
+```
+
+To inspect the SLSA Provenance (Build details):
+
+```bash
+docker buildx imagetools inspect ghcr.io/cloudnative-pg/postgresql:{tag} \
+  --format '{{ json (index .Provenance "linux/amd64").SLSA }}'
+```

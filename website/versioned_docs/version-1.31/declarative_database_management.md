@@ -1,0 +1,694 @@
+---
+id: declarative_database_management
+sidebar_position: 240
+title: PostgreSQL Database management
+---
+
+# PostgreSQL Database management
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+
+CloudNativePG simplifies PostgreSQL database provisioning by automatically
+creating an application database named `app` by default. This default behavior
+is explained in the ["Bootstrap an Empty Cluster"](bootstrap.md#bootstrap-an-empty-cluster-initdb)
+section.
+
+For more advanced use cases, CloudNativePG introduces **declarative database
+management**, which empowers users to define and control the lifecycle of
+PostgreSQL databases using the `Database` Custom Resource Definition (CRD).
+This method seamlessly integrates with Kubernetes, providing a scalable,
+automated, and consistent approach to managing PostgreSQL databases.
+
+---
+
+## Key Concepts
+
+### Scope of Management
+
+:::info[Important]
+    CloudNativePG manages **global objects** in PostgreSQL clusters, including
+    databases, roles, and tablespaces. However, it does **not** manage database content
+    beyond extensions and schemas (e.g., tables). To manage database content, use specialized
+    tools or rely on the applications themselves.
+:::
+
+### Connection and Privileges
+
+Every SQL statement described on this page is issued by the instance manager
+running on the primary, as the `postgres` superuser: database-level commands
+over a connection to the `postgres` database, and everything scoped inside a
+database over a connection to that database. Two consequences are worth keeping
+in mind:
+
+- A schema or a foreign data wrapper declared without an `owner` belongs to
+  `postgres`, and the database owner holds no privileges on it until they are
+  declared.
+- Grants and revokes never fail for lack of `GRANT OPTION`, because a superuser
+  acts as the object owner. A privilege you declare is applied even where the
+  database owner could not have granted it itself.
+
+### Declarative `Database` Manifest
+
+The following example demonstrates how a `Database` resource interacts with a
+`Cluster`:
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: cluster-example-one
+spec:
+  name: one
+  owner: app
+  cluster:
+    name: cluster-example
+  extensions:
+    - name: bloom
+      ensure: present
+```
+
+When applied, this manifest creates a `Database` object called
+`cluster-example-one` requesting a database named `one`, owned by the `app`
+role, in the `cluster-example` PostgreSQL cluster.
+
+:::info
+    Please refer to the [API reference](cloudnative-pg.v1.md#databasespec)
+    the full list of attributes you can define for each `Database` object.
+:::
+
+### Required Fields in the `Database` Manifest
+
+- `metadata.name`: Unique name of the Kubernetes object within its namespace.
+- `spec.name`: Name of the database as it will appear in PostgreSQL.
+- `spec.owner`: PostgreSQL role that owns the database. The role must
+  already exist in the cluster, since CloudNativePG does not create it as
+  part of managing the database. See [PostgreSQL Role management](declarative_role_management.md) for how to declare one.
+- `spec.cluster.name`: Name of the target PostgreSQL cluster.
+
+The `Database` object must reference a specific `Cluster`, determining where
+the database will be created. It is managed by the cluster's primary instance,
+ensuring the database is created or updated as needed.
+
+:::warning
+    The `spec.cluster` field is immutable after creation. To target a
+    different `Cluster`, create a new `Database` resource instead of updating
+    an existing one.
+:::
+
+:::info
+    The distinction between `metadata.name` and `spec.name` allows multiple
+    `Database` resources to reference databases with the same name across different
+    CloudNativePG clusters in the same Kubernetes namespace.
+:::
+
+## Reserved Database Names
+
+PostgreSQL automatically creates databases such as `postgres`, `template0`, and
+`template1`. These names are reserved and cannot be used for new `Database`
+objects in CloudNativePG.
+
+:::info[Important]
+    Creating a `Database` with `spec.name` set to `postgres`, `template0`, or
+    `template1` is not allowed.
+:::
+
+## Reconciliation and Status
+
+Once a `Database` object is reconciled successfully:
+
+- `status.applied` will be set to `true`.
+- `status.observedGeneration` will match the `metadata.generation` of the last
+  applied configuration.
+
+Example of a reconciled `Database` object:
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  generation: 1
+  name: cluster-example-one
+spec:
+  cluster:
+    name: cluster-example
+  name: one
+  owner: app
+status:
+  observedGeneration: 1
+  applied: true
+```
+
+If an error occurs during reconciliation, `status.applied` will be `false`, and
+an error message will be included in the `status.message` field.
+
+## Deleting a Database
+
+CloudNativePG supports two methods for database deletion:
+
+1. Using the `delete` reclaim policy
+2. Declaratively setting the database's `ensure` field to `absent`
+
+### Deleting via `delete` Reclaim Policy
+
+The `databaseReclaimPolicy` field determines the behavior when a `Database`
+object is deleted:
+
+- `retain` (default): The database remains in PostgreSQL for manual management.
+- `delete`: The database is automatically removed from PostgreSQL.
+
+Example:
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: cluster-example-two
+spec:
+  databaseReclaimPolicy: delete
+  name: two
+  owner: app
+  cluster:
+    name: cluster-example
+```
+
+Deleting this `Database` object will automatically remove the `two` database
+from the `cluster-example` cluster.
+
+On a replica cluster the database is read-only, so deleting a `Database` object
+releases its finalizer and removes the Kubernetes object without dropping the
+PostgreSQL database, even with `databaseReclaimPolicy: delete`. Dropping the
+database is left to the primary cluster, which owns it.
+
+### Declaratively Setting `ensure: absent`
+
+To remove a database, set the `ensure` field to `absent` like in the following
+example:.
+
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: cluster-example-database-to-drop
+spec:
+  cluster:
+    name: cluster-example
+  name: database-to-drop
+  owner: app
+  ensure: absent
+```
+
+This manifest ensures that the `database-to-drop` database is removed from the
+`cluster-example` cluster.
+
+## Managing Database Permissions
+
+CloudNativePG can grant and revoke the privileges that PostgreSQL defines on
+the database itself: `CONNECT`, `CREATE` and `TEMPORARY`.
+
+The most common use is hardening. PostgreSQL grants `CONNECT` and `TEMPORARY`
+on every new database to `PUBLIC`. CloudNativePG already revokes `CONNECT` from
+`PUBLIC` on the databases it creates, as described below. Use `spec.permissions`
+to change that default, to manage the other privileges, or to manage a database
+that already exists.
+
+:::info[Default for new databases]
+    On a new cluster bootstrapped with `initdb`, CloudNativePG revokes
+    `CONNECT` from `PUBLIC` on the `postgres` and `template1` databases and on
+    the application database. It does the same on every database it creates
+    from a `Database` resource. In all these cases, it grants `CONNECT` to the
+    `cnpg_metrics_exporter` role, so that monitoring keeps working. Other roles
+    can connect only if they are superusers, own the database (or inherit from
+    its owner), or are granted `CONNECT`, for example with `spec.permissions`.
+
+    The default is applied only when the database is created. A database that
+    already exists is never changed. This includes upgrading the operator, and
+    bootstrapping a cluster with `recovery` or `pg_basebackup`, as the databases
+    keep the privileges they had in the source. If the source doesn't have the
+    application database, CloudNativePG creates it after the bootstrap and
+    applies the default to it.
+
+    The entries of `spec.permissions` are reconciled after the default, so they
+    can override it. For example, a `grant` of `CONNECT` to `public` restores
+    the PostgreSQL behavior on a new database, while a `revoke` from `public`
+    is already satisfied. Do not revoke `CONNECT` from `cnpg_metrics_exporter`
+    on the application database, otherwise the default metrics stop: see the
+    last warning of this section.
+:::
+
+To enable this feature, define the `spec.permissions` field, as shown in the
+following example:
+
+```yaml
+# ...
+spec:
+  permissions:
+    connect:
+      - name: app
+        type: grant
+      # the metrics exporter needs it, see the warning below
+      - name: cnpg_metrics_exporter
+        type: grant
+      - name: public
+        type: revoke
+    create:
+      - name: app
+        type: grant
+    temporary:
+      - name: public
+        type: revoke
+# ...
+```
+
+The `permissions` stanza supports the following lists, one for each privilege:
+
+- `connect`: `CONNECT` privilege specifications.
+- `create`: `CREATE` privilege specifications.
+- `temporary`: `TEMPORARY` privilege specifications.
+- `all`: a shortcut for `connect`, `create` and `temporary` together.
+
+Every item of these lists accepts the following fields:
+
+- `name` *(required, string)*: The target role name. Using `public` targets the
+  PostgreSQL `PUBLIC` pseudo-role (which applies to all existing and future
+  roles). PostgreSQL reserves `public`, so no role can have this name.
+  CloudNativePG matches it in any letter case, as it does for schemas and
+  foreign data wrappers, so a role named `Public` or `PUBLIC` cannot be
+  targeted: an entry with that name applies to every role.
+- `type` *(string)*: The action to take on the privilege. Accepts `grant` or
+  `revoke` (default: `grant`).
+
+The `all` list is only a shortcut. It is expanded into `connect`, `create` and
+`temporary` before the database is reconciled, and the status reports the
+expanded entries.
+
+A role can appear only once for each privilege, once `all` has been expanded.
+Repeating a role, whether with the same or a different `type`, is rejected when
+the resource is created or updated.
+
+For each privilege and role, CloudNativePG reads the privileges currently held
+on the database and runs a `GRANT` or `REVOKE` only when it is needed. The
+outcome of every entry is reported in `status.permissions`:
+
+```yaml
+status:
+  applied: false
+  permissions:
+    - privilege: CONNECT
+      name: public
+      type: revoke
+      applied: true
+    - privilege: CONNECT
+      name: reporting
+      type: grant
+      applied: false
+      message: role does not exist
+```
+
+The entries are applied in the order they are listed, grouped by privilege.
+Within each privilege, the entries of the `all` list are applied after the
+entries of the list of that privilege, wherever `all` appears in the manifest.
+They are independent: if a role does not exist, which is reported for both
+`grant` and `revoke`, the other entries are still applied. The `Database` is
+retried until all of them succeed.
+
+When you revoke a privilege from `public` and grant it to specific roles, list
+the `grant` entries first. This way, the roles receive the privilege before
+`public` loses it. If a grant fails, the revoke is still applied and the
+failed grant is retried.
+
+:::info
+    CloudNativePG manages database permissions using the
+    [`GRANT`](https://www.postgresql.org/docs/current/sql-grant.html) and
+    [`REVOKE`](https://www.postgresql.org/docs/current/sql-revoke.html)
+    PostgreSQL commands. `WITH GRANT OPTION` and `GRANTED BY` are not supported.
+    A `revoke` is run without `CASCADE`: it fails, and is retried, while the
+    role has granted the privilege to other roles.
+:::
+
+:::warning
+    A `revoke` removes only the privilege that was granted to the named role
+    itself, and only if the owner of the database granted it. It has no effect
+    on privileges the role holds through `PUBLIC`, through the membership of
+    another role, or through a grant made by another role holding `WITH GRANT
+    OPTION`. For example, revoking `CONNECT` from `app` does not prevent `app`
+    from connecting while `PUBLIC` still has it: revoke it from `public` too.
+
+    Privileges are applied when the `Database` spec changes, not continuously,
+    so one changed directly in PostgreSQL is not brought back to the declared
+    state until the spec is modified, or until a failed reconciliation is
+    retried. Removing an entry from the spec revokes nothing: to remove a
+    privilege, set the `type` field to `revoke`.
+
+    Revoking `CONNECT` from the application role while `public` does not have it,
+    or from `public` when the application role has no other way to connect,
+    refuses the new connections of the application.
+
+    The instance manager is not affected, as it connects as the superuser. The
+    metrics exporter is, as it connects as the `cnpg_metrics_exporter` role. It
+    queries the application database of the cluster by default, so if that
+    database loses `CONNECT`, all the [default metrics](monitoring.md#default-set-of-metrics) and the
+    user-defined ones without `target_databases` stop. For any other database,
+    only the user-defined metrics that target it fail or are skipped. Grant
+    `CONNECT` to `cnpg_metrics_exporter` too, for example with an entry in the
+    `connect` list.
+:::
+
+## Managing Extensions in a Database
+
+:::info
+    While extensions are database-scoped rather than global objects,
+    CloudNativePG provides a declarative interface for managing them. This approach
+    is necessary because installing certain extensions may require superuser
+    privileges, which CloudNativePG recommends disabling by default. By leveraging
+    this API, users can efficiently manage extensions in a scalable and controlled
+    manner without requiring elevated privileges.
+:::
+
+CloudNativePG simplifies and automates the management of PostgreSQL extensions within the
+target database.
+
+To enable this feature, define the `spec.extensions` field
+with a list of extension specifications, as shown in the following example:
+
+```yaml
+# ...
+spec:
+  extensions:
+    - name: bloom
+      ensure: present
+# ...
+```
+
+Each extension entry supports the following properties:
+
+- `name` *(mandatory)*: The name of the extension.
+- `ensure`: Specifies whether the extension should be present or absent in the
+  database:
+    - `present`: Ensures that the extension is installed (default).
+    - `absent`: Ensures that the extension is removed.
+- `version`: The specific version of the extension to install or
+  upgrade to.
+- `schema`: The schema in which the extension should be installed.
+
+:::info
+    CloudNativePG manages extensions using the following PostgreSQL’s SQL commands:
+    [`CREATE EXTENSION`](https://www.postgresql.org/docs/current/sql-createextension.html),
+    [`DROP EXTENSION`](https://www.postgresql.org/docs/current/sql-dropextension.html),
+    [`ALTER EXTENSION`](https://www.postgresql.org/docs/current/sql-alterextension.html)
+    (limited to `UPDATE TO` and `SET SCHEMA`).
+:::
+
+The operator reconciles only the extensions explicitly listed in
+`spec.extensions`. Any existing extensions not specified in this list remain
+unchanged.
+
+:::warning
+    Before the introduction of declarative extension management, CloudNativePG
+    did not offer a straightforward way to create extensions through configuration.
+    To address this, the ["managed extensions"](postgresql_conf.md#managed-extensions)
+    feature was introduced, enabling the automated and transparent management
+    of key extensions like `pg_stat_statements`. Currently, it is your
+    responsibility to ensure there are no conflicts between extension support in
+    the `Database` CRD and the managed extensions feature.
+:::
+
+## Managing Schemas in a Database
+
+:::info
+    Schema management in PostgreSQL is an exception to CloudNativePG's primary
+    focus on managing global objects. Since schemas exist within a database, they
+    are typically managed as part of the application development process. However,
+    CloudNativePG provides a declarative interface for schema management, primarily
+    to complete the support of extensions deployment within schemas.
+:::
+
+CloudNativePG simplifies and automates the management of PostgreSQL schemas within the
+target database.
+
+To enable this feature, define the `spec.schemas` field
+with a list of schema specifications, as shown in the following example:
+
+```yaml
+# ...
+spec:
+  schemas:
+    - name: app
+      owner: app
+      permissions:
+        usage:
+          - name: public
+            type: revoke
+# ...
+```
+
+Each schema entry supports the following properties:
+
+- `name` *(mandatory)*: The name of the schema.
+- `owner`: The owner of the schema. If left empty, the schema is owned by
+  `postgres`, the role CloudNativePG uses to connect to the database.
+- `ensure`: Defines whether the schema should exist in the database:
+    - `present`: Ensures that the schema is created (default).
+    - `absent`: Ensures that the schema is dropped.
+- `permissions`: Manages `USAGE` and `CREATE` privileges on the schema:
+    - `usage`: A list of `USAGE` privilege specifications.
+    - `create`: A list of `CREATE` privilege specifications.
+
+Both `usage` and `create` items accept the following fields:
+
+- `name` *(required, string)*: The target role name. Using `public` targets the
+  PostgreSQL `PUBLIC` pseudo-role (which applies to all existing and future
+  roles).
+- `type` *(string)*: The action to take on the privilege. Accepts `grant` or
+  `revoke` (default: `grant`).
+
+:::info
+    CloudNativePG manages schemas using the following PostgreSQL’s SQL commands:
+    [`CREATE SCHEMA`](https://www.postgresql.org/docs/current/sql-createschema.html),
+    [`DROP SCHEMA`](https://www.postgresql.org/docs/current/sql-dropschema.html),
+    [`ALTER SCHEMA`](https://www.postgresql.org/docs/current/sql-alterschema.html),
+    [`GRANT`](https://www.postgresql.org/docs/current/sql-grant.html),
+    [`REVOKE`](https://www.postgresql.org/docs/current/sql-revoke.html).
+:::
+
+:::warning
+    Privileges are applied when the `Database` spec changes, not continuously.
+    CloudNativePG never reads back the privileges currently held in PostgreSQL,
+    so one granted or revoked directly in the database is not brought back to
+    the declared state until the spec is modified. Removing an entry from
+    `usage` or `create` likewise revokes nothing: to remove a privilege, set its
+    `type` field to `revoke`. For example, deleting the entry that grants
+    `USAGE` to `app-rw` leaves that privilege in place, while changing it to
+    `type: revoke` removes it. Keep the `revoke` entry in the spec for as long
+    as you want the privilege to stay removed.
+:::
+
+:::note
+    `USAGE` on a schema only allows a role to look up objects in it. To read or
+    modify a table, the role also needs privileges on the table itself, such as
+    `SELECT` or `INSERT`. These are not managed by the `Database` resource, nor
+    are default privileges for objects created in the future, so grant them
+    separately with SQL, for example in the application's migrations. Likewise,
+    `CREATE` on a schema only lets a role create objects in it.
+:::
+
+## Managing Foreign Data Wrappers (FDWs) in a Database
+
+:::info
+    Foreign Data Wrappers (FDWs) are database-scoped objects that typically
+    require superuser privileges to create or modify. CloudNativePG provides a
+    declarative API for managing FDWs, enabling users to define and maintain them
+    in a controlled, Kubernetes-native way without directly executing SQL commands
+    or escalating privileges.
+:::
+
+CloudNativePG enables seamless and automated management of PostgreSQL foreign
+data wrappers in the target database using declarative configuration.
+
+To enable this feature, define the `spec.fdws` field with a list of FDW
+specifications, as shown in the following example:
+
+```yaml
+# ...
+spec:
+  fdws:
+    - name: postgres_fdw
+      usage:
+        - name: app
+          type: grant
+# ...
+```
+
+Each FDW entry supports the following properties:
+
+- `name`: The name of the foreign data wrapper **(mandatory)**.
+- `ensure`: Indicates whether the FDW should be `present` or `absent` in the
+  database (default is `present`).
+- `handler`: The name of the handler function used by the FDW. If not
+  specified, the default handler defined by the FDW extension (if any) will be
+  used.
+- `validator`: The name of the validator function used by the FDW. If not
+  specified, the default validator defined by the FDW extension (if any) will
+  be used.
+- `owner`: The owner of the FDW **(must be a superuser)**.
+- `usage`: The list of `USAGE` permissions of the FDW, with the following fields:
+    - `name` : The name of the role to which the usage permission should be
+      granted or from which it should be revoked **(mandatory)**.
+    - `type` : The type of the usage permission. Supports `grant` and `revoke`.
+- `options`: A map of FDW-specific options to manage, where each key is the
+  name of an option. Each option supports the following fields:
+    - `value`: The string value of the option.
+    - `ensure`: Indicates whether the option should be `present` or `absent`.
+
+:::info
+    Both `handler` and `validator` are optional, and if not specified, the
+    default handler and validator defined by the FDW extension (if any) will be
+    used. Setting `handler` or `validator` to `"-"` will remove the handler or
+    validator from the FDW respectively. This follows the PostgreSQL convention,
+    where "-" denotes the absence of a handler or validator.
+:::
+
+:::warning
+    PostgreSQL restricts ownership of foreign data wrappers to **roles with
+    superuser privileges only**. Attempting to assign ownership to a non-superuser
+    (e.g., an app role) will be ignored or rejected, as PostgreSQL does not allow
+    non-superuser ownership of foreign data wrappers. By default, they are
+    owned by the `postgres` user.
+:::
+
+The operator reconciles only the FDWs explicitly listed in `spec.fdws`. Any
+existing FDWs not declared in this list are left untouched.
+
+:::info
+     CloudNativePG manages FDWs using PostgreSQL's native SQL commands:
+     [`CREATE FOREIGN DATA WRAPPER`](https://www.postgresql.org/docs/current/sql-createforeigndatawrapper.html),
+     [`ALTER FOREIGN DATA WRAPPER`](https://www.postgresql.org/docs/current/sql-alterforeigndatawrapper.html),
+     and [`DROP FOREIGN DATA WRAPPER`](https://www.postgresql.org/docs/current/sql-dropforeigndatawrapper.html).
+     The `ALTER` command supports option updates.
+:::
+
+### Managing Foreign Servers in a Database
+
+CloudNativePG provides seamless, automated management of PostgreSQL foreign
+servers in a target database using declarative configuration.
+
+A **foreign server** encapsulates the connection details that a foreign data
+wrapper (FDW) uses to access an external data source. For user-specific
+connection details, you can define [user mappings](https://www.postgresql.org/docs/current/sql-createusermapping.html).
+
+:::info[Important]
+    CloudNativePG does not currently support declarative configuration of user mappings.
+    However, once an FDW and its foreign server are defined, you can grant
+    usage privileges to a standard database role. This allows you to manage user
+    mappings as part of your SQL schema, without requiring superuser privileges.
+:::
+
+To enable this feature, declare the `spec.servers` field in a `Database`
+resource with a list of foreign server specifications, for example:
+
+```yaml
+# ...
+spec:
+  servers:
+    - name: angus
+      fdw: postgres_fdw
+      ensure: present
+      usage:
+        - name: app
+          type: grant
+      options:
+        - name: host
+          value: angus-rw
+        - name: dbname
+          value: app
+# ...
+```
+
+Each foreign server entry supports the following properties:
+
+- `name`: The name of the foreign server **(mandatory)**.
+- `fdw`: The name of the foreign data wrapper the server belongs to
+  **(mandatory)**.
+- `ensure`: Whether the foreign server should be `present` or `absent` in the
+  database (default: `present`).
+- `usage`: The list of `USAGE` permissions of the foreign server, with the
+  following fields:
+    - `name` : The name of the role to which the usage permission should be
+      granted or from which it should be revoked **(mandatory)**.
+    - `type` : The type of the usage permission. Supports `grant` and `revoke`.
+- `options`: A list of FDW-specific option specifications.
+  Each entry in the list supports the following keys:
+    - `name`: The name of the option **(mandatory)**.
+    - `value`: The string value of the option.
+    - `ensure`: Indicates whether the option should be `present` or `absent`.
+
+:::info[Important]
+    The `fdw` field must reference an existing foreign data wrapper already defined in the database.
+    If the specified FDW does not exist, the foreign server will not be created.
+:::
+
+CloudNativePG manages foreign servers using PostgreSQL’s native SQL commands:
+[`CREATE SERVER`](https://www.postgresql.org/docs/current/sql-createserver.html),
+[`ALTER SERVER`](https://www.postgresql.org/docs/current/sql-alterserver.html), and
+[`DROP SERVER`](https://www.postgresql.org/docs/current/sql-dropserver.html).
+The `ALTER SERVER` command is used to update server options.
+
+The operator reconciles **only** the foreign servers explicitly listed in
+`spec.servers`. Any existing servers not included in this list are left
+unchanged.
+
+## Limitations and Caveats
+
+### Renaming a database
+
+While CloudNativePG adheres to PostgreSQL’s
+[CREATE DATABASE](https://www.postgresql.org/docs/current/sql-createdatabase.html) and
+[ALTER DATABASE](https://www.postgresql.org/docs/current/sql-alterdatabase.html)
+commands, **renaming databases is not supported**.
+Attempting to modify `spec.name` in an existing `Database` object will result
+in rejection by Kubernetes.
+
+### Creating vs. Altering a Database
+
+- For new databases, CloudNativePG uses the `CREATE DATABASE` statement.
+- For existing databases, `ALTER DATABASE` is used to apply changes.
+
+It is important to note that there are some differences between these two
+Postgres commands: in particular, the options accepted by `ALTER` are a subset
+of those accepted by `CREATE`.
+
+:::warning
+    Some fields, such as encoding and collation settings, are immutable in
+    PostgreSQL. Attempts to modify these fields on existing databases will be
+    ignored.
+:::
+
+### Replica Clusters
+
+Database objects declared on replica clusters cannot be enforced, as replicas
+lack write privileges. These objects will remain in a pending state until the
+replica is promoted.
+
+### Conflict Resolution
+
+If two `Database` objects in the same namespace manage the same PostgreSQL
+database (i.e., identical `spec.name` and `spec.cluster.name`), the second
+object will be rejected.
+
+Example status message:
+
+```yaml
+status:
+  applied: false
+  message: 'reconciliation error: database "one" is already managed by Database object "cluster-example-one"'
+```
+
+### Postgres Version Differences
+
+CloudNativePG adheres to PostgreSQL's capabilities. For example, features like
+`ICU_RULES` introduced in PostgreSQL 16 are unavailable in earlier versions.
+Errors from PostgreSQL will be reflected in the `Database` object's `status`.
+
+### Manual Changes
+
+CloudNativePG does not overwrite manual changes to databases. Once reconciled,
+a `Database` object will not be reapplied unless its `metadata.generation`
+changes, giving flexibility for direct PostgreSQL modifications.
